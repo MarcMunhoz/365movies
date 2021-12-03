@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    image: 365movies_img
+    volumes:
+      - .:/app
+    working_dir: /app
+    container_name: "365movies_ctn"
+    hostname: "app"
+    ports:
+      - 3650:3650
+    entrypoint: ["yarn", "dev"]
+    # entrypoint: ["sh", "-c", "sleep 2073600"]
