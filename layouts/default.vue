@@ -8,11 +8,12 @@
   </v-app>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 
-export default {
+export default Vue.extend({
   data() {
     return {}
   },
@@ -21,5 +22,5 @@ export default {
     Navigation,
     Footer,
   },
-}
+})
 </script>
