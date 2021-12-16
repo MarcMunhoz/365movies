@@ -3,13 +3,11 @@
     <v-row>
       <v-btn @click="getMovies" elevation="2" depressed color="primary" class="mx-auto">Movie of the day</v-btn>
     </v-row>
-    <!-- <v-row>
-      <ul>
-        <li v-for="movie in movies" :key="movie">
-          {{ movie.Title }}
-        </li>
-      </ul>
-    </v-row> -->
+    <v-row>
+      <ol>
+        <li v-for="(movie, i) in movies" :key="i">{{ movie.Title }} - Array len {{ movies.length }}</li>
+      </ol>
+    </v-row>
   </v-container>
 </template>
 
@@ -21,15 +19,16 @@ export default {
   data() {
     return {
       movies: [],
-      movieCnt: 0,
+      counter: 0,
     }
   },
   methods: {
     getMovies() {
+      this.counter = 0
+      this.movies = []
       const url = `https://www.omdbapi.com/`
-      let counter = 1
 
-      while (this.movieCnt < 11) {
+      while (this.counter < 10) {
         let rndNumber = Math.floor(Math.random() * (9999999 - 1 + 1)) + 1
         let movieNumber = `tt${String(rndNumber).padStart(7, '0')}`
 
@@ -43,7 +42,7 @@ export default {
             })
             .then((resp) => {
               if (resp.Response === 'True') {
-                return resp.Type === 'movie' && this.movies.push(resp), this.movieCnt++
+                return resp.Type === 'movie' && this.movies.push(resp)
               } else {
                 throw new Error(resp.Error)
               }
@@ -54,10 +53,9 @@ export default {
         } catch (error) {
           return console.log(error)
         }
-      }
 
-      console.log(this.movies)
-      console.log(this.movieCnt)
+        this.movies.length < 10 && this.counter++
+      }
     },
   },
 }
