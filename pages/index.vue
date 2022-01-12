@@ -1,7 +1,6 @@
 <template>
   <v-main class="grey lighten-2">
     <v-container>
-      <v-row> THE MOVIE TITLE </v-row>
       <v-row>
         <Movie />
       </v-row>
