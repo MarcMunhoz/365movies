@@ -30,8 +30,16 @@
         <v-row align="center" class="mx-0 d-flex flex-wrap">
           <v-rating :value="Number(movie.rating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
 
-          <div class="grey--text ms-4 w-auto">
+          <div class="grey--text p-0 ms-4 w-auto">
             {{ movie.rating }}
+          </div>
+
+          <div class="grey--text p-0 ms-4 w-auto">
+            {{ movie.year }}
+          </div>
+
+          <div class="grey--text pl-0 ms-4 w-auto">
+            {{ movie.length }}
           </div>
         </v-row>
 
