@@ -4,7 +4,7 @@
       <v-text-field
         v-model="searchTerm"
         label="Type anything and press ENTER"
-        :rules="rules"
+        :rules="searchRules"
         hide-details="auto"
         @keyup.enter=";(luckyMethod = false), search()"
       ></v-text-field>
@@ -63,25 +63,29 @@ export default {
       alphabet: [...'abcdefghijklmnopqrstuvwxyz'],
       luckyMethod: Boolean,
       searchTerm: '',
+      searchRules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
       movie: Object,
       uri: 'https://imdb-internet-movie-database-unofficial.p.rapidapi.com',
       endpoint: String,
-      rules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
     }
   },
   methods: {
     search() {
+      // Setting defaults
       this.movie = {}
       this.endpoint = 'film'
 
+      // Breaks if search field wrong
       if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
         return false
       }
 
       if (this.luckyMethod) {
+        // Sets defaults for random search
         this.searchTerm = ''
         this.endpoint = 'search'
 
+        // Sets the search with 3 random chars
         for (let i = 0; this.searchTerm.length < 3; i++) {
           let rnd = Math.floor(Math.random() * 26)
           this.searchTerm = this.searchTerm.concat(this.alphabet[rnd])
@@ -90,6 +94,7 @@ export default {
 
       let flashURL = new URL(`${this.uri}/${this.endpoint}/${this.searchTerm}`)
 
+      // Asynchronous FN to fetch API
       async function ftMovie() {
         let resp = await fetch(flashURL, { method: 'get', headers: { 'x-rapidapi-host': api_host, 'x-rapidapi-key': api_key } })
 
@@ -100,11 +105,13 @@ export default {
         return resp.json()
       }
 
+      // Call the FN to populate the movie data
       ftMovie()
         .then((resp) => {
           if (this.endpoint === 'film') {
             return (this.movie = resp)
           } else {
+            // If API endpoint = search data received are different
             const rnd = Math.floor(Math.random() * resp.titles.length)
 
             return (this.movie = resp.titles[rnd])
