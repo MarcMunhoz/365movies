@@ -39,7 +39,7 @@ export default {
       drawer: null,
       items: [
         { title: 'Home', icon: 'mdi-movie-open', to: '/' },
-        { title: 'Watched', icon: 'mdi-movie-open-check', to: '/watched' },
+        // { title: 'Watched', icon: 'mdi-movie-open-check', to: '/watched' },
         { title: 'About', icon: 'mdi-information', to: '/about' },
       ],
     }
