@@ -96,7 +96,7 @@ export default {
 
       // Asynchronous FN to fetch API
       async function ftMovie() {
-        let resp = await fetch(flashURL, { method: 'get', headers: { 'x-rapidapi-host': api_host, 'x-rapidapi-key': api_key } })
+        let resp = await fetch(flashURL, { method: 'get', headers: { 'x-rapidapi-key': api_key } })
 
         if (!resp.ok) {
           throw new Error(`HTTP error! status: ${resp.status}`)
