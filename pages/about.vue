@@ -57,7 +57,7 @@ export default Vue.extend({
   },
   methods: {
     goto(link: URL) {
-      window.open(link, 'new_window')
+      window.open(link.toString(), 'new_window')
     },
   },
 })
