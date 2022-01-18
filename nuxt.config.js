@@ -47,7 +47,7 @@ export default {
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
-  modules: ['@nuxtjs/dotenv', 'bootstrap-vue/nuxt'],
+  modules: [['@nuxtjs/dotenv', { systemvars: true }], ['bootstrap-vue/nuxt']],
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
