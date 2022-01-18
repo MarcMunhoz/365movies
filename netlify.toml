@@ -1,0 +1,10 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy= "default-src https:"
+    Feature-Policy= "microphone 'none'; geolocation 'none'"
+    Referrer-Policy = "no-referrer-when-downgrade"
+    Strict-Transport-Security = "max-age=15552000; includeSubDomains; preload"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
