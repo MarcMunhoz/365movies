@@ -96,7 +96,10 @@ export default {
 
       // Asynchronous FN to fetch API
       async function ftMovie() {
-        let resp = await fetch(flashURL, { method: 'get', headers: { 'x-rapidapi-host': api_host.toString(), 'x-rapidapi-key': api_key.toString() } })
+        let resp = await fetch(flashURL, {
+          method: 'get',
+          headers: { 'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com', 'x-rapidapi-key': api_key },
+        })
 
         if (!resp.ok) {
           throw new Error(`HTTP error! status: ${resp.status}`)
