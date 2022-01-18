@@ -53,8 +53,8 @@
 </template>
 
 <script>
-const api_host = process.env.RAPIDAPI_HOST
 const api_key = process.env.RAPIDAPI_KEY
+const api_host = process.env.RAPIDAPI_HOST
 
 export default {
   name: 'Movie',
@@ -98,7 +98,8 @@ export default {
       async function ftMovie() {
         let resp = await fetch(flashURL, {
           method: 'get',
-          headers: { 'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com', 'x-rapidapi-key': api_key },
+          headers: { 'x-rapidapi-host': api_host, 'x-rapidapi-key': api_key },
+          useQueryString: true,
         })
 
         if (!resp.ok) {
