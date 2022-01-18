@@ -97,8 +97,10 @@ export default {
       async function ftMovie() {
         let resp = await fetch(flashURL, {
           method: 'get',
-          headers: { 'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com', 'x-rapidapi-key': api_key },
-          useQueryString: true,
+          headers: {
+            'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com',
+            'x-rapidapi-key': '3e24691969msh7f4d20f29196d3ep12d076jsn19ea6860f4b7',
+          },
         })
 
         if (!resp.ok) {
