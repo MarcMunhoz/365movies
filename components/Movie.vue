@@ -54,6 +54,7 @@
 
 <script>
 const api_key = process.env.RAPIDAPI_KEY
+const api_host = process.env.RAPIDAPI_HOST
 
 export default {
   name: 'Movie',
@@ -98,8 +99,8 @@ export default {
         let resp = await fetch(flashURL, {
           method: 'get',
           headers: {
-            'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com',
-            'x-rapidapi-key': '3e24691969msh7f4d20f29196d3ep12d076jsn19ea6860f4b7',
+            'x-rapidapi-host': api_host,
+            'x-rapidapi-key': api_key,
           },
         })
 
