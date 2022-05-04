@@ -27,25 +27,25 @@
         </v-btn>
       </v-card-title>
 
-      <v-card-text v-if="movie.rating">
+      <v-card-text v-if="movieInfo.imDbRating">
         <v-row align="center" class="mx-0 d-flex flex-wrap">
-          <v-rating :value="Number(movie.rating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
+          <v-rating :value="Number(movieInfo.imDbRating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
 
           <div class="grey--text p-0 ms-4 w-auto">
-            {{ movie.rating }}
+            {{ movieInfo.imDbRating }}
           </div>
 
           <div class="grey--text p-0 ms-4 w-auto">
-            {{ movie.year }}
+            {{ movieInfo.year }}
           </div>
 
           <div class="grey--text pl-0 ms-4 w-auto">
-            {{ movie.length }}
+            {{ movieInfo.runtimeStr }}
           </div>
         </v-row>
 
         <div class="my-4 text-subtitle-1">
-          {{ movie.plot }}
+          {{ movieInfo.plot }}
         </div>
       </v-card-text>
     </v-card>
@@ -53,8 +53,7 @@
 </template>
 
 <script>
-const api_key = process.env.RAPIDAPI_KEY
-const api_host = process.env.RAPIDAPI_HOST
+const api_key = process.env.IMDBAPI_KEY
 
 export default {
   name: 'Movie',
@@ -65,7 +64,8 @@ export default {
       searchTerm: '',
       searchRules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
       movie: Object,
-      uri: 'https://imdb-internet-movie-database-unofficial.p.rapidapi.com',
+      movieInfo: Object,
+      uri: 'https://imdb-api.com',
       endpoint: String,
     }
   },
@@ -73,7 +73,7 @@ export default {
     search() {
       // Setting defaults
       this.movie = {}
-      this.endpoint = 'film'
+      this.endpoint = 'SearchTitle'
 
       // Breaks if search field wrong
       if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
@@ -83,7 +83,7 @@ export default {
       if (this.luckyMethod) {
         // Sets defaults for random search
         this.searchTerm = ''
-        this.endpoint = 'search'
+        this.endpoint = 'Search'
 
         // Sets the search with 3 random chars
         for (let i = 0; this.searchTerm.length < 3; i++) {
@@ -92,20 +92,17 @@ export default {
         }
       }
 
-      let flashURL = new URL(`${this.uri}/${this.endpoint}/${this.searchTerm}`)
+      let flashURL = new URL(`${this.uri}/API/${this.endpoint}/${api_key}/${this.searchTerm}`)
 
       // Asynchronous FN to fetch API
       async function ftMovie() {
         let resp = await fetch(flashURL, {
           method: 'get',
-          headers: {
-            'x-rapidapi-host': api_host,
-            'x-rapidapi-key': api_key,
-          },
+          redirect: 'follow'
         })
 
         if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.status}`)
+          throw new Error(`HTTP error! status: ${resp.errorMessage}`)
         }
 
         return resp.json()
@@ -114,13 +111,33 @@ export default {
       // Call the FN to populate the movie data
       ftMovie()
         .then((resp) => {
-          if (this.endpoint === 'film') {
-            return (this.movie = resp)
+          if (this.endpoint === 'SearchTitle') {
+            let flashURL2 = new URL(`${this.uri}/en/API/Title/${api_key}/${resp.results[0].id}`)
+
+            async function ftMovieInfo() {
+              let respInfo = await fetch(flashURL2, {
+                method: 'get',
+                redirect: 'follow'
+              })
+
+              if (!respInfo.ok) {
+                throw new Error(`HTTP error! status: ${respInfo.errorMessage}`)
+              }
+
+              return respInfo.json()
+            }
+
+            ftMovieInfo()
+              .then((respInfo) => {
+                return this.movieInfo = respInfo
+              })
+
+            return (this.movie = resp.results[0])
           } else {
             // If API endpoint = search data received are different
-            const rnd = Math.floor(Math.random() * resp.titles.length)
+            const rnd = Math.floor(Math.random() * resp.results .length)
 
-            return (this.movie = resp.titles[rnd])
+            return (this.movie = resp.results[rnd])
           }
         })
         .catch((e) => {
