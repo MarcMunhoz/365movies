@@ -16,8 +16,7 @@
       <v-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click=";(luckyMethod = true), search()">I'm lucky!</v-btn>
     </v-row>
     <v-card v-if="movie.title" elevation="2" class="mt-4 mx-auto p-0" max-width="374">
-      <v-img v-if="movie.poster" height="250" :src="movie.poster"></v-img>
-      <v-img v-else height="250" :src="movie.image"></v-img>
+      <v-img height="250" :src="movie.image"></v-img>
 
       <v-card-title style="position: relative">
         {{ movie.title }}
@@ -65,7 +64,7 @@ export default {
       searchRules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
       movie: Object,
       movieInfo: Object,
-      uri: 'https://imdb-api.com',
+      uri: 'https://imdb-api.com/en/API',
       endpoint: String,
     }
   },
@@ -73,7 +72,7 @@ export default {
     search() {
       // Setting defaults
       this.movie = {}
-      this.endpoint = 'SearchTitle'
+      this.movieInfo = {}
 
       // Breaks if search field wrong
       if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
@@ -83,7 +82,6 @@ export default {
       if (this.luckyMethod) {
         // Sets defaults for random search
         this.searchTerm = ''
-        this.endpoint = 'Search'
 
         // Sets the search with 3 random chars
         for (let i = 0; this.searchTerm.length < 3; i++) {
@@ -92,13 +90,15 @@ export default {
         }
       }
 
-      let flashURL = new URL(`${this.uri}/API/${this.endpoint}/${api_key}/${this.searchTerm}`)
+      // Start search defaults
+      let flashURL = new URL(`${this.uri}/${this.endpoint}/${api_key}/${this.searchTerm}`)
+      this.endpoint = 'SearchMovie'
 
-      // Asynchronous FN to fetch API
+      // Asynchronous FN to fetch API (movie title and poster)
       async function ftMovie() {
         let resp = await fetch(flashURL, {
           method: 'get',
-          redirect: 'follow'
+          redirect: 'follow',
         })
 
         if (!resp.ok) {
@@ -111,34 +111,40 @@ export default {
       // Call the FN to populate the movie data
       ftMovie()
         .then((resp) => {
-          if (this.endpoint === 'SearchTitle') {
-            let flashURL2 = new URL(`${this.uri}/en/API/Title/${api_key}/${resp.results[0].id}`)
+          let flashURLInfo = URL
+          let movieData = Object
+          this.endpoint = 'Title' // endpoint to movie details (rating/year/runtime)
 
-            async function ftMovieInfo() {
-              let respInfo = await fetch(flashURL2, {
-                method: 'get',
-                redirect: 'follow'
-              })
+          if (!this.luckyMethod) {
+            // if regular search received the first movie found
+            flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`)
+            movieData = resp.results[0]
+          } else {
+            // if lucky search it draws a movie from data received
+            const rnd = Math.floor(Math.random() * resp.results.length)
+            flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`)
+            movieData = resp.results[rnd]
+          }
 
-              if (!respInfo.ok) {
-                throw new Error(`HTTP error! status: ${respInfo.errorMessage}`)
-              }
+          // Asynchronous FN to fetch API (movie details)
+          async function ftMovieInfo() {
+            let respInfo = await fetch(flashURLInfo, {
+              method: 'get',
+              redirect: 'follow',
+            })
 
-              return respInfo.json()
+            if (!respInfo.ok) {
+              throw new Error(`HTTP error! status: ${respInfo.errorMessage}`)
             }
 
-            ftMovieInfo()
-              .then((respInfo) => {
-                return this.movieInfo = respInfo
-              })
-
-            return (this.movie = resp.results[0])
-          } else {
-            // If API endpoint = search data received are different
-            const rnd = Math.floor(Math.random() * resp.results .length)
-
-            return (this.movie = resp.results[rnd])
+            return respInfo.json()
           }
+
+          ftMovieInfo().then((respInfo) => {
+            return (this.movieInfo = respInfo) // Populates the movie details object
+          })
+
+          return (this.movie = movieData) // Populates the movie object
         })
         .catch((e) => {
           return console.log(e)
