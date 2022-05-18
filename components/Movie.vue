@@ -26,9 +26,19 @@
         </v-btn>
       </v-card-title>
 
-      <v-card-text v-if="movieInfo.imDbRating">
+      <v-card-text>
         <v-row align="center" class="mx-0 d-flex flex-wrap">
-          <v-rating :value="Number(movieInfo.imDbRating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
+          <v-rating
+            v-if="movieInfo.imDbRating"
+            :value="Number(movieInfo.imDbRating)"
+            color="amber"
+            dense
+            half-increments
+            readonly
+            length="10"
+            size="14"
+            class="w-50"
+          ></v-rating>
 
           <div class="grey--text p-0 ms-4 w-auto">
             {{ movieInfo.imDbRating }}
@@ -66,11 +76,16 @@ export default {
       movieInfo: Object,
       uri: 'https://imdb-api.com/en/API',
       endpoint: String,
+      flashURL: URL,
+      flashURLInfo: URL,
     }
   },
   methods: {
     search() {
       // Setting defaults
+      this.endpoint = ''
+      this.flashURL = ''
+      this.flashURLInfo = ''
       this.movie = {}
       this.movieInfo = {}
 
@@ -91,8 +106,13 @@ export default {
       }
 
       // Start search defaults
-      let flashURL = new URL(`${this.uri}/${this.endpoint}/${api_key}/${this.searchTerm}`)
       this.endpoint = 'SearchMovie'
+      this.flashURL = new URL(`${this.uri}/${this.endpoint}/${api_key}/${this.searchTerm}`).href
+
+      this.fetchMovie() // Calls the FN that fetches the movie data
+    },
+    fetchMovie() {
+      let flashURL = this.flashURL
 
       // Asynchronous FN to fetch API (movie title and poster)
       async function ftMovie() {
@@ -102,7 +122,7 @@ export default {
         })
 
         if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.errorMessage}`)
+          throw new Error(`HTTP error! status: ${resp.error}`)
         }
 
         return resp.json()
@@ -111,40 +131,46 @@ export default {
       // Call the FN to populate the movie data
       ftMovie()
         .then((resp) => {
-          let flashURLInfo = URL
           let movieData = Object
           this.endpoint = 'Title' // endpoint to movie details (rating/year/runtime)
 
           if (!this.luckyMethod) {
             // if regular search received the first movie found
-            flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`)
+            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`).href
             movieData = resp.results[0]
           } else {
             // if lucky search it draws a movie from data received
             const rnd = Math.floor(Math.random() * resp.results.length)
-            flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`)
+            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`).href
             movieData = resp.results[rnd]
           }
 
-          // Asynchronous FN to fetch API (movie details)
-          async function ftMovieInfo() {
-            let respInfo = await fetch(flashURLInfo, {
-              method: 'get',
-              redirect: 'follow',
-            })
+          return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object
+        })
+        .catch((e) => {
+          return console.log(e)
+        })
+    },
+    fetchMovieInfo() {
+      let flashURLInfo = this.flashURLInfo
 
-            if (!respInfo.ok) {
-              throw new Error(`HTTP error! status: ${respInfo.errorMessage}`)
-            }
+      // Asynchronous FN to fetch API (rating/year/runtime)
+      async function ftMovieInfo() {
+        let resp = await fetch(flashURLInfo, {
+          method: 'get',
+          redirect: 'follow',
+        })
 
-            return respInfo.json()
-          }
+        if (!resp.ok) {
+          throw new Error(`HTTP error! status: ${resp.error}`)
+        }
 
-          ftMovieInfo().then((respInfo) => {
-            return (this.movieInfo = respInfo) // Populates the movie details object
-          })
+        return resp.json()
+      }
 
-          return (this.movie = movieData) // Populates the movie object
+      ftMovieInfo()
+        .then((resp) => {
+          return (this.movieInfo = resp)
         })
         .catch((e) => {
           return console.log(e)
