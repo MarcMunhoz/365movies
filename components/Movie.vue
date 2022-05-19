@@ -7,7 +7,8 @@
         :rules="searchRules"
         hide-details="auto"
         @keyup.enter=";(luckyMethod = false), search()"
-      ></v-text-field>
+      >
+      </v-text-field>
     </v-row>
     <v-row>
       <p class="h1 text-center my-4">OR</p>
@@ -27,7 +28,7 @@
       </v-card-title>
 
       <v-card-text>
-        <v-row align="center" class="mx-0 d-flex flex-wrap">
+        <v-row align="center" class="mx-0 d-flex flex-wrap justify-content-center gap-3">
           <v-rating
             v-if="movieInfo.imDbRating"
             :value="Number(movieInfo.imDbRating)"
@@ -40,15 +41,15 @@
             class="w-50"
           ></v-rating>
 
-          <div class="grey--text p-0 ms-4 w-auto">
+          <div class="grey--text p-0 w-auto">
             {{ movieInfo.imDbRating }}
           </div>
 
-          <div class="grey--text p-0 ms-4 w-auto">
+          <div class="grey--text p-0 w-auto">
             {{ movieInfo.year }}
           </div>
 
-          <div class="grey--text pl-0 ms-4 w-auto">
+          <div class="grey--text pl-0 w-auto">
             {{ movieInfo.runtimeStr }}
           </div>
         </v-row>
@@ -128,24 +129,24 @@ export default {
         return resp.json()
       }
 
-      // Call the FN to populate the movie data
+      // Calls the FN to populate the movie data
       ftMovie()
         .then((resp) => {
           let movieData = Object
           this.endpoint = 'Title' // endpoint to movie details (rating/year/runtime)
 
           if (!this.luckyMethod) {
-            // if regular search received the first movie found
+            // if regular search, gets the first movie found it
             this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`).href
             movieData = resp.results[0]
           } else {
-            // if lucky search it draws a movie from data received
+            // if lucky search, draws a movie from data received
             const rnd = Math.floor(Math.random() * resp.results.length)
             this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`).href
             movieData = resp.results[rnd]
           }
 
-          return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object
+          return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object and calls
         })
         .catch((e) => {
           return console.log(e)
@@ -168,6 +169,7 @@ export default {
         return resp.json()
       }
 
+      // Calls the FN to populate the movie details data
       ftMovieInfo()
         .then((resp) => {
           return (this.movieInfo = resp)
