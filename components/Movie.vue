@@ -7,7 +7,8 @@
         :rules="searchRules"
         hide-details="auto"
         @keyup.enter=";(luckyMethod = false), search()"
-      ></v-text-field>
+      >
+      </v-text-field>
     </v-row>
     <v-row>
       <p class="h1 text-center my-4">OR</p>
@@ -15,9 +16,11 @@
     <v-row>
       <v-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click=";(luckyMethod = true), search()">I'm lucky!</v-btn>
     </v-row>
+    <v-row v-if="progressLoader === true">
+      <v-progress-circular :size="100" color="primary" class="mx-auto" indeterminate></v-progress-circular>
+    </v-row>
     <v-card v-if="movie.title" elevation="2" class="mt-4 mx-auto p-0" max-width="374">
-      <v-img v-if="movie.poster" height="250" :src="movie.poster"></v-img>
-      <v-img v-else height="250" :src="movie.image"></v-img>
+      <v-img height="250" :src="movie.image"></v-img>
 
       <v-card-title style="position: relative">
         {{ movie.title }}
@@ -27,25 +30,35 @@
         </v-btn>
       </v-card-title>
 
-      <v-card-text v-if="movie.rating">
-        <v-row align="center" class="mx-0 d-flex flex-wrap">
-          <v-rating :value="Number(movie.rating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
+      <v-card-text>
+        <v-row align="center" class="mx-0 d-flex flex-wrap justify-content-center gap-3">
+          <v-rating
+            v-if="movieInfo.imDbRating"
+            :value="Number(movieInfo.imDbRating)"
+            color="amber"
+            dense
+            half-increments
+            readonly
+            length="10"
+            size="14"
+            class="w-50"
+          ></v-rating>
 
-          <div class="grey--text p-0 ms-4 w-auto">
-            {{ movie.rating }}
+          <div class="grey--text p-0 w-auto">
+            {{ movieInfo.imDbRating }}
           </div>
 
-          <div class="grey--text p-0 ms-4 w-auto">
-            {{ movie.year }}
+          <div class="grey--text p-0 w-auto">
+            {{ movieInfo.year }}
           </div>
 
-          <div class="grey--text pl-0 ms-4 w-auto">
-            {{ movie.length }}
+          <div class="grey--text pl-0 w-auto">
+            {{ movieInfo.runtimeStr }}
           </div>
         </v-row>
 
         <div class="my-4 text-subtitle-1">
-          {{ movie.plot }}
+          {{ movieInfo.plot }}
         </div>
       </v-card-text>
     </v-card>
@@ -53,8 +66,7 @@
 </template>
 
 <script>
-const api_key = process.env.RAPIDAPI_KEY
-const api_host = process.env.RAPIDAPI_HOST
+const api_key = process.env.IMDBAPI_KEY
 
 export default {
   name: 'Movie',
@@ -62,18 +74,29 @@ export default {
     return {
       alphabet: [...'abcdefghijklmnopqrstuvwxyz'],
       luckyMethod: Boolean,
+      progressLoader: {
+        type: Boolean,
+        default: false,
+      },
       searchTerm: '',
       searchRules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
       movie: Object,
-      uri: 'https://imdb-internet-movie-database-unofficial.p.rapidapi.com',
+      movieInfo: Object,
+      uri: 'https://imdb-api.com/en/API',
       endpoint: String,
+      flashURL: URL,
+      flashURLInfo: URL,
     }
   },
   methods: {
     search() {
       // Setting defaults
+      this.endpoint = ''
+      this.flashURL = ''
+      this.flashURLInfo = ''
       this.movie = {}
-      this.endpoint = 'film'
+      this.movieInfo = {}
+      this.progressLoader = true
 
       // Breaks if search field wrong
       if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
@@ -83,7 +106,6 @@ export default {
       if (this.luckyMethod) {
         // Sets defaults for random search
         this.searchTerm = ''
-        this.endpoint = 'search'
 
         // Sets the search with 3 random chars
         for (let i = 0; this.searchTerm.length < 3; i++) {
@@ -92,36 +114,75 @@ export default {
         }
       }
 
-      let flashURL = new URL(`${this.uri}/${this.endpoint}/${this.searchTerm}`)
+      // Start search defaults
+      this.endpoint = 'SearchMovie'
+      this.flashURL = new URL(`${this.uri}/${this.endpoint}/${api_key}/${this.searchTerm}`).href
 
-      // Asynchronous FN to fetch API
+      this.fetchMovie() // Calls the FN that fetches the movie data
+    },
+    fetchMovie() {
+      let flashURL = this.flashURL
+
+      // Asynchronous FN to fetch API (movie title and poster)
       async function ftMovie() {
         let resp = await fetch(flashURL, {
           method: 'get',
-          headers: {
-            'x-rapidapi-host': api_host,
-            'x-rapidapi-key': api_key,
-          },
+          redirect: 'follow',
         })
 
         if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.status}`)
+          throw new Error(`HTTP error! status: ${resp.error}`)
         }
 
         return resp.json()
       }
 
-      // Call the FN to populate the movie data
+      // Calls the FN to populate the movie data
       ftMovie()
         .then((resp) => {
-          if (this.endpoint === 'film') {
-            return (this.movie = resp)
-          } else {
-            // If API endpoint = search data received are different
-            const rnd = Math.floor(Math.random() * resp.titles.length)
+          let movieData = Object
+          this.endpoint = 'Title' // endpoint to movie details (rating/year/runtime)
 
-            return (this.movie = resp.titles[rnd])
+          if (!this.luckyMethod) {
+            // if regular search, gets the first movie found it
+            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`).href
+            movieData = resp.results[0]
+          } else {
+            // if lucky search, draws a movie from data received
+            const rnd = Math.floor(Math.random() * resp.results.length)
+            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`).href
+            movieData = resp.results[rnd]
           }
+
+          this.progressLoader = false
+
+          return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object and calls
+        })
+        .catch((e) => {
+          return console.log(e)
+        })
+    },
+    fetchMovieInfo() {
+      let flashURLInfo = this.flashURLInfo
+
+      // Asynchronous FN to fetch API (rating/year/runtime)
+      async function ftMovieInfo() {
+        let resp = await fetch(flashURLInfo, {
+          method: 'get',
+          redirect: 'follow',
+        })
+
+        if (!resp.ok) {
+          throw new Error(`HTTP error! status: ${resp.error}`)
+        }
+
+        return resp.json()
+      }
+
+      // Calls the FN to populate the movie details data
+      ftMovieInfo()
+        .then((resp) => {
+          return (this.movieInfo = resp)
         })
         .catch((e) => {
           return console.log(e)
