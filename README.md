@@ -1,4 +1,27 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
+
 # 365movies
+
+\* Actual Version: 1.0.1
+
+A simple app that searches for movies by title or any information passed in the search form.
+
+Random searches are possible with the "I'm lucky" button"
+
+## Release Notes
+
+**VERSION-1.0.1**
+
+- API changed to [IMDB API](https://imdb-api.com)
+- Search scripts improvements
+- About page UX improvements
+- Hack to Volar on VScode
+- favicon added
+
+**VERSION-1.0.0**
+
+- Project started with [NuxtJS](https://nuxtjs.org)
+- Movies API => https://imdb-internet-movie-database-unofficial.p.rapidapi.com
 
 ## Build Setup
 
@@ -18,6 +41,14 @@ $ yarn generate
 ```
 
 For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+
+## Docker
+
+Run it with Docker Compose.
+
+```sh
+$ docker-compose up -d
+```
 
 ## Special Directories
 
@@ -40,7 +71,6 @@ More information about the usage of this directory in [the documentation](https:
 Layouts are a great help when you want to change the look and feel of your Nuxt app, whether you want to include a sidebar or have distinct layouts for mobile and desktop.
 
 More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
-
 
 ### `pages`
 

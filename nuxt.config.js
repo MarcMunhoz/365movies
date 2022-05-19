@@ -50,8 +50,7 @@ export default {
   modules: ['@nuxtjs/dotenv', 'bootstrap-vue/nuxt'],
 
   env: {
-    RAPIDAPI_HOST: process.env.RAPIDAPI_HOST,
-    RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
+    IMDBAPI_KEY: process.env.IMDBAPI_KEY
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
