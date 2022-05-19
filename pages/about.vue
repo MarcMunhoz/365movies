@@ -4,17 +4,17 @@
       <v-row>
         <h1>What's this?!</h1>
 
-        <p>I like movies, I like Vue and Rest APIs too. So why not a dummy project with it all?</p>
+        <p>I like movies, I like Vue and Rest APIs too. So why not a dummy search movie project with it all?</p>
         <p>Find me here:</p>
       </v-row>
       <v-row>
         <v-list dense link v-for="item in items" :key="item.to">
-          <v-list-item @click="goto(item.to)">
-            <v-list-item-icon>
+          <v-list-item>
+            <v-list-item-icon @click="goto(item.to)">
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-icon>
 
-            <v-list-item-content>
+            <v-list-item-content @click="goto(item.to)">
               <v-list-item-title>{{ item.title }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
@@ -63,4 +63,13 @@ export default Vue.extend({
 })
 </script>
 
-<style></style>
+<style>
+.v-list-item__icon,
+.v-list-item__content {
+  cursor: pointer;
+}
+
+.v-list-item__content {
+  flex: unset;
+}
+</style>
