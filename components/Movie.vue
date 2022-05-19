@@ -16,6 +16,9 @@
     <v-row>
       <v-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click=";(luckyMethod = true), search()">I'm lucky!</v-btn>
     </v-row>
+    <v-row v-if="progressLoader === true">
+      <v-progress-circular :size="100" color="primary" class="mx-auto" indeterminate></v-progress-circular>
+    </v-row>
     <v-card v-if="movie.title" elevation="2" class="mt-4 mx-auto p-0" max-width="374">
       <v-img height="250" :src="movie.image"></v-img>
 
@@ -71,6 +74,10 @@ export default {
     return {
       alphabet: [...'abcdefghijklmnopqrstuvwxyz'],
       luckyMethod: Boolean,
+      progressLoader: {
+        type: Boolean,
+        default: false,
+      },
       searchTerm: '',
       searchRules: [(value) => (value && value.length >= 3) || 'Min 3 characters'],
       movie: Object,
@@ -89,6 +96,7 @@ export default {
       this.flashURLInfo = ''
       this.movie = {}
       this.movieInfo = {}
+      this.progressLoader = true
 
       // Breaks if search field wrong
       if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
@@ -145,6 +153,8 @@ export default {
             this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`).href
             movieData = resp.results[rnd]
           }
+
+          this.progressLoader = false
 
           return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object and calls
         })
