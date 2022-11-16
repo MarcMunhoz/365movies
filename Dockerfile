@@ -11,7 +11,7 @@ ENV PORT=3650
 
 COPY ["package.json", "yarn.lock", "./"]
 
-RUN yarn global add nuxt \
+RUN yarn global add nuxt@^2.15.7 \
   && yarn \
   && rm -rf /var/cache/apk/* /tmp/* /var/tmp/* /usr/share/man
 
