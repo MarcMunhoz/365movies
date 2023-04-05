@@ -50,7 +50,7 @@ export default {
   modules: ['@nuxtjs/dotenv', 'bootstrap-vue/nuxt'],
 
   env: {
-    IMDBAPI_KEY: process.env.IMDBAPI_KEY
+    OMDBAPI_KEY: process.env.OMDBAPI_KEY
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify

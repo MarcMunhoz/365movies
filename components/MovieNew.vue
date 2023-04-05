@@ -19,13 +19,16 @@
     <v-row v-if="progressLoader === true">
       <v-progress-circular :size="100" color="primary" class="mx-auto" indeterminate></v-progress-circular>
     </v-row>
-    <v-card v-if="movie.title" elevation="2" class="mt-4 mx-auto p-0" max-width="374">
-      <v-img height="250" :src="movie.image"></v-img>
+    <v-card v-if="movie.Title" elevation="2" class="mt-4 mx-auto p-0" max-width="374">
+      <!-- <v-img v-if="movie.Poster" height="250" :src="movie.Poster"></v-img> -->
+      <v-img height="250" src="/img/no_image.jpg"></v-img>
+
+      <img src="/img/no_image.jpg">
 
       <v-card-title style="position: relative">
-        {{ movie.title }}
+        {{ movie.Title }}
 
-        <v-btn absolute color="primary" class="white--text" :href="`https://www.imdb.com/title/${movie.id}`" target="movie" fab small right top>
+        <v-btn absolute color="primary" class="white--text" :href="`https://www.imdb.com/title/${movie.imdbID}`" target="movie" fab small right top>
           <v-icon>mdi-clipboard-text-outline</v-icon>
         </v-btn>
       </v-card-title>
@@ -33,8 +36,8 @@
       <v-card-text>
         <v-row align="center" class="mx-0 d-flex flex-wrap justify-content-center gap-3">
           <v-rating
-            v-if="movieInfo.imDbRating"
-            :value="Number(movieInfo.imDbRating)"
+            v-if="!movie.imdbRating =='N/A'"
+            :value="Number(movie.imdbRating)"
             color="amber"
             dense
             half-increments
@@ -44,21 +47,37 @@
             class="w-50"
           ></v-rating>
 
-          <div class="grey--text p-0 w-auto">
-            {{ movieInfo.imDbRating }}
+          <div v-if="!movie.imdbRating =='N/A'" class="grey--text p-0 w-auto">
+            {{ movie.imdbRating }}
           </div>
 
           <div class="grey--text p-0 w-auto">
-            {{ movieInfo.year }}
+            {{ movie.year }}
           </div>
 
           <div class="grey--text pl-0 w-auto">
-            {{ movieInfo.runtimeStr }}
+            {{ movie.Runtime }}
           </div>
         </v-row>
 
+        <hr>
+
+        <div class="mt-4 text-subtitle-1">
+          <strong>Director:</strong> {{ movie.Director }}
+        </div>
+
+        <div class="text-subtitle-1">
+          <strong>Actors:</strong> {{ movie.Actors }}
+        </div>
+
+        <div class="text-subtitle-1">
+          <strong>Released:</strong> {{ movie.Released }}
+        </div>
+
+        <hr>
+
         <div class="my-4 text-subtitle-1">
-          {{ movieInfo.plot }}
+          {{ movie.Plot }}
         </div>
       </v-card-text>
     </v-card>
@@ -90,10 +109,6 @@ export default {
   },
   methods: {
     search() {
-      // Setting defaults
-      this.endpoint = ''
-      this.flashURL = ''
-      this.flashURLInfo = ''
       this.movie = {}
       this.movieInfo = {}
       this.progressLoader = true
@@ -114,11 +129,8 @@ export default {
         }
       }
 
-      // Start search defaults
-      this.endpoint = 'SearchMovie'
-      this.flashURL = new URL(`${this.uri}/${this.endpoint}/${api_key}/${this.searchTerm}`).href
-
-      this.fetchMovie() // Calls the FN that fetches the movie data
+      this.flashURL = new URL(`https://www.omdbapi.com/?t=${this.searchTerm}&apikey=${api_key}`)
+      this.fetchMovie()
     },
     fetchMovie() {
       let flashURL = this.flashURL
@@ -140,54 +152,14 @@ export default {
       // Calls the FN to populate the movie data
       ftMovie()
         .then((resp) => {
-          let movieData = Object
-          this.endpoint = 'Title' // endpoint to movie details (rating/year/runtime)
-
-          if (!this.luckyMethod) {
-            // if regular search, gets the first movie found it
-            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[0].id}`).href
-            movieData = resp.results[0]
-          } else {
-            // if lucky search, draws a movie from data received
-            const rnd = Math.floor(Math.random() * resp.results.length)
-            this.flashURLInfo = new URL(`${this.uri}/${this.endpoint}/${api_key}/${resp.results[rnd].id}`).href
-            movieData = resp.results[rnd]
-          }
-
           this.progressLoader = false
 
-          return (this.movie = movieData), this.fetchMovieInfo() // Populates the movie object and calls
+          return this.movie = resp
         })
-        .catch((e) => {
+         .catch((e) => {
           return console.log(e)
         })
-    },
-    fetchMovieInfo() {
-      let flashURLInfo = this.flashURLInfo
-
-      // Asynchronous FN to fetch API (rating/year/runtime)
-      async function ftMovieInfo() {
-        let resp = await fetch(flashURLInfo, {
-          method: 'get',
-          redirect: 'follow',
-        })
-
-        if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.error}`)
-        }
-
-        return resp.json()
-      }
-
-      // Calls the FN to populate the movie details data
-      ftMovieInfo()
-        .then((resp) => {
-          return (this.movieInfo = resp)
-        })
-        .catch((e) => {
-          return console.log(e)
-        })
-    },
-  },
+    }
+  }
 }
 </script>
