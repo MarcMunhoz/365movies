@@ -2,17 +2,23 @@
 
 # 365movies
 
-\* Actual Version: 1.0.1
+\* Actual Version: 1.0.2
 
 A simple app that searches for movies by title or any information passed in the search form.
 
-Random searches are possible with the "I'm lucky" button"
+👷🚧~~Random searches are possible with the "I'm lucky" button"~~🚧
 
 ## Release Notes
 
+**VERSION-1.0.2**
+
+- API changed to [OMDB API](https://www.omdbapi.com) because the previous one blocked access
+- Random search removed for now. Maintenance required
+- "Movie Not Found" now has a friendly image
+
 **VERSION-1.0.1**
 
-- API changed to [IMDB API](https://imdb-api.com)
+- API changed to [IMDB API](https://imdb-api.com) because the previous one no longer exists
 - Search scripts improvements
 - About page UX improvements
 - Hack to Volar on VScode
