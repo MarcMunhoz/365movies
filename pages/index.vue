@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import Movie from '@/components/MovieNew.vue'
+import Movie from '@/components/Movie.vue'
 
 export default Vue.extend({
   layout: 'default',
