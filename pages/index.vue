@@ -9,13 +9,23 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
-import Movie from '@/components/Movie.vue'
+import Vue from "vue";
+import Movie from "@/components/Movie.vue";
 
 export default Vue.extend({
-  layout: 'default',
+  layout: "default",
+  data() {
+    return {
+      title: "Home",
+    };
+  },
+  head() {
+    return {
+      title: this.title,
+    };
+  },
   components: {
     Movie,
   },
-})
+});
 </script>

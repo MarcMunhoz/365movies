@@ -15,8 +15,7 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - 365movies',
-    title: '365movies',
+    titleTemplate: '365Movies - %s',
     htmlAttrs: {
       lang: 'en',
     },

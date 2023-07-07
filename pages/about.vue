@@ -25,42 +25,48 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from "vue";
 export default Vue.extend({
-  layout: 'default',
-  name: 'about',
+  layout: "default",
+  name: "about",
   data() {
     return {
+      title: "About",
       items: [
         {
-          title: 'Marcelo Munhoz website',
-          icon: 'mdi-post-outline',
-          to: 'https://www.marcelomunhoz.com',
+          title: "Marcelo Munhoz website",
+          icon: "mdi-post-outline",
+          to: new URL("https://www.marcelomunhoz.com"),
         },
         {
-          title: 'Marcelo Munhoz on LinkedIn',
-          icon: 'mdi-linkedin',
-          to: 'https://www.linkedin.com/in/marcelomunhoz',
+          title: "Marcelo Munhoz on LinkedIn",
+          icon: "mdi-linkedin",
+          to: new URL("https://www.linkedin.com/in/marcelomunhoz"),
         },
         {
-          title: 'MarcMunhoz on Github',
-          icon: 'mdi-github',
-          to: 'https://github.com/MarcMunhoz',
+          title: "MarcMunhoz on Github",
+          icon: "mdi-github",
+          to: new URL("https://github.com/MarcMunhoz"),
         },
         {
-          title: 'heyMunhoz on Twitter',
-          icon: 'mdi-twitter',
-          to: 'https://twitter.com/heyMunhoz',
+          title: "heyMunhoz on Twitter",
+          icon: "mdi-twitter",
+          to: new URL("https://twitter.com/heyMunhoz"),
         },
       ],
-    }
+    };
+  },
+  head() {
+    return {
+      title: this.title,
+    };
   },
   methods: {
     goto(link: URL) {
-      window.open(link.toString(), 'new_window')
+      window.open(link.toString(), "new_window");
     },
   },
-})
+});
 </script>
 
 <style>
