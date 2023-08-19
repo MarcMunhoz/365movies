@@ -5,11 +5,11 @@ services:
     build:
       context: .
       target: develop-stage
-    image: 365movies-vue3_img
+    image: 365movies_img
     volumes:
       - ./app:/app
     working_dir: /app
-    container_name: "365movies-vue3_ctn"
+    container_name: "365movies_ctn"
     hostname: "365movies-vue3_host"
     ports:
       - 3650:3650
