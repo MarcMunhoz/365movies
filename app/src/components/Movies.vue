@@ -1,76 +1,142 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-text-field v-model="searchTerm" label="Type a movie title portion and press ENTER" :rules="searchRules" hide-details="auto" @keyup.enter="(luckyMethod = false), search()"> </v-text-field>
-    </v-row>
-    <v-row>
-      <p class="h1 text-center my-4">OR</p>
-    </v-row>
-    <v-row>
-      <v-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), search()">I'm lucky</v-btn>
-    </v-row>
-    <v-row v-if="progressLoader === true">
-      <v-progress-circular :size="100" color="primary" class="mx-auto" indeterminate></v-progress-circular>
-    </v-row>
+  <q-page class="w-full px-5">
+    <div class="row w-full">
+      <q-input v-model="searchTerm" label="Type a movie title portion and press ENTER" lazy-rules :rules="searchRules" @keyup.enter="(luckyMethod = false), search()" class="w-full" />
+    </div>
+    <div class="row w-full">
+      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" :disable="searchTerm.length < 3" @click="(luckyMethod = false), search()">Movie Search</q-btn>
+      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), search()">I'm lucky</q-btn>
+    </div>
+    <div class="row w-full" v-if="progressLoader === true">
+      <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
+    </div>
 
-    <section class="d-flex flex-wrap justify-content-center gap-3 mt-5">
-      <div v-for="(movie, i) in moviesDetails" :key="i" class="card">
-        <img v-if="movie.Poster && movie.Poster != 'N/A'" height="250" :src="movie.Poster" class="card-img-top object-fit-cover" />
-        <img v-else height="250" src="~/assets/img/no-image.jpg" class="card-img-top object-fit-cover" />
+    <section class="flex flex-wrap justify-center gap-3 mt-5">
+      <q-card v-for="(movie, i) in moviesDetails" :key="i" class="relative max-w-[374px]">
+        <img v-if="movie.Poster && movie.Poster != 'N/A'" :src="movie.Poster" class="object-cover h-[250px]" />
+        <img v-else src="../assets/img/no-image.jpg" class="object-cover h-[250px]" />
 
-        <div class="card-body">
-          <v-btn absolute color="primary" class="white--text" :href="`https://www.imdb.com/title/${movie.imdbID}`" target="movie" fab small right top>
-            <v-icon>mdi-clipboard-text-outline</v-icon>
-          </v-btn>
+        <q-btn
+          icon="assignment"
+          color="primary"
+          class="white--text absolute right-3 top-[220px] right-[20px] opacity-75"
+          :href="`https://www.imdb.com/title/${movie.imdbID}`"
+          target="movie"
+          fab
+          small
+        />
 
-          <h5 class="card-title">{{ movie.Title }}</h5>
+        <q-fab color="primary" icon="keyboard_arrow_down" direction="down" class="absolute top-[220px] right-[90px] opacity-90">
+          <q-fab-action
+            v-for="btn in agendaButtons"
+            color="accent"
+            @click="
+              switch (btn.label) {
+                case 'Delete':
+                  delMovieAgenda(movie.imdbID);
+                  break;
+                default:
+                  movieBtnAction(btn.label, movie.imdbID, movie.Title);
+              }
+            "
+            :icon="btn.icon"
+            :label="btn.label"
+            :class="showHiddenBtns(movie.imdbID, btn.label)"
+          />
+        </q-fab>
 
-          <div class="card-subtitle mx-0 d-flex flex-wrap justify-content-between">
-            <v-rating v-if="movie.imdbRating != 'N/A'" :value="Number(movie.imdbRating)" color="amber" dense half-increments readonly length="10" size="14" class="w-50"></v-rating>
+        <q-card-section class="flex justify-around">
+          <div class="text-h6 w-full">{{ movie.Title }}</div>
 
-            <div v-if="movie.imdbRating != 'N/A'" class="grey--text p-0 w-auto">
-              {{ movie.imdbRating }}
-            </div>
+          <q-rating v-if="movie.imdbRating != 'N/A'" :model-value="Number(movie.imdbRating)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
 
-            <div class="grey--text p-0 w-auto">
-              {{ movie.Year }}
-            </div>
-
-            <div class="grey--text pl-0 w-auto">
-              {{ movie.Runtime }}
-            </div>
-
-            <hr class="w-100" />
-
-            <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ movie.Director }}</div>
-
-            <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ movie.Actors }}</div>
-
-            <div class="text-subtitle-1 w-100"><strong>Genre:</strong> {{ movie.Genre }}</div>
-
-            <hr class="w-100" />
+          <div v-if="movie.imdbRating != 'N/A'" class="grey--text p-0 w-auto">
+            {{ movie.imdbRating }}
           </div>
-          <p class="card-text">
-            {{ movie.Plot }}
-            <!-- API limit 230 chars //-->
-          </p>
-        </div>
-      </div>
+
+          <div class="grey--text p-0 w-auto">
+            {{ movie.Year }}
+          </div>
+
+          <div class="grey--text pl-0 w-auto">
+            {{ movie.Runtime }}
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ movie.Director }}</div>
+
+          <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ movie.Actors }}</div>
+
+          <div class="text-subtitle-1 w-100"><strong>Genre:</strong> {{ movie.Genre }}</div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pt-none mt-3">
+          {{ movie.Plot }}
+          <!-- API limit 230 chars //-->
+        </q-card-section>
+      </q-card>
     </section>
 
     <div v-if="noMovie === true" class="text-center">
-      <img src="~/assets/img/not-found.gif" class="mt-3 w-25" />
+      <img src="../assets/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
     </div>
-  </v-container>
+
+    <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center q-pb-none">
+          <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
+        </q-card-section>
+
+        <q-card-actions align="center" class="bg-white text-teal">
+          <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
+          <q-btn
+            color="primary"
+            @click="
+              switch (this.dialogAction) {
+                case 'Add':
+                  addMovieAgenda();
+                  break;
+                case 'Edit':
+                  editMovieAgenda();
+              }
+            "
+            >Okay</q-btn
+          >
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </q-page>
 </template>
 
 <script>
 const api_key = process.env.OMDBAPI_KEY;
+import { ref } from "vue";
+import { useQuasar } from "quasar";
 
 export default {
-  name: "Movie",
+  name: "Movies",
+  setup() {
+    const $q = useQuasar();
+
+    return {
+      movieWatchDate: ref(""),
+    };
+  },
   data() {
     return {
+      openAgendaDialog: ref(false),
+      movieWatchDateOpt(movieWatchDateOpt) {
+        return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
+      },
+      dialogTitle: String,
+      dialogAction: String,
+      movieId: String,
+      watchMovies: [],
       luckyMethod: Boolean,
       progressLoader: {
         type: Boolean,
@@ -78,6 +144,20 @@ export default {
       },
       searchTerm: "",
       searchRules: [(value) => (value && value.length >= 3) || "Min 3 characters"],
+      agendaButtons: [
+        {
+          icon: "event",
+          label: "Add",
+        },
+        {
+          icon: "edit_calendar",
+          label: "Edit",
+        },
+        {
+          icon: "event_busy",
+          label: "Delete",
+        },
+      ],
       moviesTitles: Array,
       moviesDetails: Array,
       noMovie: {
@@ -87,7 +167,17 @@ export default {
       flashURL: URL,
     };
   },
+  mounted() {
+    this.movieWatchDate = this.today();
+
+    if (localStorage.watchMovies) {
+      return (this.watchMovies = JSON.parse(localStorage.watchMovies));
+    }
+  },
   methods: {
+    today() {
+      return new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    },
     search() {
       // Setting defaults
       this.moviesTitles = [];
@@ -2247,24 +2337,84 @@ export default {
 
       return selectedWord;
     },
+    movieBtnAction(action, movieId, movieTitle) {
+      return (
+        (this.dialogTitle = movieTitle),
+        (this.movieId = movieId),
+        this.watchMovies.find((movie) => movie.movieID === movieId)
+          ? (this.movieWatchDate = ref(this.watchMovies.find((movie) => movie.movieID === movieId).watchDate))
+          : (this.movieWatchDate = ref("")),
+        (this.dialogAction = action),
+        action !== "Delete" && (this.openAgendaDialog = true)
+      );
+    },
+    addMovieAgenda() {
+      // Adds the movie into an Array and closes the calendar dialog
+      const newMovieagenda = {
+        watchDate: !this.movieWatchDate == "" ? this.movieWatchDate : this.today(),
+        movieID: this.movieId,
+        movieTitle: this.dialogTitle,
+      };
+
+      this.watchMovies.push(newMovieagenda);
+      this.openAgendaDialog = false;
+
+      return this.$q.notify({
+        type: "positive",
+        message: "Movie added successful. Good fun!",
+      });
+    },
+    editMovieAgenda() {
+      this.watchMovies.find((movie) => movie.movieID == this.movieId).watchDate = this.movieWatchDate;
+      this.openAgendaDialog = false;
+
+      return this.$q.notify({
+        type: "info",
+        message: "Movie editted successful. Nice!",
+      });
+    },
+    delMovieAgenda(movieId) {
+      const movieToDelete = this.watchMovies.filter((movie) => movie.movieID !== movieId);
+
+      this.watchMovies = movieToDelete;
+
+      return this.$q.notify({
+        type: "info",
+        message: "Movie removed successful.",
+      });
+    },
+    showHiddenBtns(movieId, btnLabel) {
+      const hasMovieAgenda = this.watchMovies.filter((mvid) => mvid.movieID === movieId)[0];
+      const label = btnLabel;
+
+      if ((!hasMovieAgenda && label == "Delete") || (hasMovieAgenda && label == "Add") || (!hasMovieAgenda && label == "Edit")) {
+        return "hidden";
+      }
+    },
+  },
+  watch: {
+    watchMovies: {
+      // Watches the add movie action and appends the local storage with it
+      handler(addMovieAgenda) {
+        localStorage.watchMovies = JSON.stringify(addMovieAgenda);
+      },
+      deep: true,
+    },
   },
 };
 </script>
 
-<style lang="scss">
-.object-fit-cover {
-  object-fit: cover;
+<style lang="scss" scoped>
+.right-\[20px\] {
+  right: 20px;
+}
+.right-\[90px\] {
+  right: 90px;
 }
 
-.card {
-  max-width: 374px;
-
-  .card-body {
-    position: relative;
-
-    .card-text {
-      text-align: justify;
-    }
+:deep(.q-date__header) {
+  .q-date__header-subtitle {
+    display: none;
   }
 }
 </style>
