@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      context: .
+      target: develop-stage
+    image: 365movies-vue3_img
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    container_name: "365movies-vue3_ctn"
+    hostname: "365movies-vue3_host"
+    ports:
+      - 3650:3650
+    entrypoint: /bin/sh -c "yarn && yarn dev"
+    # entrypoint: ["sh", "-c", "sleep 2073600"]
