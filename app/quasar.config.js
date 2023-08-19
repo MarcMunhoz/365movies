@@ -13,6 +13,8 @@ const { configure } = require('quasar/wrappers');
 
 
 module.exports = configure(function (/*ctx*/) {
+  require('dotenv').config()
+
   return {
 
 
@@ -51,7 +53,7 @@ module.exports = configure(function (/*ctx*/) {
     build: {
       target: {
         browser: [ 'es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1' ],
-        node: 'node16'
+        node: 'node18'
       },
 
 
@@ -64,7 +66,10 @@ module.exports = configure(function (/*ctx*/) {
 
       // publicPath: '/',
       // analyze: true,
-      env: require("dotenv").config().parsed
+      env: {
+        OMDBAPI_KEY: process.env.OMDBAPI_KEY,
+        BASEURL: process.env.BASEURL
+      }
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
