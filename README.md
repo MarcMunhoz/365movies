@@ -6,7 +6,7 @@
 
 A simple app that searches for movies by title or any information passed in the search form.
 
-👷🚧~~Random searches are possible with the "I'm lucky" button"~~🚧
+Random searches are possible with the "I'm lucky" button".
 
 ## Release Notes
 
@@ -52,7 +52,7 @@ $ yarn build
 Run it with Docker Compose.
 
 ```sh
-$ docker-compose -f docker-compose_dev up -d
+$ docker-compose -f docker-compose_dev.yaml up -d
 ```
 
 ### Customize the configuration
