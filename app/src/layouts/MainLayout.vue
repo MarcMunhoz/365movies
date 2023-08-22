@@ -94,7 +94,7 @@ export default defineComponent({
       socialLinks: myLinks,
       leftDrawerOpen,
       toggleLeftDrawer() {
-        leftDrawerOpen.value = !leftDrawerOpen.value;
+        return (leftDrawerOpen.value = !leftDrawerOpen.value), (document.documentElement.scrollTop = 0);
       },
     };
   },
