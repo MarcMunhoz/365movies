@@ -2354,6 +2354,7 @@ export default {
         watchDate: !this.movieWatchDate == "" ? this.movieWatchDate : this.today(),
         movieID: this.movieId,
         movieTitle: this.dialogTitle,
+        watched: false,
       };
 
       this.watchMovies.push(newMovieagenda);

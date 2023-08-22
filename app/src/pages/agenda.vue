@@ -1,11 +1,19 @@
 <template>
   <q-page class="flex flex-center content-center justify-center p-3">
     <q-btn @click="clearCalendar" color="accent" push class="my-4">Clear calendar!</q-btn>
+
     <Calendar expanded borderless is-double-paned :columns="columns" :rows="5" :attributes="events" :min-date="minDate" :max-date="maxDate">
       <template #day-popover="{ attributes }">
         <ul>
-          <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary">
+          <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary" :class="{ 'text-positive': customData.watched }">
             <a :href="`https://www.imdb.com/title/${customData.movieId}`" target="movie">{{ popover.label }}</a>
+            <q-checkbox v-model="customData.watched" checked-icon="task_alt" unchecked-icon="highlight_off" color="positive" @click="markWatch(customData.movieId, customData.watched)">
+              <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
+              <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
+            </q-checkbox>
+            <q-btn flat round color="negative" icon="delete" @click="delMovieAgenda(customData.movieId)">
+              <q-tooltip>Click to delete it from agenda!</q-tooltip>
+            </q-btn>
           </li>
         </ul>
       </template>
@@ -29,6 +37,7 @@ export default {
   data() {
     return {
       events: ref([]),
+      deleteMovie: ref(),
     };
   },
   mounted() {
@@ -64,16 +73,40 @@ export default {
             },
             customData: {
               movieId: "",
+              watched: Boolean,
             },
           };
 
           eventAdd.popover.label = e.movieTitle;
           eventAdd.customData.movieId = e.movieID;
+          eventAdd.customData.watched = e.watched;
           eventAdd.dates.push(e.watchDate);
 
           this.events.push(eventAdd);
         });
       }
+    },
+    markWatch(movieID, status) {
+      let moviesList = JSON.parse(localStorage.getItem("watchMovies"));
+      const movie = moviesList.find((movie) => movie.movieID === movieID);
+
+      movie.watched = status;
+      moviesList[moviesList.findIndex((oldMovie) => oldMovie.movieID === movieID)] = movie;
+
+      localStorage.setItem("watchMovies", JSON.stringify(moviesList));
+    },
+    delMovieAgenda(movieID) {
+      let moviesList = JSON.parse(localStorage.getItem("watchMovies"));
+
+      moviesList = moviesList.filter((movie) => movie.movieID !== movieID);
+
+      this.deleteMovie = moviesList;
+      this.events = this.events.filter((event) => event.customData.movieId !== movieID);
+
+      return this.$q.notify({
+        type: "info",
+        message: "Movie removed successful.",
+      });
     },
     clearCalendar() {
       const hasMovies = localStorage.watchMovies ? true : false;
@@ -93,6 +126,15 @@ export default {
     },
     maxDate() {
       return `${new Date().getFullYear() + 1}-02-01`;
+    },
+  },
+  watch: {
+    deleteMovie: {
+      // Watches the add movie action and appends the local storage with it
+      handler(delMovieAgenda) {
+        localStorage.watchMovies = JSON.stringify(delMovieAgenda);
+      },
+      deep: true,
     },
   },
 };
