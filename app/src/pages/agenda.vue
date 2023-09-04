@@ -5,8 +5,8 @@
     <Calendar expanded borderless is-double-paned :columns="columns" :rows="5" :attributes="events" :min-date="minDate" :max-date="maxDate">
       <template #day-popover="{ attributes }">
         <ul>
-          <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary" :class="{ 'text-positive': customData.watched }">
-            <a :href="`https://www.imdb.com/title/${customData.movieId}`" target="movie">{{ popover.label }}</a>
+          <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary border-dashed border-2 mt-5 first:mt-0" :class="{ 'text-positive': customData.watched }">
+            <a :href="`https://www.imdb.com/title/${customData.movieId}`" target="movie" class="text-lg">{{ popover.label }}</a>
             <q-checkbox v-model="customData.watched" checked-icon="task_alt" unchecked-icon="highlight_off" color="positive" @click="markWatch(customData.movieId, customData.watched)">
               <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
               <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
@@ -14,6 +14,17 @@
             <q-btn flat round color="negative" icon="delete" @click="delMovieAgenda(customData.movieId)">
               <q-tooltip>Click to delete it from agenda!</q-tooltip>
             </q-btn>
+
+            <section v-if="customData.streamingList.length">
+              <p class="font-bold">Streaming list:</p>
+              <ul>
+                <li v-for="stream in customData.streamingList" class="uppercase text-center">
+                  <a :href="stream.link" target="_blank" class="underline underline-offset-1">{{ stream.service }}</a>
+                </li>
+              </ul>
+            </section>
+
+            <p v-else>Unavailable on streaming services in Brazil ¯\_(ツ)_/¯</p>
           </li>
         </ul>
       </template>
@@ -73,16 +84,18 @@ export default {
             },
             customData: {
               movieId: "",
+              streamingList: Array,
               watched: Boolean,
             },
           };
 
           eventAdd.popover.label = e.movieTitle;
           eventAdd.customData.movieId = e.movieID;
+          eventAdd.customData.streamingList = e.streamingList;
           eventAdd.customData.watched = e.watched;
           eventAdd.dates.push(e.watchDate);
 
-          this.events.push(eventAdd);
+          return this.events.push(eventAdd);
         });
       }
     },

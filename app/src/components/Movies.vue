@@ -99,7 +99,7 @@
             @click="
               switch (this.dialogAction) {
                 case 'Add':
-                  addMovieAgenda();
+                  getStreamingList();
                   break;
                 case 'Edit':
                   editMovieAgenda();
@@ -115,6 +115,7 @@
 
 <script>
 const api_key = process.env.OMDBAPI_KEY;
+const streaming_key = process.env.STREAMING_KEY;
 import { ref } from "vue";
 import { useQuasar } from "quasar";
 
@@ -136,6 +137,7 @@ export default {
       dialogTitle: String,
       dialogAction: String,
       movieId: String,
+      streamingList: ref([]),
       watchMovies: [],
       luckyMethod: Boolean,
       progressLoader: {
@@ -266,6 +268,41 @@ export default {
         })
         .catch((err) => {
           console.error(err);
+        });
+    },
+    getStreamingList() {
+      this.$api_streaming
+        .get("/get", {
+          headers: {
+            "X-RapidAPI-Key": streaming_key,
+          },
+          params: {
+            imdb_id: this.movieId,
+            output_language: "en",
+          },
+        })
+        .then((res) => {
+          const rawData = res.data.result.streamingInfo.br;
+          const uniqueData = new Set();
+
+          // Use filter to create an array with unique service entries
+          const uniqueServices = rawData.filter((item) => {
+            // Check if the service is not in the Set
+            if (!uniqueData.has(item.service)) {
+              // Add the service to the Set
+              uniqueData.add(item.service);
+              return true; // Include the item in the filtered array
+            }
+            return false; // Exclude duplicates from the filtered array
+          });
+
+          return (this.streamingList = uniqueServices);
+        })
+        .catch((e) => {
+          console.error(e);
+        })
+        .finally(() => {
+          return this.addMovieAgenda();
         });
     },
     sortAndFilter() {
@@ -2354,10 +2391,12 @@ export default {
         watchDate: !this.movieWatchDate == "" ? this.movieWatchDate : this.today(),
         movieID: this.movieId,
         movieTitle: this.dialogTitle,
+        streamingList: this.streamingList,
         watched: false,
       };
 
       this.watchMovies.push(newMovieagenda);
+
       this.openAgendaDialog = false;
 
       return this.$q.notify({

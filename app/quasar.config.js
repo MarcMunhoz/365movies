@@ -68,7 +68,9 @@ module.exports = configure(function (/*ctx*/) {
       // analyze: true,
       env: {
         OMDBAPI_KEY: process.env.OMDBAPI_KEY,
-        BASEURL: process.env.BASEURL
+        BASEURL: process.env.BASEURL,
+        STREAMING_KEY: process.env.STREAMING_KEY,
+        STREAMING_URL: process.env.STREAMING_URL
       }
       // rawDefine: {}
       // ignorePublicFolder: true,
