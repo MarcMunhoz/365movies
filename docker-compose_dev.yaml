@@ -5,6 +5,7 @@ services:
     build:
       context: .
       target: develop-stage
+      no_cache: true
     image: 365movies_img
     volumes:
       - ./app:/app
