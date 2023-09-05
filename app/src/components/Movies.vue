@@ -87,12 +87,16 @@
     </div>
 
     <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
-      <q-card>
-        <q-card-section class="row items-center q-pb-none">
+      <q-card class="min-h-[290px] min-w-[290px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
+        <q-card-section v-if="movieAddedLoading === true">
+          <q-spinner-pie color="primary" size="8em" />
+        </q-card-section>
+
+        <q-card-section v-else class="row items-center q-pb-none">
           <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
         </q-card-section>
 
-        <q-card-actions align="center" class="bg-white text-teal">
+        <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal">
           <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
           <q-btn
             color="primary"
@@ -126,6 +130,7 @@ export default {
 
     return {
       movieWatchDate: ref(""),
+      movieAddedLoading: ref(false),
     };
   },
   data() {
@@ -271,6 +276,8 @@ export default {
         });
     },
     getStreamingList() {
+      this.movieAddedLoading = true;
+
       this.$api_streaming
         .get("/get", {
           headers: {
@@ -302,7 +309,7 @@ export default {
           console.error(e);
         })
         .finally(() => {
-          return this.addMovieAgenda();
+          return this.addMovieAgenda(), (this.movieAddedLoading = false);
         });
     },
     sortAndFilter() {
