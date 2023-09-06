@@ -87,12 +87,13 @@
     </div>
 
     <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
-      <q-card class="min-h-[290px] min-w-[290px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
+      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
         <q-card-section v-if="movieAddedLoading === true">
           <q-spinner-pie color="primary" size="8em" />
         </q-card-section>
 
-        <q-card-section v-else class="row items-center q-pb-none">
+        <q-card-section v-else class="flex justify-center">
+          <q-input filled v-model="countrySearch" label="Country" @blur="checkMovie" placeholder="Where'll you watch?" class="w-full mb-4 capitalize" />
           <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
         </q-card-section>
 
@@ -129,6 +130,7 @@ export default {
     const $q = useQuasar();
 
     return {
+      countriesList: ref([]),
       movieWatchDate: ref(""),
       movieAddedLoading: ref(false),
     };
@@ -139,6 +141,8 @@ export default {
       movieWatchDateOpt(movieWatchDateOpt) {
         return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
       },
+      countrySearch: "",
+      selectedCountry: "br",
       dialogTitle: String,
       dialogAction: String,
       movieId: String,
@@ -173,6 +177,9 @@ export default {
       },
       flashURL: URL,
     };
+  },
+  created() {
+    return this.getCountries();
   },
   mounted() {
     this.movieWatchDate = this.today();
@@ -311,6 +318,30 @@ export default {
         .finally(() => {
           return this.addMovieAgenda(), (this.movieAddedLoading = false);
         });
+    },
+    getCountries() {
+      this.$api_streaming
+        .get("/countries", {
+          headers: {
+            "X-RapidAPI-Key": streaming_key,
+          },
+        })
+        .then((res) => {
+          return (this.countriesList = Object.values(res.data.result));
+        });
+    },
+    checkMovie() {
+      let country = this.countriesList.filter((country) => country.name === this.countrySearch);
+
+      if (country.length > 0) this.selectedCountry = country[0].countryCode;
+      else {
+        this.$q.notify({
+          type: "negative",
+          message: "Country not found. Please check it",
+        });
+      }
+
+      console.log(this.selectedCountry);
     },
     sortAndFilter() {
       const uniqueMovies = this.moviesDetails
