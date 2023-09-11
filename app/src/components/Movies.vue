@@ -93,7 +93,7 @@
         </q-card-section>
 
         <q-card-section v-else class="flex justify-center">
-          <q-input filled v-model="countrySearch" label="Country" @blur="checkMovie" placeholder="Where'll you watch?" class="w-full mb-4 capitalize" />
+          <q-input filled v-model="countrySearch" label="Country" autofocus @blur="checkMovie" placeholder="Where'll you watch? (default: United States)" class="w-full mb-4 capitalize" />
           <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
         </q-card-section>
 
@@ -142,7 +142,7 @@ export default {
         return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
       },
       countrySearch: "",
-      selectedCountry: "br",
+      selectedCountry: String,
       dialogTitle: String,
       dialogAction: String,
       movieId: String,
@@ -296,16 +296,18 @@ export default {
           },
         })
         .then((res) => {
-          const rawData = res.data.result.streamingInfo.br;
+          const countryCode = this.selectedCountry;
+          const rawData = res.data.result.streamingInfo[countryCode];
+
           const uniqueData = new Set();
 
-          // Use filter to create an array with unique service entries
+          // Filtering and creating an array with unique service entries
           const uniqueServices = rawData.filter((item) => {
             // Check if the service is not in the Set
             if (!uniqueData.has(item.service)) {
               // Add the service to the Set
               uniqueData.add(item.service);
-              return true; // Include the item in the filtered array
+              return true;
             }
             return false; // Exclude duplicates from the filtered array
           });
@@ -320,28 +322,61 @@ export default {
         });
     },
     getCountries() {
-      this.$api_streaming
-        .get("/countries", {
-          headers: {
-            "X-RapidAPI-Key": streaming_key,
-          },
-        })
-        .then((res) => {
-          return (this.countriesList = Object.values(res.data.result));
+      const ctList = localStorage.moviesContriesList ? JSON.parse(localStorage.moviesContriesList) : null;
+
+      if (ctList) {
+        ctList.forEach((e) => {
+          const country = {
+            countryCode: e.countryCode,
+            name: e.name,
+          };
+
+          return this.countriesList.push(country);
         });
+      } else {
+        this.$api_streaming
+          .get("/countries", {
+            headers: {
+              "X-RapidAPI-Key": streaming_key,
+            },
+          })
+          .then((res) => {
+            this.countriesList = Object.values(res.data.result);
+          });
+
+        return localStorage.setItem("moviesContriesList", JSON.stringify(this.countriesList));
+      }
     },
     checkMovie() {
+      this.selectedCountry = "";
+
+      this.countrySearch.length === 0 && (this.countrySearch = "United States");
+
+      // Capitalize the country name for the API
+      const capitalizeString = (str) =>
+        str
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ");
+
+      this.countrySearch = capitalizeString(this.countrySearch);
+
+      // Search in the API by the string received
       let country = this.countriesList.filter((country) => country.name === this.countrySearch);
 
-      if (country.length > 0) this.selectedCountry = country[0].countryCode;
-      else {
-        this.$q.notify({
+      if (country.length > 0) {
+        this.selectedCountry = country[0].countryCode;
+
+        return this.$q.notify({
+          type: "positive",
+          message: `Okay. We'll search by streaming services from ${country[0].name.toUpperCase()}`,
+        });
+      } else {
+        return this.$q.notify({
           type: "negative",
           message: "Country not found. Please check it",
         });
       }
-
-      console.log(this.selectedCountry);
     },
     sortAndFilter() {
       const uniqueMovies = this.moviesDetails
@@ -2430,6 +2465,8 @@ export default {
         movieID: this.movieId,
         movieTitle: this.dialogTitle,
         streamingList: this.streamingList,
+        streamingCountry: this.selectedCountry,
+        streamingCountryName: this.countrySearch,
         watched: false,
       };
 

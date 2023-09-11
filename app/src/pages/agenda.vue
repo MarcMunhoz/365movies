@@ -23,7 +23,10 @@
             </q-btn>
 
             <section v-if="customData.streamingList.length">
-              <p class="font-bold">Streaming list:</p>
+              <p class="font-bold">
+                Streaming list for
+                <span class="bg-slate-200 p-1">{{ customData.streamingCountry }}</span>
+              </p>
               <ul>
                 <li v-for="stream in customData.streamingList" class="uppercase text-center">
                   <a :href="stream.link" target="_blank" class="underline underline-offset-1">{{ stream.service }}</a>
@@ -31,7 +34,9 @@
               </ul>
             </section>
 
-            <p v-else>Unavailable on streaming services in Brazil ¯\_(ツ)_/¯</p>
+            <p v-else>
+              Unavailable on streaming services in <span class="bg-slate-200 p-1">{{ customData.streamingCountry }}</span> ¯\_(ツ)_/¯
+            </p>
           </li>
         </ul>
       </template>
@@ -91,6 +96,7 @@ export default {
             },
             customData: {
               movieId: "",
+              streamingCountry: String,
               streamingList: Array,
               watched: Boolean,
             },
@@ -98,6 +104,7 @@ export default {
 
           eventAdd.popover.label = e.movieTitle;
           eventAdd.customData.movieId = e.movieID;
+          eventAdd.customData.streamingCountry = e.streamingCountryName;
           eventAdd.customData.streamingList = e.streamingList;
           eventAdd.customData.watched = e.watched;
           eventAdd.dates.push(e.watchDate);
