@@ -18,6 +18,7 @@
               <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
               <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
             </q-checkbox>
+            <q-btn flat round color="secondary" icon="edit" @click=""></q-btn>
             <q-btn flat round color="negative" icon="delete" @click="delMovieAgenda(customData.movieId)">
               <q-tooltip>Click to delete it from agenda!</q-tooltip>
             </q-btn>

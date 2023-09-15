@@ -129,10 +129,20 @@ export default {
   setup() {
     const $q = useQuasar();
 
+    const editMovieAgenda = () => {
+      this.watchMovies.find((movie) => movie.movieID == this.movieId).watchDate = this.movieWatchDate;
+      this.watchMovies.find((movie) => movie.movieID == this.movieId).streamingCountry = this.selectedCountry;
+      this.watchMovies.find((movie) => movie.movieID == this.movieId).streamingCountryName = this.countrySearch;
+      this.openAgendaDialog = false;
+
+      return this.getStreamingList();
+    };
+
     return {
       countriesList: ref([]),
       movieWatchDate: ref(""),
       movieAddedLoading: ref(false),
+      editMovieAgenda,
     };
   },
   data() {
@@ -318,7 +328,19 @@ export default {
           console.error(e);
         })
         .finally(() => {
-          return this.addMovieAgenda(), (this.movieAddedLoading = false);
+          const editMovie = this.watchMovies.find((movie) => movie.movieID == this.movieId);
+
+          if (editMovie === null) this.addMovieAgenda();
+          else {
+            this.watchMovies.find((movie) => movie.movieID == this.movieId).streamingList = this.streamingList;
+
+            return this.$q.notify({
+              type: "info",
+              message: "Movie editted successful. Nice!",
+            });
+          }
+
+          return (this.movieAddedLoading = false);
         });
     },
     getCountries() {
@@ -341,10 +363,8 @@ export default {
             },
           })
           .then((res) => {
-            this.countriesList = Object.values(res.data.result);
+            return (this.countriesList = Object.values(res.data.result));
           });
-
-        return localStorage.setItem("moviesContriesList", JSON.stringify(this.countriesList));
       }
     },
     checkMovie() {
@@ -2479,15 +2499,6 @@ export default {
         message: "Movie added successful. Good fun!",
       });
     },
-    editMovieAgenda() {
-      this.watchMovies.find((movie) => movie.movieID == this.movieId).watchDate = this.movieWatchDate;
-      this.openAgendaDialog = false;
-
-      return this.$q.notify({
-        type: "info",
-        message: "Movie editted successful. Nice!",
-      });
-    },
     delMovieAgenda(movieId) {
       const movieToDelete = this.watchMovies.filter((movie) => movie.movieID !== movieId);
 
@@ -2512,6 +2523,12 @@ export default {
       // Watches the add movie action and appends the local storage with it
       handler(addMovieAgenda) {
         localStorage.watchMovies = JSON.stringify(addMovieAgenda);
+      },
+      deep: true,
+    },
+    countriesList: {
+      handler(getCountries) {
+        localStorage.moviesContriesList = JSON.stringify(getCountries);
       },
       deep: true,
     },
