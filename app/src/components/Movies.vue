@@ -161,14 +161,8 @@ export default {
     const selectedCountry = ref(String);
     const streamingList = ref([]);
     const watchMovies = ref([]);
-    const noMovie = ref({
-      type: Boolean,
-      default: false,
-    });
-    const progressLoader = ref({
-      type: Boolean,
-      default: false,
-    });
+    const noMovie = ref(false);
+    const progressLoader = ref(false);
 
     // API Functions/Methods
     const today = () => {
@@ -2516,16 +2510,24 @@ export default {
     onMounted(() => {
       movieWatchDate.value = today();
 
-      if (localStorage.watchMovies) {
+      if (localStorage.watchMovies && localStorage.watchMovies !== "undefined") {
         return (watchMovies.value = JSON.parse(localStorage.watchMovies));
       }
     });
 
     watch(
       addMovieAgenda,
-      getCountries,
       () => {
         localStorage.watchMovies = JSON.stringify(addMovieAgenda);
+      },
+      {
+        deep: true,
+      }
+    );
+
+    watch(
+      getCountries,
+      () => {
         localStorage.moviesContriesList = JSON.stringify(getCountries);
       },
       {
@@ -2546,6 +2548,8 @@ export default {
       movieWatchDate,
       moviesDetails,
       moviesTitles,
+      openAgendaDialog,
+      progressLoader,
       searchRules,
       searchTerm,
       selectedCountry,
