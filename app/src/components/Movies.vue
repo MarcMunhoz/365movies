@@ -102,7 +102,7 @@
           <q-btn
             color="primary"
             @click="
-              switch (this.dialogAction) {
+              switch (dialogAction) {
                 case 'Add':
                   getStreamingList();
                   break;
@@ -121,6 +121,7 @@
 <script>
 import { onMounted, ref, watch } from "vue";
 import { useQuasar } from "quasar";
+import axios from "axios";
 
 export default {
   name: "Movies",
@@ -128,6 +129,7 @@ export default {
     const api_key = process.env.OMDBAPI_KEY;
     const streaming_key = process.env.STREAMING_KEY;
     const $q = ref(useQuasar());
+    const api_streaming = axios.create({ baseURL: process.env.STREAMING_URL });
 
     // API Data
     const agendaButtons = ref([
@@ -2233,18 +2235,18 @@ export default {
       return selectedWord;
     };
 
-    const movieBtnAction = (action, movieId, movieTitle) => {
+    const movieBtnAction = (action, mId, movieTitle) => {
       return (
         (dialogTitle.value = movieTitle),
-        (movieId.value = movieId),
-        watchMovies.value.find((movie) => movie.movieID === movieId) ? (movieWatchDate.value = watchMovies.value.find((movie) => movie.movieID === movieId).watchDate) : (movieWatchDate.value = ""),
+        (movieId.value = mId),
+        watchMovies.value.find((movie) => movie.movieID === mId) ? (movieWatchDate.value = watchMovies.value.find((movie) => movie.movieID === mId).watchDate) : (movieWatchDate.value = ""),
         (dialogAction.value = action),
         action !== "Delete" && (openAgendaDialog.value = true)
       );
     };
 
-    const showHiddenBtns = (movieId, btnLabel) => {
-      const hasMovieAgenda = watchMovies.value.filter((mvid) => mvid.movieID === movieId)[0];
+    const showHiddenBtns = (mId, btnLabel) => {
+      const hasMovieAgenda = watchMovies.value.filter((mvid) => mvid.movieID === mId)[0];
       const label = btnLabel;
 
       if ((!hasMovieAgenda && label == "Delete") || (hasMovieAgenda && label == "Add") || (!hasMovieAgenda && label == "Edit")) {
@@ -2357,7 +2359,7 @@ export default {
     const getStreamingList = () => {
       movieAddedLoading.value = true;
 
-      this.$api_streaming
+      api_streaming
         .get("/get", {
           headers: {
             "X-RapidAPI-Key": streaming_key,
@@ -2392,7 +2394,7 @@ export default {
         .finally(() => {
           const editMovie = watchMovies.value.find((movie) => movie.movieID == movieId.value);
 
-          if (editMovie === null) addMovieAgenda();
+          if (editMovie === undefined) addMovieAgenda();
           else {
             watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingList = streamingList.value;
 
@@ -2419,7 +2421,7 @@ export default {
           return countriesList.value.push(country);
         });
       } else {
-        this.$api_streaming
+        api_streaming
           .get("/countries", {
             headers: {
               "X-RapidAPI-Key": streaming_key,
@@ -2494,8 +2496,8 @@ export default {
       return getStreamingList();
     };
 
-    const delMovieAgenda = (movieId) => {
-      const movieToDelete = watchMovies.value.filter((movie) => movie.movieID !== movieId);
+    const delMovieAgenda = (mId) => {
+      const movieToDelete = watchMovies.value.filter((movie) => movie.movieID !== mId);
 
       watchMovies.value = movieToDelete;
 
@@ -2514,26 +2516,6 @@ export default {
         return (watchMovies.value = JSON.parse(localStorage.watchMovies));
       }
     });
-
-    watch(
-      addMovieAgenda,
-      () => {
-        localStorage.watchMovies = JSON.stringify(addMovieAgenda);
-      },
-      {
-        deep: true,
-      }
-    );
-
-    watch(
-      getCountries,
-      () => {
-        localStorage.moviesContriesList = JSON.stringify(getCountries);
-      },
-      {
-        deep: true,
-      }
-    );
 
     return {
       agendaButtons,
@@ -2557,6 +2539,7 @@ export default {
       noMovie,
       watchMovies,
       checkMovie,
+      getStreamingList,
       editMovieAgenda,
       delMovieAgenda,
       movieBtnAction,
@@ -2564,6 +2547,21 @@ export default {
       search,
       showHiddenBtns,
     };
+  },
+  watch: {
+    watchMovies: {
+      // Watches the add movie action and appends the local storage with it
+      handler(addMovieAgenda) {
+        localStorage.watchMovies = JSON.stringify(addMovieAgenda);
+      },
+      deep: true,
+    },
+    countriesList: {
+      handler(getCountries) {
+        localStorage.moviesContriesList = JSON.stringify(getCountries);
+      },
+      deep: true,
+    },
   },
 };
 </script>
