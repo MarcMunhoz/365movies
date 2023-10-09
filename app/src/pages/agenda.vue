@@ -18,7 +18,7 @@
               <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
               <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
             </q-checkbox>
-            <q-btn flat round color="secondary" icon="edit" @click=""></q-btn>
+            <q-btn flat round color="secondary" icon="edit" @click="openEditDialog(customData.movieId)"></q-btn>
             <q-btn flat round color="negative" icon="delete" @click="delMovieAgenda(customData.movieId)">
               <q-tooltip>Click to delete it from agenda!</q-tooltip>
             </q-btn>
@@ -42,29 +42,47 @@
         </ul>
       </template>
     </Calendar>
+
+    <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
+      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px] flex justify-center content-center">
+        <q-card-section class="flex justify-center">
+          <q-input filled disable v-model="editCountryNameMovie" label="Watching from" class="w-full mb-4 capitalize" />
+          <q-date v-model="editDateMovie" :options="movieWatchDateOpt" subtitle="" :title="editMovieTitle" />
+        </q-card-section>
+      </q-card>
+
+      <q-card-actions align="center" class="bg-white text-teal">
+        <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
+        <q-btn color="primary" @click="editMovieAgenda">Okay</q-btn>
+      </q-card-actions>
+    </q-dialog>
   </q-page>
 </template>
 
-<script setup>
-const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
-const columns = mapCurrent({ lg: 3 }, 1);
-</script>
-
 <script>
-import { ref } from "vue";
+import { ref, computed, watch } from "vue";
 import { Calendar } from "v-calendar";
 import { useScreens } from "vue-screen-utils";
 import "v-calendar/style.css";
+import { useQuasar } from "quasar";
 
 export default {
   name: "Agenda",
-  data() {
-    return {
-      events: ref([]),
-      deleteMovie: ref(),
-    };
+  components: {
+    Calendar,
   },
-  mounted() {
+  setup() {
+    const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
+    const columns = mapCurrent({ lg: 3 }, 1);
+    const watchMovies = ref(localStorage.watchMovies ? JSON.parse(localStorage.watchMovies) : null);
+    const editMovieId = ref("");
+    const editMovieTitle = ref("");
+    const editCountryNameMovie = ref("");
+    const editDateMovie = ref("");
+    const events = ref([]);
+    const $q = ref(useQuasar());
+    const openAgendaDialog = ref(false);
+
     const months = document.querySelectorAll(".vc-title");
 
     months.forEach((e) => {
@@ -77,17 +95,21 @@ export default {
       return e.parentNode.replaceChild(divElement, e);
     });
 
-    return this.addDates();
-  },
-  components: {
-    Calendar,
-  },
-  methods: {
-    addDates() {
-      const watchMovies = localStorage.watchMovies ? JSON.parse(localStorage.watchMovies) : null;
+    const clearCalendar = () => {
+      const hasMovies = localStorage.watchMovies ? true : false;
+      let message = "There's no movies in Calendar.";
 
-      if (watchMovies) {
-        watchMovies.forEach((e) => {
+      hasMovies && (localStorage.removeItem("watchMovies"), (events.value.length = 0), (message = "Calendar is clear!"));
+
+      return $q.value.notify({
+        type: "info",
+        message: message,
+      });
+    };
+
+    const addDates = () => {
+      if (watchMovies.value !== null) {
+        watchMovies.value.forEach((e) => {
           const eventAdd = {
             highlight: true,
             dates: [],
@@ -110,11 +132,14 @@ export default {
           eventAdd.customData.watched = e.watched;
           eventAdd.dates.push(e.watchDate);
 
-          return this.events.push(eventAdd);
+          return events.value.push(eventAdd);
         });
       }
-    },
-    markWatch(movieID, status) {
+    };
+
+    addDates(); // Populates calendar on MOUNTED
+
+    const markWatch = (movieID, status) => {
       let moviesList = JSON.parse(localStorage.getItem("watchMovies"));
       const movie = moviesList.find((movie) => movie.movieID === movieID);
 
@@ -122,48 +147,84 @@ export default {
       moviesList[moviesList.findIndex((oldMovie) => oldMovie.movieID === movieID)] = movie;
 
       localStorage.setItem("watchMovies", JSON.stringify(moviesList));
-    },
-    delMovieAgenda(movieID) {
+    };
+
+    const movieWatchDateOpt = (movieWatchDateOpt) => {
+      return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    };
+
+    const openEditDialog = (movieID) => {
+      const movie = watchMovies.value.find((movie) => movie.movieID === movieID);
+
+      editMovieId.value = movieID;
+      editDateMovie.value = movie.watchDate;
+      editCountryNameMovie.value = movie.streamingCountryName;
+      editMovieTitle.value = movie.movieTitle;
+
+      return (openAgendaDialog.value = true);
+    };
+
+    const editMovieAgenda = () => {
+      let movieEdit = events.value.filter((event) => event.customData.movieId === editMovieId.value)[0];
+
+      movieEdit.dates = editDateMovie.value;
+      watchMovies.value.find((movie) => movie.movieID === editMovieId.value).watchDate = editDateMovie.value;
+
+      openAgendaDialog.value = false;
+
+      return $q.value.notify({
+        type: "positive",
+        message: "Movie edited successful.",
+      });
+    };
+
+    const delMovieAgenda = (movieID) => {
       let moviesList = JSON.parse(localStorage.getItem("watchMovies"));
 
       moviesList = moviesList.filter((movie) => movie.movieID !== movieID);
 
-      this.deleteMovie = moviesList;
-      this.events = this.events.filter((event) => event.customData.movieId !== movieID);
+      watchMovies.value = moviesList;
+      events.value = events.value.filter((event) => event.customData.movieId !== movieID);
 
-      return this.$q.notify({
+      return $q.value.notify({
         type: "info",
         message: "Movie removed successful.",
       });
-    },
-    clearCalendar() {
-      const hasMovies = localStorage.watchMovies ? true : false;
-      let message = "There's no movies in Calendar.";
+    };
 
-      hasMovies && (localStorage.removeItem("watchMovies"), (this.events.length = 0), (message = "Calendar is clear!"));
-
-      return this.$q.notify({
-        type: "info",
-        message: message,
-      });
-    },
-  },
-  computed: {
-    minDate() {
+    const minDate = computed(() => {
       return `${new Date().getFullYear()}-01-02`;
-    },
-    maxDate() {
+    });
+
+    const maxDate = computed(() => {
       return `${new Date().getFullYear() + 1}-02-01`;
-    },
-  },
-  watch: {
-    deleteMovie: {
-      // Watches the add movie action and appends the local storage with it
-      handler(delMovieAgenda) {
+    });
+
+    watch(
+      watchMovies,
+      (delMovieAgenda) => {
         localStorage.watchMovies = JSON.stringify(delMovieAgenda);
       },
-      deep: true,
-    },
+      { deep: true }
+    );
+
+    return {
+      columns,
+      editMovieTitle,
+      editCountryNameMovie,
+      editDateMovie,
+      events,
+      clearCalendar,
+      addDates,
+      markWatch,
+      movieWatchDateOpt,
+      openEditDialog,
+      editMovieAgenda,
+      delMovieAgenda,
+      openAgendaDialog,
+      minDate,
+      maxDate,
+    };
   },
 };
 </script>
