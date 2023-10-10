@@ -44,18 +44,18 @@
       </template>
     </Calendar>
 
-    <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
-      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px] flex justify-center content-center">
+    <q-dialog v-model="openAgendaDialog" persistent>
+      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]">
         <q-card-section class="flex justify-center">
           <q-input filled disable v-model="editCountryNameMovie" label="Watching from" class="w-full mb-4 capitalize" />
           <q-date v-model="editDateMovie" :options="movieWatchDateOpt" subtitle="" :title="editMovieTitle" />
         </q-card-section>
-      </q-card>
 
-      <q-card-actions align="center" class="bg-white text-teal">
-        <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
-        <q-btn color="primary" @click="editMovieAgenda">Okay</q-btn>
-      </q-card-actions>
+        <q-card-actions align="center" class="bg-white text-teal">
+          <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
+          <q-btn color="primary" @click="editMovieAgenda">Okay</q-btn>
+        </q-card-actions>
+      </q-card>
     </q-dialog>
   </q-page>
 </template>
