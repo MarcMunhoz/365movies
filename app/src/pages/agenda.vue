@@ -3,9 +3,10 @@
     <q-btn @click="clearCalendar" color="accent" push class="my-4">Clear calendar!</q-btn>
 
     <section class="w-full text-right mb-4">
-      <q-chip outline color="primary" size="sm" :ripple="false" icon="circle" label="Has movie!" />
+      <q-chip outline color="primary" size="sm" :ripple="false" icon="circle" label="Scheduled movie" />
       <q-chip outline color="grey-7" size="sm" :ripple="false" icon="highlight_off" label="Unwatched" />
       <q-chip outline color="positive" size="sm" :ripple="false" icon="task_alt" label="Watched" />
+      <q-chip outline color="secondary" size="sm" :ripple="false" icon="edit" label="Date edit" />
       <q-chip outline color="negative" size="sm" :ripple="false" icon="delete" label="Delete from Agenda" />
     </section>
 
@@ -112,6 +113,7 @@ export default {
         watchMovies.value.forEach((e) => {
           const eventAdd = {
             highlight: true,
+            isInteractive: true,
             dates: [],
             popover: {
               label: "",
@@ -174,6 +176,7 @@ export default {
 
       return $q.value.notify({
         type: "positive",
+        timeout: 2500,
         message: "Movie edited successful.",
       });
     };
@@ -188,6 +191,7 @@ export default {
 
       return $q.value.notify({
         type: "info",
+        timeout: 2500,
         message: "Movie removed successful.",
       });
     };
@@ -204,6 +208,10 @@ export default {
       watchMovies,
       (delMovieAgenda) => {
         localStorage.watchMovies = JSON.stringify(delMovieAgenda);
+
+        return setTimeout(() => {
+          return location.reload(true);
+        }, 2600);
       },
       { deep: true }
     );
