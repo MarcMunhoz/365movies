@@ -87,19 +87,24 @@
     </div>
 
     <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
-      <q-card>
-        <q-card-section class="row items-center q-pb-none">
+      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
+        <q-card-section v-if="movieAddedLoading === true">
+          <q-spinner-pie color="primary" size="8em" />
+        </q-card-section>
+
+        <q-card-section v-else class="flex justify-center">
+          <q-input filled v-model="countrySearch" label="Country" autofocus @blur="checkMovie" placeholder="Where'll you watch? (default: United States)" class="w-full mb-4 capitalize" />
           <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
         </q-card-section>
 
-        <q-card-actions align="center" class="bg-white text-teal">
+        <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal">
           <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
           <q-btn
             color="primary"
             @click="
-              switch (this.dialogAction) {
+              switch (dialogAction) {
                 case 'Add':
-                  addMovieAgenda();
+                  getStreamingList();
                   break;
                 case 'Edit':
                   editMovieAgenda();
@@ -114,171 +119,63 @@
 </template>
 
 <script>
-const api_key = process.env.OMDBAPI_KEY;
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useQuasar } from "quasar";
+import axios from "axios";
 
 export default {
   name: "Movies",
   setup() {
-    const $q = useQuasar();
+    const api_key = process.env.OMDBAPI_KEY;
+    const streaming_key = process.env.STREAMING_KEY;
+    const $q = ref(useQuasar());
+    const api_streaming = axios.create({ baseURL: process.env.STREAMING_URL });
 
-    return {
-      movieWatchDate: ref(""),
-    };
-  },
-  data() {
-    return {
-      openAgendaDialog: ref(false),
-      movieWatchDateOpt(movieWatchDateOpt) {
-        return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    // API Data
+    const agendaButtons = ref([
+      {
+        icon: "event",
+        label: "Add",
       },
-      dialogTitle: String,
-      dialogAction: String,
-      movieId: String,
-      watchMovies: [],
-      luckyMethod: Boolean,
-      progressLoader: {
-        type: Boolean,
-        default: false,
+      {
+        icon: "edit_calendar",
+        label: "Edit",
       },
-      searchTerm: "",
-      searchRules: [(value) => (value && value.length >= 3) || "Min 3 characters"],
-      agendaButtons: [
-        {
-          icon: "event",
-          label: "Add",
-        },
-        {
-          icon: "edit_calendar",
-          label: "Edit",
-        },
-        {
-          icon: "event_busy",
-          label: "Delete",
-        },
-      ],
-      moviesTitles: Array,
-      moviesDetails: Array,
-      noMovie: {
-        type: Boolean,
-        default: false,
+      {
+        icon: "event_busy",
+        label: "Delete",
       },
-      flashURL: URL,
-    };
-  },
-  mounted() {
-    this.movieWatchDate = this.today();
+    ]);
+    const countriesList = ref([]);
+    const countrySearch = ref("");
+    const dialogAction = ref(String);
+    const dialogTitle = ref(String);
+    const flashURL = ref(URL);
+    const luckyMethod = ref(Boolean);
+    const movieAddedLoading = ref(false);
+    const movieId = ref(String);
+    const movieWatchDate = ref("");
+    const moviesDetails = ref(Array);
+    const moviesTitles = ref(Array);
+    const openAgendaDialog = ref(false);
+    const searchRules = ref([(value) => (value && value.length >= 3) || "Min 3 characters"]);
+    const searchTerm = ref("");
+    const selectedCountry = ref(String);
+    const streamingList = ref([]);
+    const watchMovies = ref([]);
+    const noMovie = ref(false);
+    const progressLoader = ref(false);
 
-    if (localStorage.watchMovies) {
-      return (this.watchMovies = JSON.parse(localStorage.watchMovies));
-    }
-  },
-  methods: {
-    today() {
+    // API Functions/Methods
+    const today = () => {
       return new Date().toISOString().split("T")[0].replace(/-/g, "/");
-    },
-    search() {
-      // Setting defaults
-      this.moviesTitles = [];
-      this.moviesDetails = [];
-      this.noMovie = false;
-      this.progressLoader = true;
+    };
 
-      // Breaks if search field wrong
-      if ((!this.searchTerm && !this.luckyMethod) || (this.searchTerm.length < 3 && !this.luckyMethod)) {
-        return false;
-      }
+    const movieWatchDateOpt = (movieWatchDateOpt) => {
+      return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    };
 
-      this.luckyMethod && (this.searchTerm = this.getRandomWord());
-
-      this.flashURL = new URL(`https://www.omdbapi.com/?s=${this.searchTerm}&type=movie&apikey=${api_key}`);
-      this.fetchMovie();
-    },
-    fetchMovie() {
-      let flashURL = this.flashURL;
-
-      // Asynchronous FN to fetch API
-      async function ftMovie() {
-        let resp = await fetch(flashURL, {
-          method: "get",
-          redirect: "follow",
-        });
-
-        if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.error}`);
-        }
-
-        return resp.json();
-      }
-
-      // Calls the FN to populate the movie list
-      ftMovie()
-        .then((resp) => {
-          if (resp.Response == "False") {
-            throw new Error(resp.Error);
-          }
-
-          this.moviesTitles = resp.Search;
-          return this.fetchMovieDetails();
-        })
-        .catch((e) => {
-          return (this.progressLoader = false), (this.noMovie = true), console.error(e);
-        });
-    },
-    fetchMovieDetails() {
-      this.moviesDetails = [];
-      let detailsTerms = new Array();
-      let detailsUrls = new Array();
-      const fetchDetails = new Array();
-
-      this.moviesTitles.forEach((movie) => {
-        detailsTerms.push(movie.Title);
-      });
-
-      detailsTerms.forEach((term) => {
-        const detailUrl = `https://www.omdbapi.com/?t=${term}&type=movie&apikey=${api_key}`;
-
-        detailsUrls.push(detailUrl);
-      });
-
-      detailsUrls.forEach((detailUrl) => {
-        const detailPromise = fetch(detailUrl).then((resp) => {
-          if (resp.Response == "False") {
-            throw new Error(resp.Error);
-          }
-
-          return resp.json();
-        });
-
-        fetchDetails.push(detailPromise);
-      });
-
-      Promise.all(fetchDetails)
-        .then((detailArray) => {
-          this.progressLoader = false;
-
-          detailArray.forEach((data) => {
-            return this.moviesDetails.push(data);
-          });
-
-          return this.sortAndFilter();
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    },
-    sortAndFilter() {
-      const uniqueMovies = this.moviesDetails
-        .sort((a, b) => b.Year - a.Year)
-        .filter((movie, index, self) => {
-          const titles = self.map((movie) => movie.Title);
-          return titles.indexOf(movie.Title) === index;
-        });
-
-      return (this.moviesDetails = uniqueMovies);
-    },
-    getRandomWord() {
+    const getRandomWord = () => {
       const commonWords = [
         "ability",
         "I",
@@ -2336,68 +2233,332 @@ export default {
       }
 
       return selectedWord;
-    },
-    movieBtnAction(action, movieId, movieTitle) {
+    };
+
+    const movieBtnAction = (action, mId, movieTitle) => {
       return (
-        (this.dialogTitle = movieTitle),
-        (this.movieId = movieId),
-        this.watchMovies.find((movie) => movie.movieID === movieId)
-          ? (this.movieWatchDate = ref(this.watchMovies.find((movie) => movie.movieID === movieId).watchDate))
-          : (this.movieWatchDate = ref("")),
-        (this.dialogAction = action),
-        action !== "Delete" && (this.openAgendaDialog = true)
+        (dialogTitle.value = movieTitle),
+        (movieId.value = mId),
+        watchMovies.value.find((movie) => movie.movieID === mId) ? (movieWatchDate.value = watchMovies.value.find((movie) => movie.movieID === mId).watchDate) : (movieWatchDate.value = ""),
+        (dialogAction.value = action),
+        action !== "Delete" && (openAgendaDialog.value = true)
       );
-    },
-    addMovieAgenda() {
-      // Adds the movie into an Array and closes the calendar dialog
-      const newMovieagenda = {
-        watchDate: !this.movieWatchDate == "" ? this.movieWatchDate : this.today(),
-        movieID: this.movieId,
-        movieTitle: this.dialogTitle,
-        watched: false,
-      };
+    };
 
-      this.watchMovies.push(newMovieagenda);
-      this.openAgendaDialog = false;
-
-      return this.$q.notify({
-        type: "positive",
-        message: "Movie added successful. Good fun!",
-      });
-    },
-    editMovieAgenda() {
-      this.watchMovies.find((movie) => movie.movieID == this.movieId).watchDate = this.movieWatchDate;
-      this.openAgendaDialog = false;
-
-      return this.$q.notify({
-        type: "info",
-        message: "Movie editted successful. Nice!",
-      });
-    },
-    delMovieAgenda(movieId) {
-      const movieToDelete = this.watchMovies.filter((movie) => movie.movieID !== movieId);
-
-      this.watchMovies = movieToDelete;
-
-      return this.$q.notify({
-        type: "info",
-        message: "Movie removed successful.",
-      });
-    },
-    showHiddenBtns(movieId, btnLabel) {
-      const hasMovieAgenda = this.watchMovies.filter((mvid) => mvid.movieID === movieId)[0];
+    const showHiddenBtns = (mId, btnLabel) => {
+      const hasMovieAgenda = watchMovies.value.filter((mvid) => mvid.movieID === mId)[0];
       const label = btnLabel;
 
       if ((!hasMovieAgenda && label == "Delete") || (hasMovieAgenda && label == "Add") || (!hasMovieAgenda && label == "Edit")) {
         return "hidden";
       }
-    },
+    };
+
+    const fetchMovie = () => {
+      // Asynchronous FN to fetch API
+      async function ftMovie() {
+        let resp = await fetch(flashURL.value, {
+          method: "get",
+          redirect: "follow",
+        });
+
+        if (!resp.ok) {
+          throw new Error(`HTTP error! status: ${resp.error}`);
+        }
+
+        return resp.json();
+      }
+
+      // Calls the FN to populate the movie list
+      ftMovie()
+        .then((resp) => {
+          if (resp.Response == "False") {
+            throw new Error(resp.Error);
+          }
+
+          moviesTitles.value = resp.Search;
+          return fetchMovieDetails();
+        })
+        .catch((e) => {
+          return (progressLoader.value = false), (noMovie.value = true), console.error(e);
+        });
+    };
+
+    const fetchMovieDetails = () => {
+      moviesDetails.value = [];
+      let detailsTerms = new Array();
+      let detailsUrls = new Array();
+      const fetchDetails = new Array();
+
+      moviesTitles.value.forEach((movie) => {
+        detailsTerms.push(movie.Title);
+      });
+
+      detailsTerms.forEach((term) => {
+        const detailUrl = `https://www.omdbapi.com/?t=${term}&type=movie&apikey=${api_key}`;
+
+        detailsUrls.push(detailUrl);
+      });
+
+      detailsUrls.forEach((detailUrl) => {
+        const detailPromise = fetch(detailUrl).then((resp) => {
+          if (resp.Response == "False") {
+            throw new Error(resp.Error);
+          }
+
+          return resp.json();
+        });
+
+        fetchDetails.push(detailPromise);
+      });
+
+      Promise.all(fetchDetails)
+        .then((detailArray) => {
+          progressLoader.value = false;
+
+          detailArray.forEach((data) => {
+            return moviesDetails.value.push(data);
+          });
+
+          return sortAndFilter();
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    };
+
+    const sortAndFilter = () => {
+      const uniqueMovies = moviesDetails.value
+        .sort((a, b) => b.Year - a.Year)
+        .filter((movie, index, self) => {
+          const titles = self.map((movie) => movie.Title);
+          return titles.indexOf(movie.Title) === index;
+        });
+
+      return (moviesDetails.value = uniqueMovies);
+    };
+
+    const search = () => {
+      // Setting defaults
+      moviesTitles.value = [];
+      moviesDetails.value = [];
+      noMovie.value = false;
+      progressLoader.value = true;
+
+      // Breaks if search field wrong
+      if ((!searchTerm.value && !luckyMethod.value) || (searchTerm.value.length < 3 && !luckyMethod.value)) {
+        return false;
+      }
+
+      luckyMethod.value && (searchTerm.value = getRandomWord());
+
+      flashURL.value = new URL(`https://www.omdbapi.com/?s=${searchTerm.value}&type=movie&apikey=${api_key}`);
+      fetchMovie();
+    };
+
+    const getStreamingList = () => {
+      movieAddedLoading.value = true;
+
+      api_streaming
+        .get("/get", {
+          headers: {
+            "X-RapidAPI-Key": streaming_key,
+          },
+          params: {
+            imdb_id: movieId.value,
+            output_language: "en",
+          },
+        })
+        .then((res) => {
+          const countryCode = selectedCountry.value;
+          const rawData = res.data.result.streamingInfo[countryCode];
+
+          const uniqueData = new Set();
+
+          // Filtering and creating an array with unique service entries
+          const uniqueServices = rawData.filter((item) => {
+            // Check if the service is not in the Set
+            if (!uniqueData.has(item.service)) {
+              // Add the service to the Set
+              uniqueData.add(item.service);
+              return true;
+            }
+            return false; // Exclude duplicates from the filtered array
+          });
+
+          return (streamingList.value = uniqueServices);
+        })
+        .catch((e) => {
+          console.error(e);
+        })
+        .finally(() => {
+          const editMovie = watchMovies.value.find((movie) => movie.movieID == movieId.value);
+
+          if (editMovie === undefined) addMovieAgenda();
+          else {
+            watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingList = streamingList.value;
+
+            return $q.value.notify({
+              type: "info",
+              message: "Movie editted successful. Nice!",
+            });
+          }
+
+          return (movieAddedLoading.value = false);
+        });
+    };
+
+    const getCountries = () => {
+      const ctList = localStorage.moviesContriesList ? JSON.parse(localStorage.moviesContriesList) : null;
+
+      if (ctList) {
+        ctList.forEach((e) => {
+          const country = {
+            countryCode: e.countryCode,
+            name: e.name,
+          };
+
+          return countriesList.value.push(country);
+        });
+      } else {
+        api_streaming
+          .get("/countries", {
+            headers: {
+              "X-RapidAPI-Key": streaming_key,
+            },
+          })
+          .then((res) => {
+            return (countriesList.value = Object.values(res.data.result));
+          });
+      }
+    };
+
+    const checkMovie = () => {
+      selectedCountry.value = "";
+
+      countrySearch.value.length === 0 && (countrySearch.value = "United States");
+
+      // Capitalize the country name for the API
+      const capitalizeString = (str) =>
+        str
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ");
+
+      countrySearch.value = capitalizeString(countrySearch.value);
+
+      // Search in the API by the string received
+      let country = countriesList.value.filter((country) => country.name === countrySearch.value);
+
+      if (country.length > 0) {
+        selectedCountry.value = country[0].countryCode;
+
+        return $q.value.notify({
+          type: "positive",
+          message: `Okay. We'll search by streaming services from ${country[0].name.toUpperCase()}`,
+        });
+      } else {
+        return $q.value.notify({
+          type: "negative",
+          message: "Country not found. Please check it",
+        });
+      }
+    };
+
+    const addMovieAgenda = () => {
+      // Adds the movie into an Array and closes the calendar dialog
+      const newMovieagenda = {
+        watchDate: !movieWatchDate.value == "" ? movieWatchDate.value : today(),
+        movieID: movieId.value,
+        movieTitle: dialogTitle.value,
+        streamingList: streamingList.value,
+        streamingCountry: selectedCountry.value,
+        streamingCountryName: countrySearch.value,
+        watched: false,
+      };
+
+      watchMovies.value.push(newMovieagenda);
+
+      openAgendaDialog.value = false;
+
+      return $q.value.notify({
+        type: "positive",
+        message: "Movie added successful. Good fun!",
+      });
+    };
+
+    const editMovieAgenda = () => {
+      watchMovies.value.find((movie) => movie.movieID == movieId.value).watchDate = movieWatchDate.value;
+      watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingCountry = selectedCountry.value;
+      watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingCountryName = countrySearch.value;
+      openAgendaDialog.value = false;
+
+      return getStreamingList();
+    };
+
+    const delMovieAgenda = (mId) => {
+      const movieToDelete = watchMovies.value.filter((movie) => movie.movieID !== mId);
+
+      watchMovies.value = movieToDelete;
+
+      return $q.value.notify({
+        type: "info",
+        message: "Movie removed successful.",
+      });
+    };
+
+    getCountries(); // Gets countrie list from API on created
+
+    onMounted(() => {
+      movieWatchDate.value = today();
+
+      if (localStorage.watchMovies && localStorage.watchMovies !== "undefined") {
+        return (watchMovies.value = JSON.parse(localStorage.watchMovies));
+      }
+    });
+
+    return {
+      agendaButtons,
+      countriesList,
+      countrySearch,
+      dialogAction,
+      dialogTitle,
+      flashURL,
+      luckyMethod,
+      movieAddedLoading,
+      movieId,
+      movieWatchDate,
+      moviesDetails,
+      moviesTitles,
+      openAgendaDialog,
+      progressLoader,
+      searchRules,
+      searchTerm,
+      selectedCountry,
+      streamingList,
+      noMovie,
+      watchMovies,
+      checkMovie,
+      getStreamingList,
+      editMovieAgenda,
+      delMovieAgenda,
+      movieBtnAction,
+      movieWatchDateOpt,
+      search,
+      showHiddenBtns,
+    };
   },
   watch: {
     watchMovies: {
       // Watches the add movie action and appends the local storage with it
       handler(addMovieAgenda) {
         localStorage.watchMovies = JSON.stringify(addMovieAgenda);
+      },
+      deep: true,
+    },
+    countriesList: {
+      handler(getCountries) {
+        localStorage.moviesContriesList = JSON.stringify(getCountries);
       },
       deep: true,
     },
