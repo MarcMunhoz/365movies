@@ -129,7 +129,7 @@ export default {
     const api_key = process.env.OMDBAPI_KEY;
     const streaming_key = process.env.STREAMING_KEY;
     const $q = ref(useQuasar());
-    const api_streaming = axios.create({ baseURL: process.env.STREAMING_URL });
+    const api_streaming = axios.create({ baseURL: "https://streaming-availability.p.rapidapi.com" });
 
     // API Data
     const agendaButtons = ref([
