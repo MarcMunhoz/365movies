@@ -17,7 +17,7 @@
     </q-drawer>
 
     <q-footer bordered reveal elevated class="flex justify-around bg-grey-3 text-primary">
-      <q-item v-for="link in socialLinks" clickable tag="a" :href="link.to" target="_blank" class="w-1/4">
+      <q-item v-for="link in socialLinks" clickable tag="a" :href="link.to" target="_blank" class="w-auto md:w-1/5">
         <q-item-section v-if="link.icon" avatar>
           <q-icon :name="link.icon" />
         </q-item-section>
