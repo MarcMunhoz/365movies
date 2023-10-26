@@ -93,7 +93,27 @@
         </q-card-section>
 
         <q-card-section v-else class="flex justify-center">
-          <q-input filled v-model="countrySearch" label="Country" autofocus @blur="checkMovie" placeholder="Where'll you watch? (default: United States)" class="w-full mb-4 capitalize" />
+          <q-select
+            v-model="countrySearch"
+            :options="countriesList"
+            autofocus
+            @update:model-value="checkCountry"
+            :rules="[(val) => !!val || 'Please select a country']"
+            label="Country"
+            hint="STREAMING IN"
+            class="w-full mb-4 select-country"
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section avatar>
+                  <q-img :src="`https://flagsapi.com/${scope.opt.value.toUpperCase()}/shiny/32.png`" loading="lazy" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
           <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
         </q-card-section>
 
@@ -2357,55 +2377,68 @@ export default {
     };
 
     const getStreamingList = () => {
-      movieAddedLoading.value = true;
+      if (selectedCountry.value.length < 2) {
+        const selectCountry = document.querySelector(".select-country");
 
-      api_streaming
-        .get("/get", {
-          headers: {
-            "X-RapidAPI-Key": streaming_key,
-          },
-          params: {
-            imdb_id: movieId.value,
-            output_language: "en",
-          },
-        })
-        .then((res) => {
-          const countryCode = selectedCountry.value;
-          const rawData = res.data.result.streamingInfo[countryCode];
-
-          const uniqueData = new Set();
-
-          // Filtering and creating an array with unique service entries
-          const uniqueServices = rawData.filter((item) => {
-            // Check if the service is not in the Set
-            if (!uniqueData.has(item.service)) {
-              // Add the service to the Set
-              uniqueData.add(item.service);
-              return true;
-            }
-            return false; // Exclude duplicates from the filtered array
-          });
-
-          return (streamingList.value = uniqueServices);
-        })
-        .catch((e) => {
-          console.error(e);
-        })
-        .finally(() => {
-          const editMovie = watchMovies.value.find((movie) => movie.movieID == movieId.value);
-
-          if (editMovie === undefined) addMovieAgenda();
-          else {
-            watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingList = streamingList.value;
-
-            return $q.value.notify({
-              type: "info",
-              message: "Movie editted successful. Nice!",
-            });
-          }
-
-          return (movieAddedLoading.value = false);
+        $q.value.notify({
+          type: "warning",
+          message: "Please, choose a country",
         });
+
+        selectCountry.focus();
+
+        return false;
+      } else {
+        movieAddedLoading.value = true;
+
+        api_streaming
+          .get("/get", {
+            headers: {
+              "X-RapidAPI-Key": streaming_key,
+            },
+            params: {
+              imdb_id: movieId.value,
+              output_language: "en",
+            },
+          })
+          .then((res) => {
+            const countryCode = selectedCountry.value;
+            const rawData = res.data.result.streamingInfo[countryCode];
+
+            const uniqueData = new Set();
+
+            // Filtering and creating an array with unique service entries
+            const uniqueServices = rawData.filter((item) => {
+              // Check if the service is not in the Set
+              if (!uniqueData.has(item.service)) {
+                // Add the service to the Set
+                uniqueData.add(item.service);
+                return true;
+              }
+              return false; // Exclude duplicates from the filtered array
+            });
+
+            return (streamingList.value = uniqueServices);
+          })
+          .catch((e) => {
+            console.error(e);
+          })
+          .finally(() => {
+            const editMovie = watchMovies.value.find((movie) => movie.movieID == movieId.value);
+
+            if (editMovie === undefined) addMovieAgenda();
+            else {
+              watchMovies.value.find((movie) => movie.movieID == movieId.value).streamingList = streamingList.value;
+
+              return $q.value.notify({
+                type: "info",
+                message: "Movie editted successful. Nice!",
+              });
+            }
+
+            return (movieAddedLoading.value = false);
+          });
+      }
     };
 
     const getCountries = () => {
@@ -2414,12 +2447,14 @@ export default {
       if (ctList) {
         ctList.forEach((e) => {
           const country = {
-            countryCode: e.countryCode,
-            name: e.name,
+            value: e.countryCode,
+            label: e.name,
           };
 
           return countriesList.value.push(country);
         });
+
+        return countriesList.value.sort((a, b) => a.label.localeCompare(b.label));
       } else {
         api_streaming
           .get("/countries", {
@@ -2433,36 +2468,15 @@ export default {
       }
     };
 
-    const checkMovie = () => {
+    const checkCountry = () => {
       selectedCountry.value = "";
 
-      countrySearch.value.length === 0 && (countrySearch.value = "United States");
+      selectedCountry.value = countrySearch.value.value; // Prop named 'value' coz Quasar qselect options needs it
 
-      // Capitalize the country name for the API
-      const capitalizeString = (str) =>
-        str
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(" ");
-
-      countrySearch.value = capitalizeString(countrySearch.value);
-
-      // Search in the API by the string received
-      let country = countriesList.value.filter((country) => country.name === countrySearch.value);
-
-      if (country.length > 0) {
-        selectedCountry.value = country[0].countryCode;
-
-        return $q.value.notify({
-          type: "positive",
-          message: `Okay. We'll search by streaming services from ${country[0].name.toUpperCase()}`,
-        });
-      } else {
-        return $q.value.notify({
-          type: "negative",
-          message: "Country not found. Please check it",
-        });
-      }
+      return $q.value.notify({
+        type: "positive",
+        message: `Okay. We'll search by streaming services from ${countrySearch.value.label.toUpperCase()}`,
+      });
     };
 
     const addMovieAgenda = () => {
@@ -2473,13 +2487,15 @@ export default {
         movieTitle: dialogTitle.value,
         streamingList: streamingList.value,
         streamingCountry: selectedCountry.value,
-        streamingCountryName: countrySearch.value,
+        streamingCountryName: selectedCountry.value !== "us" ? countrySearch.value.label : "United States",
         watched: false,
       };
 
       watchMovies.value.push(newMovieagenda);
 
       openAgendaDialog.value = false;
+
+      countrySearch.value = "";
 
       return $q.value.notify({
         type: "positive",
@@ -2538,7 +2554,7 @@ export default {
       streamingList,
       noMovie,
       watchMovies,
-      checkMovie,
+      checkCountry,
       getStreamingList,
       editMovieAgenda,
       delMovieAgenda,
