@@ -11,6 +11,22 @@
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
     </div>
 
+    <div>
+      <h1>TESTE</h1>
+      <q-btn label="Filmes Populares" @click="fetchMoviesEx" color="primary" />
+      <q-list v-if="filmes.length" class="q-mt-md">
+        <q-item v-for="filme in filmes" :key="filme.id">
+          <q-item-section avatar>
+            <q-img :src="'https://image.tmdb.org/t/p/w200' + filme.poster_path" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ filme.title }}</q-item-label>
+            <q-item-label caption>{{ filme.release_date }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </div>
+
     <section class="flex flex-wrap justify-center gap-3 mt-5">
       <q-card v-for="(movie, i) in moviesDetails" :key="i" class="relative max-w-[374px]">
         <img v-if="movie.Poster && movie.Poster != 'N/A'" :src="movie.Poster" class="object-cover h-[250px]" />
@@ -142,10 +158,20 @@
 import { onMounted, ref } from "vue";
 import { useQuasar } from "quasar";
 import axios from "axios";
+import { useTmdb } from "src/composables/useTmdb";
 
 export default {
   name: "Movies",
   setup() {
+    const { fetch } = useTmdb();
+
+    const filmes = ref([]);
+
+    const fetchMoviesEx = async () => {
+      const data = await fetch("movie/popular");
+      filmes.value = data?.results || [];
+    };
+
     const api_key = process.env.OMDBAPI_KEY;
     const streaming_key = process.env.STREAMING_KEY;
     const $q = ref(useQuasar());
@@ -2526,6 +2552,7 @@ export default {
     getCountries(); // Gets countrie list from API on created
 
     onMounted(() => {
+      fetchMoviesEx;
       movieWatchDate.value = today();
 
       if (localStorage.watchMovies && localStorage.watchMovies !== "undefined") {
@@ -2562,6 +2589,8 @@ export default {
       movieWatchDateOpt,
       search,
       showHiddenBtns,
+      filmes,
+      fetchMoviesEx,
     };
   },
   watch: {
