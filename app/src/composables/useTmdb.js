@@ -1,13 +1,11 @@
-import { inject } from 'vue';
-
 export function useTmdb() {
-  const tmdb = inject('$tmdb'); // Acessando o $tmdb fornecido globalmente
-
-  if (!tmdb) {
-    throw new Error('O TMDb não foi injetado corretamente. Verifique se o boot file foi carregado.');
-  }
+  const apiUrl = process.env.VITE_API_URL;
 
   return {
-    fetch: tmdb.fetch,
+    fetch: async (endpoint, params = {}) => {
+      const url = `${apiUrl}/${endpoint}?${new URLSearchParams(params)}`;
+      const response = await fetch(url);
+      return response.json();
+    },
   };
 }

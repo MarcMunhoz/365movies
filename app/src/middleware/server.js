@@ -14,21 +14,21 @@ const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN;
 
 // 🔥 Rota dinâmica para qualquer endpoint do TMDb
 app.use('/api/tmdb/*', async (req, res) => {
-    try {
-        const tmdbPath = req.params[0]; // Captura a URL após /api/tmdb/
-        const queryParams = req.query; // Captura parâmetros de busca
+  try {
+    const tmdbPath = req.params[0]; // Captura a URL após /api/tmdb/
+    const queryParams = req.query; // Captura parâmetros de busca
 
-        const response = await axios.get(`${TMDB_API_URL}/${tmdbPath}`, {
-            params: queryParams,
-            headers: { Authorization: `Bearer ${TMDB_BEARER_TOKEN}` },
-        });
+    const response = await axios.get(`${TMDB_API_URL}/${tmdbPath}`, {
+      params: queryParams,
+      headers: { Authorization: `Bearer ${TMDB_BEARER_TOKEN}` },
+    });
 
-        res.json(response.data);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar dados do TMDb', details: error.message });
-    }
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar dados do TMDb', details: error.message });
+  }
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Backend rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Serving backend on http://localhost:${PORT}`);
 });

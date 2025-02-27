@@ -70,7 +70,10 @@ module.exports = configure(function (/*ctx*/) {
         OMDBAPI_KEY: process.env.OMDBAPI_KEY,
         BASEURL: process.env.BASEURL,
         STREAMING_KEY: process.env.STREAMING_KEY,
-        STREAMING_URL: process.env.STREAMING_URL
+        STREAMING_URL: process.env.STREAMING_URL,
+        TMDB_API_URL: process.env.TMDB_API_URL,
+        TMDB_BEARER_TOKEN: process.env.TMDB_BEARER_TOKEN,
+        VITE_API_URL: process.env.VITE_API_URL
       }
       // rawDefine: {}
       // ignorePublicFolder: true,
