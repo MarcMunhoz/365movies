@@ -1,31 +1,56 @@
 <template>
   <q-page class="w-full px-5">
     <div class="row w-full">
-      <q-input v-model="searchTerm" label="Type a movie title portion and press ENTER" lazy-rules :rules="searchRules" @keyup.enter="(luckyMethod = false), search()" class="w-full" />
+      <q-input v-model="searchTerm" label="Type a movie title portion and press ENTER" lazy-rules :rules="searchRules" @keyup.enter="(luckyMethod = false), sFnmovies()" class="w-full" />
     </div>
     <div class="row w-full">
-      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" :disable="searchTerm.length < 3" @click="(luckyMethod = false), search()">Movie Search</q-btn>
+      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" :disable="searchTerm.length < 3" @click="(luckyMethod = false), sFnmovies()">Movie Search</q-btn>
       <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), search()">I'm lucky</q-btn>
     </div>
     <div class="row w-full" v-if="progressLoader === true">
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
     </div>
 
-    <div>
-      <h1>TESTE</h1>
-      <q-btn label="Filmes Populares" @click="fetchMoviesEx" color="primary" />
-      <q-list v-if="filmes.length" class="q-mt-md">
-        <q-item v-for="filme in filmes" :key="filme.id">
-          <q-item-section avatar>
-            <q-img :src="'https://image.tmdb.org/t/p/w200' + filme.poster_path" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>{{ filme.title }}</q-item-label>
-            <q-item-label caption>{{ filme.release_date }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </div>
+    <section class="flex flex-wrap justify-center gap-3 mt-5">
+      <q-card v-for="(sMovie, i) in sMovies" :key="i" class="relative w-[374px] max-w-[374px]">
+        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px]" />
+        <img v-else src="../assets/img/no-image.jpg" class="object-cover h-[250px]" />
+
+        <q-card-section class="flex justify-around">
+          <div class="text-h6 w-full">{{ sMovie.title }}</div>
+
+          <template v-if="sMovie.vote_average != null">
+            <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
+
+            <div v-if="sMovie.vote_average > 0" class="grey--text p-0 w-auto">
+              {{ sMovie.vote_average.toFixed(2) }}
+            </div>
+          </template>
+
+          <div class="grey--text p-0 w-auto">
+            {{ sMovie.release_date.split("-")[0] }}
+          </div>
+          <div v-if="sMoviesDetails.id === sMovie.id" class="grey--text pl-0 w-auto">{{ sMoviesDetails[i].runtime }} min</div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <div v-if="getDirector(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
+
+          <div v-if="getActors(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id).join(", ") }}</div>
+
+          <div v-if="getGenres(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Genres:</strong> {{ getGenres(sMovie.id).join(", ") }}</div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pt-none mt-3">
+          <template v-if="sMovie.overview">{{ sMovie.overview }}</template>
+          <template v-else>N/A</template>
+        </q-card-section>
+      </q-card>
+    </section>
 
     <section class="flex flex-wrap justify-center gap-3 mt-5">
       <q-card v-for="(movie, i) in moviesDetails" :key="i" class="relative max-w-[374px]">
@@ -155,7 +180,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import axios from "axios";
 import { useTmdb } from "src/composables/useTmdb";
@@ -165,12 +190,50 @@ export default {
   setup() {
     const { fetch } = useTmdb();
 
-    const filmes = ref([]);
+    const sMovies = ref([]);
+    const sMoviesDetails = ref([]);
+    const sMoviesCredits = ref([]);
 
-    const fetchMoviesEx = async () => {
-      const data = await fetch("movie/popular");
-      filmes.value = data?.results || [];
+    const sFnmovies = async () => {
+      const data = await fetch("search/movie", { query: searchTerm.value });
+      sMovies.value = data.results || [];
+
+      if (sMovies.value.length) {
+        // Aguarda todas as requisições de detalhes e créditos
+        await Promise.all(sMovies.value.map((movie) => sFnmoviesDetailsCredits(movie.id)));
+      }
     };
+
+    const sFnmoviesDetailsCredits = async (movieId) => {
+      const [sDetailsData, sCreditsData] = await Promise.all([fetch(`movie/${movieId}`), fetch(`movie/${movieId}/credits`)]);
+
+      sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
+      sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
+    };
+
+    const getDirector = computed(() => (movieId) => {
+      const credits = sMoviesCredits.value.find((item) => item.id === movieId);
+      return credits ? credits.crew.find((person) => person.job === "Director")?.name || "Unknown" : "Loading...";
+    });
+
+    const getActors = computed(() => (movieId) => {
+      const credits = sMoviesCredits.value.find((item) => item.id === movieId);
+      if (!credits) return ["Loading..."];
+
+      const actors = credits.cast.filter((person) => person.known_for_department === "Acting").map((actor) => actor.name);
+
+      return actors.length > 5 ? [...actors.slice(0, 5), "..."] : actors;
+    });
+
+    const getGenres = computed(() => (movieId) => {
+      const details = sMoviesDetails.value.find((item) => item.id === movieId);
+
+      if (!details) return ["Loading..."];
+
+      const genres = details.genres?.map((genre) => genre.name) || [];
+
+      return genres;
+    });
 
     const api_key = process.env.OMDBAPI_KEY;
     const streaming_key = process.env.STREAMING_KEY;
@@ -2552,7 +2615,6 @@ export default {
     getCountries(); // Gets countrie list from API on created
 
     onMounted(() => {
-      fetchMoviesEx;
       movieWatchDate.value = today();
 
       if (localStorage.watchMovies && localStorage.watchMovies !== "undefined") {
@@ -2589,8 +2651,14 @@ export default {
       movieWatchDateOpt,
       search,
       showHiddenBtns,
-      filmes,
-      fetchMoviesEx,
+
+      sFnmovies,
+      sMovies,
+      sMoviesDetails,
+      sMoviesCredits,
+      getDirector,
+      getActors,
+      getGenres,
     };
   },
   watch: {
