@@ -72,11 +72,6 @@ const myLinks = [
     icon: "mdi-github",
     to: "https://github.com/MarcMunhoz",
   },
-  {
-    title: "heyMunhoz on Twitter",
-    icon: "mdi-twitter",
-    to: "https://twitter.com/heyMunhoz",
-  },
 ];
 
 export default defineComponent({
