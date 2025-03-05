@@ -12,7 +12,7 @@
     </div>
 
     <section class="flex flex-wrap justify-center gap-3 mt-5">
-      <q-card v-for="(sMovie, i) in sMovies" :key="i" class="relative w-[374px] max-w-[374px]">
+      <q-card v-for="(sMovie, i) in sortedMovies" :key="i" class="relative w-[374px] max-w-[374px]">
         <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px]" />
         <img v-else src="../assets/img/no-image.jpg" class="object-cover h-[250px]" />
 
@@ -21,16 +21,12 @@
 
           <template v-if="sMovie.vote_average != null">
             <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
-
-            <div v-if="sMovie.vote_average > 0" class="grey--text p-0 w-auto">
-              {{ sMovie.vote_average.toFixed(2) }}
-            </div>
           </template>
 
           <div class="grey--text p-0 w-auto">
             {{ sMovie.release_date.split("-")[0] }}
           </div>
-          <div v-if="sMoviesDetails.id === sMovie.id" class="grey--text pl-0 w-auto">{{ sMoviesDetails[i].runtime }} min</div>
+          <div v-if="getRuntime(sMovie.id)" class="grey--text pl-0 w-auto">{{ getRuntime(sMovie.id) }}min</div>
         </q-card-section>
 
         <q-separator />
@@ -195,12 +191,21 @@ export default {
     const sMoviesCredits = ref([]);
 
     const sFnmovies = async () => {
+      // Zerando a busca
+      sMovies.value = [];
+      noMovie.value = false;
+      progressLoader.value = true;
+
+      // Iniciando a nova busca
       const data = await fetch("search/movie", { query: searchTerm.value });
       sMovies.value = data.results || [];
+      progressLoader.value = false;
 
       if (sMovies.value.length) {
         // Aguarda todas as requisições de detalhes e créditos
         await Promise.all(sMovies.value.map((movie) => sFnmoviesDetailsCredits(movie.id)));
+      } else {
+        noMovie.value = true;
       }
     };
 
@@ -210,6 +215,13 @@ export default {
       sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
       sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
     };
+
+    const sortedMovies = computed(() => {
+      const today = new Date();
+      return [...sMovies.value]
+        .filter((movie) => new Date(movie.release_date) <= today) // Remove filmes com data futura
+        .sort((a, b) => new Date(a.release_date) - new Date(b.release_date)); // Ordena do mais recente para o mais antigo
+    });
 
     const getDirector = computed(() => (movieId) => {
       const credits = sMoviesCredits.value.find((item) => item.id === movieId);
@@ -234,6 +246,16 @@ export default {
 
       return genres;
     });
+
+    const getRuntime = computed(() => (movieId) => {
+      const details = sMoviesDetails.value.find((item) => item.id === movieId);
+
+      if (!details) return null;
+
+      return details.runtime || null;
+    });
+
+    // CÓDIGO ANTIGO A PARTIR DAQUI
 
     const api_key = process.env.OMDBAPI_KEY;
     const streaming_key = process.env.STREAMING_KEY;
@@ -2653,12 +2675,13 @@ export default {
       showHiddenBtns,
 
       sFnmovies,
-      sMovies,
+      sortedMovies,
       sMoviesDetails,
       sMoviesCredits,
       getDirector,
       getActors,
       getGenres,
+      getRuntime,
     };
   },
   watch: {
