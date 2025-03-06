@@ -26,7 +26,7 @@
           <div class="grey--text p-0 w-auto">
             {{ sMovie.release_date.split("-")[0] }}
           </div>
-          <div v-if="getRuntime(sMovie.id)" class="grey--text pl-0 w-auto">{{ getRuntime(sMovie.id) }}min</div>
+          <div v-if="getRuntime(sMovie.id) > 0" class="grey--text pl-0 w-auto">{{ getRuntime(sMovie.id) }}min</div>
         </q-card-section>
 
         <q-separator />
@@ -180,15 +180,17 @@ import { onMounted, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import axios from "axios";
 import { useTmdb } from "src/composables/useTmdb";
+import { useMovieData } from "src/composables/useMovieData";
 
 export default {
   name: "Movies",
   setup() {
     const { fetch } = useTmdb();
+    const sMoviesCredits = ref([]);
+    const sMoviesDetails = ref([]);
+    const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails);
 
     const sMovies = ref([]);
-    const sMoviesDetails = ref([]);
-    const sMoviesCredits = ref([]);
 
     const sFnmovies = async () => {
       // Zerando a busca
@@ -219,40 +221,8 @@ export default {
     const sortedMovies = computed(() => {
       const today = new Date();
       return [...sMovies.value]
-        .filter((movie) => new Date(movie.release_date) <= today) // Remove filmes com data futura
+        .filter((movie) => new Date(movie.release_date) <= today && !movie.genre_ids.includes(10402)) // Remove filmes com data futura
         .sort((a, b) => new Date(a.release_date) - new Date(b.release_date)); // Ordena do mais recente para o mais antigo
-    });
-
-    const getDirector = computed(() => (movieId) => {
-      const credits = sMoviesCredits.value.find((item) => item.id === movieId);
-      return credits ? credits.crew.find((person) => person.job === "Director")?.name || "Unknown" : "Loading...";
-    });
-
-    const getActors = computed(() => (movieId) => {
-      const credits = sMoviesCredits.value.find((item) => item.id === movieId);
-      if (!credits) return ["Loading..."];
-
-      const actors = credits.cast.filter((person) => person.known_for_department === "Acting").map((actor) => actor.name);
-
-      return actors.length > 5 ? [...actors.slice(0, 5), "..."] : actors;
-    });
-
-    const getGenres = computed(() => (movieId) => {
-      const details = sMoviesDetails.value.find((item) => item.id === movieId);
-
-      if (!details) return ["Loading..."];
-
-      const genres = details.genres?.map((genre) => genre.name) || [];
-
-      return genres;
-    });
-
-    const getRuntime = computed(() => (movieId) => {
-      const details = sMoviesDetails.value.find((item) => item.id === movieId);
-
-      if (!details) return null;
-
-      return details.runtime || null;
     });
 
     // CÓDIGO ANTIGO A PARTIR DAQUI
@@ -2676,12 +2646,17 @@ export default {
 
       sFnmovies,
       sortedMovies,
-      sMoviesDetails,
-      sMoviesCredits,
-      getDirector,
-      getActors,
-      getGenres,
-      getRuntime,
+      getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "Unknown"),
+
+      getActors: (movieId) =>
+        getMovieData(sMoviesCredits, movieId, "cast", (cast) => {
+          const actors = cast.filter((person) => person.known_for_department === "Acting").map((actor) => actor.name);
+          return actors.length > 5 ? [...actors.slice(0, 5), "..."] : actors;
+        }),
+
+      getGenres: (movieId) => getMovieData(sMoviesDetails, movieId, "genres", (genres) => genres.map((genre) => genre.name)),
+
+      getRuntime: (movieId) => getMovieData(sMoviesDetails, movieId, "runtime"),
     };
   },
   watch: {
