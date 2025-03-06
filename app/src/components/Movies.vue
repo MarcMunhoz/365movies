@@ -37,6 +37,8 @@
           <div v-if="getActors(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id).join(", ") }}</div>
 
           <div v-if="getGenres(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Genres:</strong> {{ getGenres(sMovie.id).join(", ") }}</div>
+
+          <div v-if="getProviders(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Providers:</strong> {{ getProviders(sMovie.id).join(", ") }}</div>
         </q-card-section>
 
         <q-separator />
@@ -176,7 +178,7 @@
 </template>
 
 <script>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, provide } from "vue";
 import { useQuasar } from "quasar";
 import axios from "axios";
 import { useTmdb } from "src/composables/useTmdb";
@@ -188,7 +190,8 @@ export default {
     const { fetch } = useTmdb();
     const sMoviesCredits = ref([]);
     const sMoviesDetails = ref([]);
-    const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails);
+    const sMoviesProviders = ref([]);
+    const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders);
 
     const sMovies = ref([]);
 
@@ -205,17 +208,18 @@ export default {
 
       if (sMovies.value.length) {
         // Aguarda todas as requisições de detalhes e créditos
-        await Promise.all(sMovies.value.map((movie) => sFnmoviesDetailsCredits(movie.id)));
+        await Promise.all(sMovies.value.map((movie) => sFnmoviesInfo(movie.id)));
       } else {
         noMovie.value = true;
       }
     };
 
-    const sFnmoviesDetailsCredits = async (movieId) => {
-      const [sDetailsData, sCreditsData] = await Promise.all([fetch(`movie/${movieId}`), fetch(`movie/${movieId}/credits`)]);
+    const sFnmoviesInfo = async (movieId) => {
+      const [sDetailsData, sCreditsData, sProvidersData] = await Promise.all([fetch(`movie/${movieId}`), fetch(`movie/${movieId}/credits`), fetch(`movie/${movieId}/watch/providers`)]);
 
       sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
       sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
+      sMoviesProviders.value.push({ id: movieId, ...sProvidersData });
     };
 
     const sortedMovies = computed(() => {
@@ -2648,6 +2652,8 @@ export default {
       sortedMovies,
       getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "Unknown"),
 
+      getRuntime: (movieId) => getMovieData(sMoviesDetails, movieId, "runtime"),
+
       getActors: (movieId) =>
         getMovieData(sMoviesCredits, movieId, "cast", (cast) => {
           const actors = cast.filter((person) => person.known_for_department === "Acting").map((actor) => actor.name);
@@ -2656,7 +2662,12 @@ export default {
 
       getGenres: (movieId) => getMovieData(sMoviesDetails, movieId, "genres", (genres) => genres.map((genre) => genre.name)),
 
-      getRuntime: (movieId) => getMovieData(sMoviesDetails, movieId, "runtime"),
+      getProviders: (movieId) =>
+        getMovieData(sMoviesProviders, movieId, "results", (results) => {
+          const countryProviders = results["BR"];
+
+          return countryProviders?.flatrate?.map((provider) => provider.provider_name) || ["No providers found for region US"];
+        }),
     };
   },
   watch: {
