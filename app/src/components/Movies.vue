@@ -75,6 +75,7 @@
         <q-separator />
 
         <q-card-section class="q-pt-none mt-3">
+          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">Trailer</q-btn>
           <template v-if="sMovie.overview">{{ sMovie.overview }}</template>
           <template v-else>N/A</template>
         </q-card-section>
@@ -150,12 +151,8 @@ export default {
   name: "Movies",
   setup() {
     const { fetch } = useTmdb();
-    const sMoviesCredits = ref([]);
-    const sMoviesDetails = ref([]);
-    const sMoviesProviders = ref([]);
-    const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders);
-
-    const sMovies = ref([]);
+    const [sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos, sMovies] = [ref([]), ref([]), ref([]), ref([]), ref([])];
+    const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
     const sFnmovies = async () => {
       // Zerando a busca
@@ -177,11 +174,23 @@ export default {
     };
 
     const sFnmoviesInfo = async (movieId) => {
-      const [sDetailsData, sCreditsData, sProvidersData] = await Promise.all([fetch(`movie/${movieId}`), fetch(`movie/${movieId}/credits`), fetch(`movie/${movieId}/watch/providers`)]);
+      const [sDetailsData, sCreditsData, sProvidersData, sVideosData] = await Promise.all([
+        fetch(`movie/${movieId}`),
+        fetch(`movie/${movieId}/credits`),
+        fetch(`movie/${movieId}/watch/providers`),
+        fetch(`movie/${movieId}/videos`),
+      ]);
 
       sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
       sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
       sMoviesProviders.value.push({ id: movieId, ...sProvidersData });
+      sMoviesVideos.value.push({ id: movieId, ...sVideosData });
+    };
+
+    const openTrailerDialog = (trailerId) => {
+      const ytUrl = `https://www.youtube.com/watch?v=${trailerId}`;
+
+      console.log(ytUrl);
     };
 
     const sortedMovies = computed(() => {
@@ -565,6 +574,7 @@ export default {
 
       sFnmovies,
       sortedMovies,
+      openTrailerDialog,
       getImdb: (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id"),
 
       getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "Unknown"),
@@ -584,6 +594,13 @@ export default {
           const countryProviders = results["BR"];
 
           return countryProviders?.flatrate?.map((provider) => provider.provider_name) || ["No providers found for region US"];
+        }),
+
+      getTrailer: (movieId) =>
+        getMovieData(sMoviesVideos, movieId, "results", (videos) => {
+          const trailers = videos.filter((video) => video.type === "Trailer")[0];
+
+          return trailers?.key || "";
         }),
     };
   },
