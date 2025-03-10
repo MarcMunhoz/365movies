@@ -11,6 +11,10 @@
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
     </div>
 
+    <div v-if="noMovie === true" class="text-center">
+      <img src="../assets/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
+    </div>
+
     <section class="flex flex-wrap justify-center gap-3 mt-5">
       <q-card v-for="(sMovie, i) in sortedMovies" :key="i" class="relative w-[374px] max-w-[374px]">
         <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px]" />
@@ -54,6 +58,9 @@
 
           <template v-if="sMovie.vote_average != null">
             <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
+            <q-tooltip class="bg-primary" anchor="bottom middle" self="center middle">
+              {{ sMovie.vote_average }}
+            </q-tooltip>
           </template>
 
           <div class="grey--text p-0 w-auto">
@@ -86,9 +93,6 @@
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
 
     <!-- OLD CODE HERE -->
-    <div v-if="noMovie === true" class="text-center">
-      <img src="../assets/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
-    </div>
 
     <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
       <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
@@ -156,7 +160,13 @@ export default {
   components: { Trailers },
   setup() {
     const { fetch } = useTmdb();
-    const [sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos, sMovies, trailerDialog, dialogTrailerId] = [ref([]), ref([]), ref([]), ref([]), ref([]), ref(), ref()];
+    const sMoviesCredits = ref([]);
+    const sMoviesDetails = ref([]);
+    const sMoviesProviders = ref([]);
+    const sMoviesVideos = ref([]);
+    const sMovies = ref([]);
+    const trailerDialog = ref();
+    const dialogTrailerId = ref();
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
     const sFnmovies = async () => {
