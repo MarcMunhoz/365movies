@@ -76,11 +76,14 @@
 
         <q-card-section class="q-pt-none mt-3">
           <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">Trailer</q-btn>
+          <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
           <template v-if="sMovie.overview">{{ sMovie.overview }}</template>
           <template v-else>N/A</template>
         </q-card-section>
       </q-card>
     </section>
+
+    <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
 
     <!-- OLD CODE HERE -->
     <div v-if="noMovie === true" class="text-center">
@@ -140,18 +143,20 @@
 </template>
 
 <script>
-import { onMounted, ref, computed, provide } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import axios from "axios";
 import { commonWords } from "src/utils/commonWords";
 import { useTmdb } from "src/composables/useTmdb";
 import { useMovieData } from "src/composables/useMovieData";
+import Trailers from "./Trailers.vue";
 
 export default {
   name: "Movies",
+  components: { Trailers },
   setup() {
     const { fetch } = useTmdb();
-    const [sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos, sMovies] = [ref([]), ref([]), ref([]), ref([]), ref([])];
+    const [sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos, sMovies, trailerDialog, dialogTrailerId] = [ref([]), ref([]), ref([]), ref([]), ref([]), ref(), ref()];
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
     const sFnmovies = async () => {
@@ -188,15 +193,15 @@ export default {
     };
 
     const openTrailerDialog = (trailerId) => {
-      const ytUrl = `https://www.youtube.com/watch?v=${trailerId}`;
+      dialogTrailerId.value = trailerId;
 
-      console.log(ytUrl);
+      return trailerDialog.value.openDialog();
     };
 
     const sortedMovies = computed(() => {
       const today = new Date();
       return [...sMovies.value]
-        .filter((movie) => new Date(movie.release_date) <= today && !movie.genre_ids.includes(10402)) // Remove filmes com data futura
+        .filter((movie) => new Date(movie.release_date) <= today) // Remove filmes com data futura
         .sort((a, b) => new Date(a.release_date) - new Date(b.release_date)); // Ordena do mais recente para o mais antigo
     });
 
@@ -575,6 +580,8 @@ export default {
       sFnmovies,
       sortedMovies,
       openTrailerDialog,
+      trailerDialog,
+      dialogTrailerId,
       getImdb: (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id"),
 
       getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "Unknown"),

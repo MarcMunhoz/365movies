@@ -28,7 +28,7 @@
       </q-item>
     </q-footer>
 
-    <q-page-container>
+    <q-page-container class="mb-8">
       <router-view />
     </q-page-container>
   </q-layout>
