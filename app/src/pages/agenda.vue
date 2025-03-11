@@ -1,6 +1,7 @@
 <template>
-  <q-page class="flex flex-center content-center justify-center p-3">
-    <q-btn @click="clearCalendar" color="accent" push class="my-4">Clear calendar!</q-btn>
+  <q-page class="flex flex-center content-start justify-center p-3">
+    <q-btn @click="clearCalendar" color="accent" push class="my-4 mr-4">Clear calendar!</q-btn>
+    <q-btn @click="listMode = !listMode" color="secondary" push class="my-4">{{ !listMode ? "List" : "Calendar" }} View</q-btn>
 
     <section class="w-full text-right mb-4">
       <q-chip outline color="primary" size="sm" :ripple="false" icon="circle" label="Scheduled movie" />
@@ -10,7 +11,53 @@
       <q-chip outline color="negative" size="sm" :ripple="false" icon="delete" label="Delete from Agenda" />
     </section>
 
-    <Calendar expanded borderless is-double-paned :columns="columns" :rows="5" :attributes="events" :min-date="minDate" :max-date="maxDate">
+    <section v-if="listMode" class="w-full">
+      <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Total per page" class="w-full">
+        <template #body-cell-title="{ row }">
+          <q-td>
+            <a :href="`https://www.imdb.com/title/${row.movieId}`" target="movie" class="text-lg text-primary">{{ row.title }} </a>
+          </q-td>
+        </template>
+
+        <template #body-cell-watched="{ row }">
+          <q-td class="text-center">
+            <q-checkbox v-model="row.watched" checked-icon="task_alt" unchecked-icon="highlight_off" color="positive" @click="markWatch(row.movieId, row.watched)" />
+          </q-td>
+        </template>
+
+        <template #body-cell-actions="{ row }">
+          <q-td class="text-center">
+            <q-btn flat round color="secondary" icon="edit" @click="openEditDialog(row.movieId)" />
+            <q-btn flat round color="negative" icon="delete" @click="delMovieAgenda(row.movieId)">
+              <q-tooltip>Click to delete it from agenda!</q-tooltip>
+            </q-btn>
+          </q-td>
+        </template>
+
+        <template #body-cell-streaming="{ row }">
+          <q-td class="text-center">
+            <div v-if="row.streamingList.length">
+              <p class="font-bold">
+                <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span>
+              </p>
+              <p class="uppercase text-center">
+                <span v-for="(stream, index) in row.streamingList" :key="stream.service">
+                  <a :href="stream.link" target="_blank" class="underline underline-offset-1">
+                    {{ stream.service }}
+                  </a>
+                  <span v-if="index !== row.streamingList.length - 1">, </span>
+                </span>
+              </p>
+            </div>
+            <p v-else>
+              Unavailable on streaming services in <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span> ¯\_(ツ)_/¯
+            </p>
+          </q-td>
+        </template>
+      </q-table>
+    </section>
+
+    <Calendar v-else expanded borderless is-double-paned :columns="columns" :rows="5" :attributes="events" :min-date="minDate" :max-date="maxDate">
       <template #day-popover="{ attributes }">
         <ul>
           <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary border-dashed border-2 mt-5 first:mt-0" :class="{ 'text-positive': customData.watched }">
@@ -84,6 +131,18 @@ export default {
     const $q = ref(useQuasar());
     const openAgendaDialog = ref(false);
 
+    // NEW CODE
+    const listMode = ref(false);
+    const tableData = ref([]);
+
+    // Definição das colunas da tabela
+    const tableColumns = [
+      { name: "title", label: "Title", align: "left", field: "title" },
+      { name: "watched", label: "Watched", align: "center", field: "watched" },
+      { name: "streaming", label: "Streaming", align: "center", field: "streamingList" },
+      { name: "actions", label: "Actions", align: "center", field: "actions" },
+    ];
+
     const months = document.querySelectorAll(".vc-title");
 
     months.forEach((e) => {
@@ -134,7 +193,15 @@ export default {
           eventAdd.customData.watched = e.watched;
           eventAdd.dates.push(e.watchDate);
 
-          return events.value.push(eventAdd);
+          events.value.push(eventAdd);
+
+          tableData.value.push({
+            movieId: eventAdd.customData.movieId,
+            title: eventAdd.popover.label,
+            watched: eventAdd.customData.watched,
+            streamingList: eventAdd.customData.streamingList,
+            streamingCountry: eventAdd.customData.streamingCountry,
+          });
         });
       }
     };
@@ -205,13 +272,30 @@ export default {
     });
 
     watch(
-      watchMovies,
-      (delMovieAgenda) => {
-        localStorage.watchMovies = JSON.stringify(delMovieAgenda);
+      events,
+      (newEvents) => {
+        tableData.value = newEvents.map(({ customData, popover }) => ({
+          movieId: customData.movieId,
+          title: popover.label,
+          watched: customData.watched,
+          streamingList: customData.streamingList,
+          streamingCountry: customData.streamingCountry,
+        }));
+      },
+      { deep: true, immediate: true } // Atualiza imediatamente na inicialização
+    );
 
-        return setTimeout(() => {
-          return location.reload(true);
-        }, 2600);
+    // Atualiza events apenas quando tableData mudar (sem loops infinitos)
+    watch(
+      tableData,
+      (newTableData) => {
+        events.value = events.value.map((event, index) => ({
+          ...event,
+          customData: {
+            ...event.customData,
+            watched: newTableData[index]?.watched || false,
+          },
+        }));
       },
       { deep: true }
     );
@@ -232,6 +316,9 @@ export default {
       openAgendaDialog,
       minDate,
       maxDate,
+      tableData,
+      tableColumns,
+      listMode,
     };
   },
 };

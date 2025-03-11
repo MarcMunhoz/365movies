@@ -28,7 +28,7 @@
                     delMovieAgenda(getImdb(sMovie.id));
                     break;
                   default:
-                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.Title);
+                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title);
                 }
               "
               :icon="btn.icon"
