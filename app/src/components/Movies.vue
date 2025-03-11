@@ -5,7 +5,7 @@
     </div>
     <div class="row w-full">
       <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" :disable="searchTerm.length < 3" @click="(luckyMethod = false), sFnmovies()">Movie Search</q-btn>
-      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), search()">I'm lucky</q-btn>
+      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), sFnmovies()">I'm lucky</q-btn>
     </div>
     <div class="row w-full" v-if="progressLoader === true">
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
@@ -69,11 +69,11 @@
         <q-separator />
 
         <q-card-section>
-          <div v-if="getDirector(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
+          <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
 
-          <div v-if="getActors(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id).join(", ") }}</div>
+          <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id)?.join(", ") || "N/A" }}</div>
 
-          <div v-if="getGenres(sMovie.id).length" class="text-subtitle-1 w-100"><strong>Genres:</strong> {{ getGenres(sMovie.id).join(", ") }}</div>
+          <div class="text-subtitle-1 w-100"><strong>Genres:</strong> {{ getGenres(sMovie.id)?.join(", ") || "N/A" }}</div>
         </q-card-section>
 
         <q-separator />
@@ -180,6 +180,13 @@ export default {
       noMovie.value = false;
       progressLoader.value = true;
 
+      // Breaks if search field wrong
+      if ((!searchTerm.value && !luckyMethod.value) || (searchTerm.value.length < 3 && !luckyMethod.value)) {
+        return false;
+      }
+
+      luckyMethod.value && (searchTerm.value = getRandomWord());
+
       // Fazendo a busca
       const data = await fetch("search/movie", { query: searchTerm.value });
       const movies = data?.results || [];
@@ -222,7 +229,7 @@ export default {
       const today = new Date();
       return [...sMovies.value]
         .filter((movie) => new Date(movie.release_date) <= today) // Remove filmes com data futura
-        .sort((a, b) => new Date(a.release_date) - new Date(b.release_date)); // Ordena do mais recente para o mais antigo
+        .sort((a, b) => new Date(b.release_date) - new Date(a.release_date)); // Ordena do mais recente para o mais antigo
     });
 
     // CÓDIGO ANTIGO A PARTIR DAQUI
@@ -251,7 +258,6 @@ export default {
     const countrySearch = ref("");
     const dialogAction = ref(String);
     const dialogTitle = ref(String);
-    const flashURL = ref(URL);
     const luckyMethod = ref(Boolean);
     const movieAddedLoading = ref(false);
     const movieId = ref(String);
@@ -306,108 +312,6 @@ export default {
       if ((!hasMovieAgenda && label == "Delete") || (hasMovieAgenda && label == "Add") || (!hasMovieAgenda && label == "Edit")) {
         return "hidden";
       }
-    };
-
-    const fetchMovie = () => {
-      // Asynchronous FN to fetch API
-      async function ftMovie() {
-        let resp = await fetch(flashURL.value, {
-          method: "get",
-          redirect: "follow",
-        });
-
-        if (!resp.ok) {
-          throw new Error(`HTTP error! status: ${resp.error}`);
-        }
-
-        return resp.json();
-      }
-
-      // Calls the FN to populate the movie list
-      ftMovie()
-        .then((resp) => {
-          if (resp.Response == "False") {
-            throw new Error(resp.Error);
-          }
-
-          moviesTitles.value = resp.Search;
-          return fetchMovieDetails();
-        })
-        .catch((e) => {
-          return (progressLoader.value = false), (noMovie.value = true), console.error(e);
-        });
-    };
-
-    const fetchMovieDetails = () => {
-      moviesDetails.value = [];
-      let detailsTerms = new Array();
-      let detailsUrls = new Array();
-      const fetchDetails = new Array();
-
-      moviesTitles.value.forEach((movie) => {
-        detailsTerms.push(movie.Title);
-      });
-
-      detailsTerms.forEach((term) => {
-        const detailUrl = `https://www.omdbapi.com/?t=${term}&type=movie&apikey=${api_key}`;
-
-        detailsUrls.push(detailUrl);
-      });
-
-      detailsUrls.forEach((detailUrl) => {
-        const detailPromise = fetch(detailUrl).then((resp) => {
-          if (resp.Response == "False") {
-            throw new Error(resp.Error);
-          }
-
-          return resp.json();
-        });
-
-        fetchDetails.push(detailPromise);
-      });
-
-      Promise.all(fetchDetails)
-        .then((detailArray) => {
-          progressLoader.value = false;
-
-          detailArray.forEach((data) => {
-            return moviesDetails.value.push(data);
-          });
-
-          return sortAndFilter();
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    };
-
-    const sortAndFilter = () => {
-      const uniqueMovies = moviesDetails.value
-        .sort((a, b) => b.Year - a.Year)
-        .filter((movie, index, self) => {
-          const titles = self.map((movie) => movie.Title);
-          return titles.indexOf(movie.Title) === index;
-        });
-
-      return (moviesDetails.value = uniqueMovies);
-    };
-
-    const search = () => {
-      // Setting defaults
-      moviesTitles.value = [];
-      moviesDetails.value = [];
-      noMovie.value = false;
-      progressLoader.value = true;
-
-      // Breaks if search field wrong
-      if ((!searchTerm.value && !luckyMethod.value) || (searchTerm.value.length < 3 && !luckyMethod.value)) {
-        return false;
-      }
-
-      luckyMethod.value && (searchTerm.value = getRandomWord());
-
-      flashURL.value = new URL(`https://www.omdbapi.com/?s=${searchTerm.value}&type=movie&apikey=${api_key}`);
-      fetchMovie();
     };
 
     const getStreamingList = () => {
@@ -573,7 +477,6 @@ export default {
       countrySearch,
       dialogAction,
       dialogTitle,
-      flashURL,
       luckyMethod,
       movieAddedLoading,
       movieId,
@@ -593,7 +496,6 @@ export default {
       delMovieAgenda,
       movieBtnAction,
       movieWatchDateOpt,
-      search,
       showHiddenBtns,
 
       progressLoader,
@@ -604,7 +506,7 @@ export default {
       dialogTrailerId,
       getImdb: (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id"),
 
-      getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "Unknown"),
+      getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A"),
 
       getRuntime: (movieId) => getMovieData(sMoviesDetails, movieId, "runtime"),
 
