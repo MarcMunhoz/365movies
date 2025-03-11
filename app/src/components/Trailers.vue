@@ -1,7 +1,7 @@
 <template>
   <q-dialog v-model="trailerDialog" full-width full-height persistent>
     <q-card class="flex flex-col h-screen">
-      <q-card-section class="flex justify-end">
+      <q-card-section class="flex justify-end pb-0">
         <q-btn icon="close" color="primary" flat round dense v-close-popup />
       </q-card-section>
       <q-card-section class="flex-grow flex items-center justify-center">
@@ -19,6 +19,7 @@ const props = defineProps({
   trailerId: {
     type: String,
     required: true,
+    default: "undefined",
   },
 });
 

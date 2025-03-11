@@ -9,13 +9,10 @@
     </div>
     <div class="row w-full" v-if="progressLoader === true">
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
+      <p class="text-center text-lg font-bold text-primary animate-pulse mt-2 w-full">Please, wait...</p>
     </div>
 
-    <div v-if="noMovie === true" class="text-center">
-      <img src="../assets/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
-    </div>
-
-    <section class="flex flex-wrap justify-center gap-3 mt-5">
+    <section v-else class="flex flex-wrap justify-center gap-3 mt-5">
       <q-card v-for="(sMovie, i) in sortedMovies" :key="i" class="relative w-[374px] max-w-[374px]">
         <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px]" />
         <img v-else src="../assets/img/no-image.jpg" class="object-cover h-[250px]" />
@@ -82,13 +79,17 @@
         <q-separator />
 
         <q-card-section class="q-pt-none mt-3">
-          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">Trailer</q-btn>
+          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
           <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
           <template v-if="sMovie.overview">{{ sMovie.overview }}</template>
           <template v-else>N/A</template>
         </q-card-section>
       </q-card>
     </section>
+
+    <div v-if="noMovie === true" class="text-center">
+      <img src="../assets/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
+    </div>
 
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
 
@@ -170,22 +171,31 @@ export default {
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
     const sFnmovies = async () => {
-      // Zerando a busca
+      // Resetando estado
       sMovies.value = [];
+      sMoviesDetails.value = [];
+      sMoviesCredits.value = [];
+      sMoviesProviders.value = [];
+      sMoviesVideos.value = [];
       noMovie.value = false;
       progressLoader.value = true;
 
-      // Iniciando a nova busca
+      // Fazendo a busca
       const data = await fetch("search/movie", { query: searchTerm.value });
-      sMovies.value = data.results || [];
-      progressLoader.value = false;
+      const movies = data?.results || [];
 
-      if (sMovies.value.length) {
-        // Aguarda todas as requisições de detalhes e créditos
-        await Promise.all(sMovies.value.map((movie) => sFnmoviesInfo(movie.id)));
+      if (movies.length) {
+        await Promise.all(
+          movies.map(async (movie) => {
+            await sFnmoviesInfo(movie.id);
+            sMovies.value.push(movie); // Adiciona só depois de carregar os detalhes
+          })
+        );
       } else {
         noMovie.value = true;
       }
+
+      progressLoader.value = false;
     };
 
     const sFnmoviesInfo = async (movieId) => {
@@ -571,7 +581,6 @@ export default {
       moviesDetails,
       moviesTitles,
       openAgendaDialog,
-      progressLoader,
       searchRules,
       searchTerm,
       selectedCountry,
@@ -587,6 +596,7 @@ export default {
       search,
       showHiddenBtns,
 
+      progressLoader,
       sFnmovies,
       sortedMovies,
       openTrailerDialog,
