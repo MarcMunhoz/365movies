@@ -12,7 +12,7 @@
     </section>
 
     <section v-if="listMode" class="w-full">
-      <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Total per page" no-data-label="There are no movies planned" class="w-full">
+      <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Movies per page" no-data-label="There are no movies planned" class="w-full">
         <template #body-cell-title="{ row }">
           <q-td>
             <a :href="`https://www.imdb.com/title/${row.movieId}`" target="movie" class="text-lg text-primary">{{ row.title }} </a>
@@ -137,7 +137,8 @@ export default {
 
     // Definição das colunas da tabela
     const tableColumns = [
-      { name: "title", label: "Title", align: "left", field: "title" },
+      { name: "title", label: "Title", align: "left", field: "title", sortable: true, sort: (a, b) => a.localeCompare(b) },
+      { name: "watchDate", label: "Watch Date", align: "center", field: "watchDate", sortable: true, sort: (a, b) => new Date(a) - new Date(b) },
       { name: "watched", label: "Watched", align: "center", field: "watched" },
       { name: "streaming", label: "Streaming", align: "center", field: "streamingList" },
       { name: "actions", label: "Actions", align: "center", field: "actions" },
@@ -159,7 +160,7 @@ export default {
       const hasMovies = localStorage.watchMovies ? true : false;
       let message = "There's no movies in Calendar.";
 
-      hasMovies && (localStorage.removeItem("watchMovies"), (events.value.length = 0), (message = "Calendar is clear!"));
+      hasMovies && (localStorage.removeItem("watchMovies"), (events.value.length = 0), (tableData.value.length = 0), (message = "Calendar is clear!"));
 
       return $q.value.notify({
         type: "info",
@@ -199,6 +200,7 @@ export default {
           tableData.value.push({
             movieId: eventAdd.customData.movieId,
             title: eventAdd.popover.label,
+            watchDate: new Date(e.watchDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
             watched: eventAdd.customData.watched,
             streamingList: eventAdd.customData.streamingList,
             streamingCountry: eventAdd.customData.streamingCountry,
