@@ -12,7 +12,7 @@
     </section>
 
     <section v-if="listMode" class="w-full">
-      <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Total per page" class="w-full">
+      <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Total per page" no-data-label="There are no movies planned" class="w-full">
         <template #body-cell-title="{ row }">
           <q-td>
             <a :href="`https://www.imdb.com/title/${row.movieId}`" target="movie" class="text-lg text-primary">{{ row.title }} </a>
@@ -132,7 +132,7 @@ export default {
     const openAgendaDialog = ref(false);
 
     // NEW CODE
-    const listMode = ref(false);
+    const listMode = ref(localStorage.getItem("listMode") === "true");
     const tableData = ref([]);
 
     // Definição das colunas da tabela
@@ -195,6 +195,7 @@ export default {
 
           events.value.push(eventAdd);
 
+          // Defines table rows
           tableData.value.push({
             movieId: eventAdd.customData.movieId,
             title: eventAdd.popover.label,
@@ -209,13 +210,11 @@ export default {
     addDates(); // Populates calendar on MOUNTED
 
     const markWatch = (movieID, status) => {
-      let moviesList = JSON.parse(localStorage.getItem("watchMovies"));
-      const movie = moviesList.find((movie) => movie.movieID === movieID);
+      let markMovie = events.value.filter((event) => event.customData.movieId === movieID)[0];
 
-      movie.watched = status;
-      moviesList[moviesList.findIndex((oldMovie) => oldMovie.movieID === movieID)] = movie;
-
-      localStorage.setItem("watchMovies", JSON.stringify(moviesList));
+      markMovie.customData.watched = status;
+      tableData.value.find((movie) => movie.movieId === movieID).watched = status;
+      watchMovies.value.find((movie) => movie.movieID === movieID).watched = status;
     };
 
     const movieWatchDateOpt = (movieWatchDateOpt) => {
@@ -255,6 +254,7 @@ export default {
 
       watchMovies.value = moviesList;
       events.value = events.value.filter((event) => event.customData.movieId !== movieID);
+      tableData.value = tableData.value.filter((event) => event.movieId !== movieID);
 
       return $q.value.notify({
         type: "info",
@@ -272,30 +272,13 @@ export default {
     });
 
     watch(
-      events,
-      (newEvents) => {
-        tableData.value = newEvents.map(({ customData, popover }) => ({
-          movieId: customData.movieId,
-          title: popover.label,
-          watched: customData.watched,
-          streamingList: customData.streamingList,
-          streamingCountry: customData.streamingCountry,
-        }));
-      },
-      { deep: true, immediate: true } // Atualiza imediatamente na inicialização
-    );
+      [watchMovies, listMode],
+      ([newMovies, newListMode]) => {
+        // Updates watchMovies in localStorage
+        localStorage.setItem("watchMovies", JSON.stringify(newMovies));
 
-    // Atualiza events apenas quando tableData mudar (sem loops infinitos)
-    watch(
-      tableData,
-      (newTableData) => {
-        events.value = events.value.map((event, index) => ({
-          ...event,
-          customData: {
-            ...event.customData,
-            watched: newTableData[index]?.watched || false,
-          },
-        }));
+        // Updates listMode in localStorage
+        localStorage.setItem("listMode", JSON.stringify(newListMode));
       },
       { deep: true }
     );
