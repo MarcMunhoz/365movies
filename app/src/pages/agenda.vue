@@ -239,6 +239,7 @@ export default {
 
       movieEdit.dates = editDateMovie.value;
       watchMovies.value.find((movie) => movie.movieID === editMovieId.value).watchDate = editDateMovie.value;
+      tableData.value.find((movie) => movie.movieId === editMovieId.value).watchDate = new Date(editDateMovie.value).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
       openAgendaDialog.value = false;
 
