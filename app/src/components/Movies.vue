@@ -28,7 +28,8 @@
                     delMovieAgenda(getImdb(sMovie.id));
                     break;
                   default:
-                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title);
+                    //movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title);
+                    openMovieDialog(sMovie.title);
                 }
               "
               :icon="btn.icon"
@@ -93,6 +94,8 @@
 
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
 
+    <AddMovie ref="addMovieDialog" :movie-watch-date="movieWatchDate" :movie-title="dialogTitle" />
+
     <!-- OLD CODE HERE -->
 
     <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
@@ -155,10 +158,11 @@ import { commonWords } from "src/utils/commonWords";
 import { useTmdb } from "src/composables/useTmdb";
 import { useMovieData } from "src/composables/useMovieData";
 import Trailers from "./Trailers.vue";
+import AddMovie from "./AddMovie.vue";
 
 export default {
   name: "Movies",
-  components: { Trailers },
+  components: { Trailers, AddMovie },
   setup() {
     const { fetch } = useTmdb();
     const sMoviesCredits = ref([]);
@@ -168,7 +172,13 @@ export default {
     const sMovies = ref([]);
     const trailerDialog = ref();
     const dialogTrailerId = ref();
+    const addMovieDialog = ref(); // addMovieDialog
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
+
+    const openMovieDialog = (movieTitle) => {
+      dialogTitle.value = movieTitle;
+      return addMovieDialog.value.openMvDialog();
+    };
 
     const sFnmovies = async () => {
       // Resetando estado
@@ -257,7 +267,7 @@ export default {
     const countriesList = ref([]);
     const countrySearch = ref("");
     const dialogAction = ref(String);
-    const dialogTitle = ref(String);
+    const dialogTitle = ref("");
     const luckyMethod = ref(Boolean);
     const movieAddedLoading = ref(false);
     const movieId = ref(String);
@@ -504,6 +514,8 @@ export default {
       openTrailerDialog,
       trailerDialog,
       dialogTrailerId,
+      addMovieDialog,
+      openMovieDialog,
       getImdb: (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id"),
 
       getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A"),
