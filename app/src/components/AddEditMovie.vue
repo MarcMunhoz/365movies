@@ -1,5 +1,5 @@
 <template>
-  <q-dialog class="movie-dialog" v-model="addMovieDialog" persistent>
+  <q-dialog class="movie-dialog" v-model="AddEditMovieDialog" persistent>
     <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
       <q-card-section v-if="movieAddedLoading === true">
         <q-spinner-pie color="primary" size="8em" />
@@ -9,6 +9,7 @@
         <q-select
           v-model="countrySearch"
           :options="getCountries"
+          option-label="name"
           autofocus
           @update:model-value="chosenMesage"
           :rules="[(val) => !!val || 'Please select a country']"
@@ -34,7 +35,7 @@
         <q-date v-model="localmovieWatchDate" :options="movieWatchDateOpt" :title="movieTitle" />
 
         <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal mt-5">
-          <q-btn color="negative" @click="addMovieDialog = false">Cancel</q-btn>
+          <q-btn color="negative" @click="AddEditMovieDialog = false">Cancel</q-btn>
         </q-card-actions>
       </q-card-section>
     </q-card>
@@ -57,7 +58,7 @@ const props = defineProps({
   },
 });
 
-const addMovieDialog = ref(false);
+const AddEditMovieDialog = ref(false);
 const regions = ref([]);
 const countrySearch = ref("");
 const failedFlags = ref(new Set());
@@ -65,13 +66,13 @@ const localmovieWatchDate = ref(props.movieWatchDate);
 const movieAddedLoading = ref(false);
 
 const openMvDialog = () => {
-  addMovieDialog.value = true;
+  AddEditMovieDialog.value = true;
 };
 
 const chosenMesage = () => {
   return Notify.create({
     type: "positive",
-    message: `Okay. We'll search by streaming services from ${countrySearch.value.toUpperCase()}`,
+    message: `Okay. We'll search by streaming services from ${countrySearch.value.name.toUpperCase()}`,
   });
 };
 
@@ -79,9 +80,9 @@ const getCountries = computed(() => {
   return regions.value
     .map(({ iso_3166_1, native_name }) => ({
       code: iso_3166_1,
-      name: native_name,
+      name: native_name, // Apenas pegue a string direto, pois não é um objeto
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name)); // Ordena corretamente
 });
 
 const markFlagAsFailed = (code) => {
