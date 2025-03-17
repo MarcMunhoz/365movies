@@ -28,7 +28,7 @@
                     delMovieAgenda(getImdb(sMovie.id));
                     break;
                   default:
-                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title, getProviders(sMovie.id));
+                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title, sMovie.id);
                 }
               "
               :icon="btn.icon"
@@ -92,8 +92,7 @@
     </div>
 
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
-
-    <AddEditMovie ref="AddEditMovieDialog" :movie-watch-date="movieWatchDate" :movie-title="dialogTitle" />
+    <AddEditMovie ref="AddEditMovieDialog" :movie-watch-date="movieWatchDate" :movie-title="dialogTitle" :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)" />
 
     <!-- OLD CODE HERE -->
 
@@ -171,7 +170,7 @@ export default {
     const sMovies = ref([]);
     const trailerDialog = ref();
     const dialogTrailerId = ref();
-    const AddEditMovieDialog = ref(); // AddEditMovieDialog
+    const AddEditMovieDialog = ref();
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
     const sFnmovies = async () => {
@@ -265,6 +264,7 @@ export default {
     const luckyMethod = ref(Boolean);
     const movieAddedLoading = ref(false);
     const movieId = ref(String);
+    const movieTmdbId = ref(String);
     const movieWatchDate = ref("");
     const moviesDetails = ref(Array);
     const moviesTitles = ref(Array);
@@ -299,6 +299,7 @@ export default {
       return (
         (dialogTitle.value = movieTitle),
         (movieId.value = imdbId),
+        (movieTmdbId.value = movieRawId),
         watchMovies.value.find((movie) => movie.movieID === imdbId) ? (movieWatchDate.value = watchMovies.value.find((movie) => movie.movieID === imdbId).watchDate) : (movieWatchDate.value = ""),
         (dialogAction.value = action),
         action !== "Delete" && AddEditMovieDialog.value.openMvDialog()
@@ -499,6 +500,8 @@ export default {
 
       progressLoader,
       sFnmovies,
+      sMoviesProviders,
+      movieTmdbId,
       sortedMovies,
       openTrailerDialog,
       trailerDialog,
@@ -517,14 +520,6 @@ export default {
         }),
 
       getGenres: (movieId) => getMovieData(sMoviesDetails, movieId, "genres", (genres) => genres.map((genre) => genre.name)),
-
-      getProviders: (movieId) =>
-        getMovieData(sMoviesProviders, movieId, "results", (results) => {
-          const countryProviders = results["BR"];
-          console.log(results);
-
-          return countryProviders?.flatrate?.map((provider) => provider.provider_name) || ["No providers found for region US"];
-        }),
 
       getTrailer: (movieId) =>
         getMovieData(sMoviesVideos, movieId, "results", (videos) => {
