@@ -92,7 +92,13 @@
     </div>
 
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
-    <AddEditMovie ref="AddEditMovieDialog" :movie-watch-date="movieWatchDate" :movie-title="dialogTitle" :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)" />
+    <AddEditMovie
+      ref="AddEditMovieDialog"
+      :dialog-action="dialogAction"
+      :movie-watch-date="movieWatchDate"
+      :movie-title="dialogTitle"
+      :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)"
+    />
 
     <!-- OLD CODE HERE -->
 

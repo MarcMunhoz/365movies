@@ -37,6 +37,20 @@
 
           <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal mt-5">
             <q-btn color="negative" @click="cancelEdit()">Cancel</q-btn>
+
+            <q-btn
+              color="primary"
+              @click="
+                switch (dialogAction) {
+                  case 'Add':
+                    addMovie();
+                    break;
+                  case 'Edit':
+                    alert('EDIT');
+                }
+              "
+              >Okay</q-btn
+            >
           </q-card-actions>
         </q-card-section>
       </section>
@@ -58,6 +72,10 @@ import { Notify } from "quasar";
 import { availableRegions } from "src/utils/availableRegions";
 
 const props = defineProps({
+  dialogAction: {
+    type: String,
+    required: true,
+  },
   movieWatchDate: {
     type: String,
     require: true,
@@ -79,6 +97,7 @@ const failedFlags = ref(new Set());
 const localmovieWatchDate = ref(props.movieWatchDate);
 const movieAddedLoading = ref(false);
 const regionsByMovie = ref(Array);
+const streamingList = ref(Object);
 
 const openMvDialog = () => {
   AddEditMovieDialog.value = true;
@@ -117,6 +136,14 @@ const movieWatchDateOpt = (movieWatchDateOpt) => {
 const cancelEdit = () => {
   AddEditMovieDialog.value = false;
   countrySearch.value = "";
+};
+
+const addMovie = () => {
+  streamingList.value = props.movieProviders[0].results[countrySearch.value.code];
+
+  console.log(streamingList.value);
+
+  return cancelEdit();
 };
 
 onMounted(async () => {
