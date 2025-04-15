@@ -25,24 +25,24 @@
               @click="
                 switch (btn.label) {
                   case 'Delete':
-                    delMovieAgenda(getImdb(sMovie.id));
+                    delMovieAgenda(sMovie.imdbId);
                     break;
                   default:
-                    movieBtnAction(btn.label, getImdb(sMovie.id), sMovie.title, sMovie.id);
+                    movieBtnAction(btn.label, sMovie.imdbId, sMovie.title, sMovie.id);
                 }
               "
               :icon="btn.icon"
               :label="btn.label"
-              :class="showHiddenBtns(getImdb(sMovie.id), btn.label)"
+              :class="showHiddenBtns(sMovie.imdbId, btn.label)"
             />
           </q-fab>
 
           <q-btn
-            v-if="getImdb(sMovie.id) !== 'Unknown'"
+            v-if="sMovie.imdbId !== 'Unknown'"
             icon="assignment"
             color="primary"
             class="white--text opacity-75"
-            :href="`https://www.imdb.com/title/${getImdb(sMovie.id)}`"
+            :href="`https://www.imdb.com/title/${sMovie.imdbId}`"
             target="movie"
             title="Go to IMDb"
             fab
@@ -96,6 +96,7 @@
       ref="AddEditMovieDialog"
       :dialog-action="dialogAction"
       :movie-watch-date="movieWatchDate"
+      :movie-imdb="movieId"
       :movie-title="dialogTitle"
       :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)"
     />
@@ -179,6 +180,11 @@ export default {
     const AddEditMovieDialog = ref();
     const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
+    // API Functions/Methods
+    const today = () => {
+      return new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    };
+
     const sFnmovies = async () => {
       // Resetando estado
       sMovies.value = [];
@@ -204,6 +210,8 @@ export default {
         await Promise.all(
           movies.map(async (movie) => {
             await sFnmoviesInfo(movie.id);
+            movie.imdbId = getImdb(movie.id);
+
             sMovies.value.push(movie); // Adiciona só depois de carregar os detalhes
           })
         );
@@ -227,6 +235,8 @@ export default {
       sMoviesProviders.value.push({ id: movieId, ...sProvidersData });
       sMoviesVideos.value.push({ id: movieId, ...sVideosData });
     };
+
+    const getImdb = (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id");
 
     const openTrailerDialog = (trailerId) => {
       dialogTrailerId.value = trailerId;
@@ -265,11 +275,11 @@ export default {
     ]);
     const countriesList = ref([]);
     const countrySearch = ref("");
-    const dialogAction = ref(String);
+    const dialogAction = ref("");
     const dialogTitle = ref("");
     const luckyMethod = ref(Boolean);
     const movieAddedLoading = ref(false);
-    const movieId = ref(String);
+    const movieId = ref("");
     const movieTmdbId = ref(String);
     const movieWatchDate = ref("");
     const moviesDetails = ref(Array);
@@ -282,11 +292,6 @@ export default {
     const watchMovies = ref([]);
     const noMovie = ref(false);
     const progressLoader = ref(false);
-
-    // API Functions/Methods
-    const today = () => {
-      return new Date().toISOString().split("T")[0].replace(/-/g, "/");
-    };
 
     const getRandomWord = () => {
       const randomIndex = Math.floor(Math.random() * commonWords.length);
@@ -513,7 +518,6 @@ export default {
       trailerDialog,
       dialogTrailerId,
       AddEditMovieDialog,
-      getImdb: (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id"),
 
       getDirector: (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A"),
 

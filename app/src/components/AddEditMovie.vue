@@ -67,9 +67,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { Notify } from "quasar";
 import { availableRegions } from "src/utils/availableRegions";
+import { today } from "src/utils/dateToday";
 
 const props = defineProps({
   dialogAction: {
@@ -77,6 +78,10 @@ const props = defineProps({
     required: true,
   },
   movieWatchDate: {
+    type: String,
+    require: true,
+  },
+  movieImdb: {
     type: String,
     require: true,
   },
@@ -97,7 +102,8 @@ const failedFlags = ref(new Set());
 const localmovieWatchDate = ref(props.movieWatchDate);
 const movieAddedLoading = ref(false);
 const regionsByMovie = ref(Array);
-const streamingList = ref(Object);
+const streamingList = ref(Array);
+const watchMovies = ref(Array);
 
 const openMvDialog = () => {
   AddEditMovieDialog.value = true;
@@ -111,9 +117,16 @@ const chosenMesage = () => {
 };
 
 const getCountries = computed(() => {
-  const validIsoCodes = new Set(Object.keys(props.movieProviders[0].results));
+  const providers = props.movieProviders?.[0]?.results;
+  if (!providers) return [];
 
-  // Filtering streaming regions list by chosen movie
+  const validIsoCodes = new Set(
+    Object.entries(providers)
+      .filter(([_, data]) => Array.isArray(data.flatrate) && data.flatrate.length > 0)
+      .map(([code]) => code)
+  );
+
+  // Filter regions that have flatrate streaming
   regionsByMovie.value = regions.value
     .filter(({ iso_3166_1 }) => validIsoCodes.has(iso_3166_1))
     .map(({ iso_3166_1, native_name }) => ({
@@ -139,16 +152,54 @@ const cancelEdit = () => {
 };
 
 const addMovie = () => {
-  streamingList.value = props.movieProviders[0].results[countrySearch.value.code];
+  // Start loading state
+  watchMovies.value = [];
+  movieAddedLoading.value = true;
 
-  console.log(streamingList.value);
+  // Clear the current list of streamings
+  streamingList.value = [];
 
+  // Access streaming providers based on the selected country
+  const streamings = props.movieProviders?.[0]?.results?.[countrySearch.value.code]?.flatrate;
+
+  // Add streamings to the list
+  streamings.forEach((e) => {
+    streamingList.value.push(e);
+  });
+
+  // Adds the movie into an Array and closes the calendar dialog
+  const newMovieagenda = {
+    watchDate: !localmovieWatchDate.value == "" ? localmovieWatchDate.value : today(),
+    movieID: props.movieImdb,
+    movieTitle: props.movieTitle,
+    streamingList: streamingList.value,
+    streamingCountry: countrySearch.value.code,
+    streamingCountryName: countrySearch.value.name,
+    watched: false,
+  };
+
+  watchMovies.value.push(newMovieagenda);
+
+  console.log(watchMovies.value);
+
+  // End loading state
+  movieAddedLoading.value = false;
+
+  // Exit edit mode or close modal
   return cancelEdit();
 };
 
 onMounted(async () => {
   regions.value = await availableRegions();
 });
+
+watch(
+  watchMovies, // ref ou propriedade do reactive
+  (newValue) => {
+    localStorage.watchMovies = JSON.stringify(newValue);
+  },
+  { deep: true }
+);
 
 defineExpose({
   openMvDialog,

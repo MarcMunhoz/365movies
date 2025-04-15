@@ -40,14 +40,11 @@
               <p class="font-bold">
                 <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span>
               </p>
-              <p class="uppercase text-center">
-                <span v-for="(stream, index) in row.streamingList" :key="stream.service">
-                  <a :href="stream.link" target="_blank" class="underline underline-offset-1">
-                    {{ stream.service }}
-                  </a>
-                  <span v-if="index !== row.streamingList.length - 1">, </span>
-                </span>
-              </p>
+              <ul class="flex flex-wrap flex-row justify-center gap-4 w-full">
+                <li v-for="(stream, index) in row.streamingList" :key="stream.provider_id">
+                  <img :src="`https://image.tmdb.org/t/p/w45${stream.logo_path}`" :title="stream.provider_name" class="rounded-full" />
+                </li>
+              </ul>
             </div>
             <p v-else>
               Unavailable on streaming services in <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span> ¯\_(ツ)_/¯
