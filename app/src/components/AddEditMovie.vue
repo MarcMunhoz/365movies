@@ -36,7 +36,7 @@
           <q-date v-model="localmovieWatchDate" :options="movieWatchDateOpt" :title="movieTitle" />
 
           <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal mt-5">
-            <q-btn color="negative" @click="cancelEdit()">Cancel</q-btn>
+            <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
 
             <q-btn
               color="primary"
@@ -46,7 +46,7 @@
                     addMovie();
                     break;
                   case 'Edit':
-                    alert('EDIT');
+                    editMovie();
                 }
               "
               >Okay</q-btn
@@ -59,7 +59,7 @@
         <h1>XIII... SEM STREAMING</h1>
 
         <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal mt-5">
-          <q-btn color="negative" @click="cancelEdit()">Cancel</q-btn>
+          <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
         </q-card-actions>
       </section>
     </q-card>
@@ -147,22 +147,15 @@ const movieWatchDateOpt = (movieWatchDateOpt) => {
   return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
 };
 
-const cancelEdit = () => {
+// Get existing movies from localStorage
+const storedMovies = getLocalStorage("watchMovies");
+
+const clearDialog = () => {
   AddEditMovieDialog.value = false;
   countrySearch.value = "";
 };
 
 const addMovie = () => {
-  // Get existing movies from localStorage
-  const storedMovies = getLocalStorage("watchMovies");
-
-  // Avoid duplicates
-  const alreadyExists = storedMovies.some((movie) => movie.movieID === props.movieId);
-  if (alreadyExists) {
-    console.warn("Movie already added");
-    return cancelEdit();
-  }
-
   // Loading state
   movieAddedLoading.value = true;
   streamingList.value = [];
@@ -172,7 +165,7 @@ const addMovie = () => {
 
   if (!streamings?.flatrate?.length) {
     movieAddedLoading.value = false;
-    return cancelEdit();
+    return clearDialog();
   }
 
   streamingList.value = [...streamings.flatrate];
@@ -188,13 +181,25 @@ const addMovie = () => {
   };
 
   // Save to localStorage
-  localStorage.setItem("watchMovies", JSON.stringify([...storedMovies, newMovieAgenda]));
-
   const updated = [...storedMovies, newMovieAgenda];
   setLocalStorage("watchMovies", updated);
 
   movieAddedLoading.value = false;
-  return cancelEdit();
+  return clearDialog();
+};
+
+const editMovie = () => {
+  return alert("EDIT MOVIE!");
+
+  // Avoid duplicates
+  const alreadyExists = storedMovies.some((movie) => movie.movieID === props.movieId);
+  if (alreadyExists) {
+    Notify.create({
+      type: "warning",
+      message: "Movie already added",
+    });
+    return clearDialog();
+  }
 };
 
 onMounted(async () => {
