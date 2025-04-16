@@ -71,6 +71,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { Notify } from "quasar";
 import { availableRegions } from "src/utils/availableRegions";
 import { today } from "src/utils/dateToday";
+import { getLocalStorage, setLocalStorage } from "src/composables/useLocalStorage";
 
 const props = defineProps({
   dialogAction: {
@@ -81,8 +82,8 @@ const props = defineProps({
     type: String,
     require: true,
   },
-  movieImdb: {
-    type: String,
+  movieId: {
+    type: Number,
     require: true,
   },
   movieTitle: {
@@ -152,40 +153,47 @@ const cancelEdit = () => {
 };
 
 const addMovie = () => {
-  // Start loading state
-  watchMovies.value = [];
-  movieAddedLoading.value = true;
+  // Get existing movies from localStorage
+  const storedMovies = getLocalStorage("watchMovies");
 
-  // Clear the current list of streamings
+  // Avoid duplicates
+  const alreadyExists = storedMovies.some((movie) => movie.movieID === props.movieId);
+  if (alreadyExists) {
+    console.warn("Movie already added");
+    return cancelEdit();
+  }
+
+  // Loading state
+  movieAddedLoading.value = true;
   streamingList.value = [];
 
-  // Access streaming providers based on the selected country
-  const streamings = props.movieProviders?.[0]?.results?.[countrySearch.value.code]?.flatrate;
+  const countryCode = countrySearch.value.code;
+  const streamings = props.movieProviders?.[0]?.results?.[countryCode];
 
-  // Add streamings to the list
-  streamings.forEach((e) => {
-    streamingList.value.push(e);
-  });
+  if (!streamings?.flatrate?.length) {
+    movieAddedLoading.value = false;
+    return cancelEdit();
+  }
 
-  // Adds the movie into an Array and closes the calendar dialog
-  const newMovieagenda = {
-    watchDate: !localmovieWatchDate.value == "" ? localmovieWatchDate.value : today(),
-    movieID: props.movieImdb,
+  streamingList.value = [...streamings.flatrate];
+
+  const newMovieAgenda = {
+    watchDate: localmovieWatchDate.value !== "" ? localmovieWatchDate.value : today(),
+    movieID: props.movieId,
     movieTitle: props.movieTitle,
+    movieLink: streamings.link,
     streamingList: streamingList.value,
-    streamingCountry: countrySearch.value.code,
     streamingCountryName: countrySearch.value.name,
     watched: false,
   };
 
-  watchMovies.value.push(newMovieagenda);
+  // Save to localStorage
+  localStorage.setItem("watchMovies", JSON.stringify([...storedMovies, newMovieAgenda]));
 
-  console.log(watchMovies.value);
+  const updated = [...storedMovies, newMovieAgenda];
+  setLocalStorage("watchMovies", updated);
 
-  // End loading state
   movieAddedLoading.value = false;
-
-  // Exit edit mode or close modal
   return cancelEdit();
 };
 

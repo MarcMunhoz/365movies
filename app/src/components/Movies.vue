@@ -33,7 +33,7 @@
               "
               :icon="btn.icon"
               :label="btn.label"
-              :class="showHiddenBtns(sMovie.imdbId, btn.label)"
+              :class="showHiddenBtns(sMovie.id, btn.label)"
             />
           </q-fab>
 
@@ -96,62 +96,10 @@
       ref="AddEditMovieDialog"
       :dialog-action="dialogAction"
       :movie-watch-date="movieWatchDate"
-      :movie-imdb="movieId"
+      :movie-id="movieTmdbId"
       :movie-title="dialogTitle"
       :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)"
     />
-
-    <!-- OLD CODE HERE -->
-
-    <q-dialog class="movie-dialog" v-model="openAgendaDialog" persistent>
-      <q-card class="min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
-        <q-card-section v-if="movieAddedLoading === true">
-          <q-spinner-pie color="primary" size="8em" />
-        </q-card-section>
-
-        <q-card-section v-else class="flex justify-center">
-          <q-select
-            v-model="countrySearch"
-            :options="countriesList"
-            autofocus
-            @update:model-value="checkCountry"
-            :rules="[(val) => !!val || 'Please select a country']"
-            label="Country"
-            hint="STREAMING IN"
-            class="w-full mb-4 select-country"
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section avatar>
-                  <q-img :src="`https://flagsapi.com/${scope.opt.value.toUpperCase()}/shiny/32.png`" loading="lazy" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ scope.opt.label }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-          <q-date v-model="movieWatchDate" :options="movieWatchDateOpt" subtitle="" :title="dialogTitle" />
-        </q-card-section>
-
-        <q-card-actions v-if="movieAddedLoading === false" align="center" class="bg-white text-teal">
-          <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
-          <q-btn
-            color="primary"
-            @click="
-              switch (dialogAction) {
-                case 'Add':
-                  getStreamingList();
-                  break;
-                case 'Edit':
-                  editMovieAgenda();
-              }
-            "
-            >Okay</q-btn
-          >
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </q-page>
 </template>
 
@@ -279,8 +227,8 @@ export default {
     const dialogTitle = ref("");
     const luckyMethod = ref(Boolean);
     const movieAddedLoading = ref(false);
-    const movieId = ref("");
-    const movieTmdbId = ref(String);
+    const movieId = ref(String);
+    const movieTmdbId = ref(0);
     const movieWatchDate = ref("");
     const moviesDetails = ref(Array);
     const moviesTitles = ref(Array);

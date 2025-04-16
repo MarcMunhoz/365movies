@@ -15,7 +15,7 @@
       <q-table flat bordered :rows="tableData" :columns="tableColumns" row-key="movieId" rows-per-page-label="Movies per page" no-data-label="There are no movies planned" class="w-full">
         <template #body-cell-title="{ row }">
           <q-td>
-            <a :href="`https://www.imdb.com/title/${row.movieId}`" target="movie" class="text-lg text-primary">{{ row.title }} </a>
+            <a :href="row.movieLink" target="movie" class="text-lg text-primary">{{ row.title }} </a>
           </q-td>
         </template>
 
@@ -42,7 +42,7 @@
               </p>
               <ul class="flex flex-wrap flex-row justify-center gap-4 w-full">
                 <li v-for="(stream, index) in row.streamingList" :key="stream.provider_id">
-                  <img :src="`https://image.tmdb.org/t/p/w45${stream.logo_path}`" :title="stream.provider_name" class="rounded-full" />
+                  <img :src="`https://image.tmdb.org/t/p/w45${stream.logo_path}`" :title="stream.provider_name" class="rounded-full hover:border-2 hover:border-solid border-[#1976d3]" />
                 </li>
               </ul>
             </div>
@@ -75,7 +75,7 @@
               </p>
               <ul>
                 <li v-for="stream in customData.streamingList" class="uppercase text-center">
-                  <a :href="stream.link" target="_blank" class="underline underline-offset-1">{{ stream.service }}</a>
+                  {{ stream.provider_name }}
                 </li>
               </ul>
             </section>
@@ -110,6 +110,7 @@ import { Calendar } from "v-calendar";
 import { useScreens } from "vue-screen-utils";
 import "v-calendar/style.css";
 import { useQuasar } from "quasar";
+import { getLocalStorage, setLocalStorage } from "src/composables/useLocalStorage";
 
 export default {
   name: "Agenda",
@@ -119,7 +120,7 @@ export default {
   setup() {
     const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
     const columns = mapCurrent({ lg: 3 }, 1);
-    const watchMovies = ref(localStorage.watchMovies ? JSON.parse(localStorage.watchMovies) : null);
+    const watchMovies = ref(getLocalStorage("watchMovies"));
     const editMovieId = ref("");
     const editMovieTitle = ref("");
     const editCountryNameMovie = ref("");
@@ -129,7 +130,7 @@ export default {
     const openAgendaDialog = ref(false);
 
     // NEW CODE
-    const listMode = ref(localStorage.getItem("listMode") === "true");
+    const listMode = ref(getLocalStorage("listMode") === "true");
     const tableData = ref([]);
 
     // Definição das colunas da tabela
@@ -154,10 +155,10 @@ export default {
     });
 
     const clearCalendar = () => {
-      const hasMovies = localStorage.watchMovies ? true : false;
+      const hasMovies = watchMovies.value ? true : false;
       let message = "There's no movies in Calendar.";
 
-      hasMovies && (localStorage.removeItem("watchMovies"), (events.value.length = 0), (tableData.value.length = 0), (message = "Calendar is clear!"));
+      hasMovies && ((watchMovies.value.length = 0), (events.value.length = 0), (tableData.value.length = 0), (message = "Calendar is clear!"));
 
       return $q.value.notify({
         type: "info",
@@ -178,6 +179,7 @@ export default {
             },
             customData: {
               movieId: "",
+              movieLink: "",
               streamingCountry: String,
               streamingList: Array,
               watched: Boolean,
@@ -186,6 +188,7 @@ export default {
 
           eventAdd.popover.label = e.movieTitle;
           eventAdd.customData.movieId = e.movieID;
+          eventAdd.customData.movieLink = e.movieLink;
           eventAdd.customData.streamingCountry = e.streamingCountryName;
           eventAdd.customData.streamingList = e.streamingList;
           eventAdd.customData.watched = e.watched;
@@ -196,6 +199,7 @@ export default {
           // Defines table rows
           tableData.value.push({
             movieId: eventAdd.customData.movieId,
+            movieLink: eventAdd.customData.movieLink,
             title: eventAdd.popover.label,
             watchDate: new Date(e.watchDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
             watched: eventAdd.customData.watched,
@@ -272,13 +276,13 @@ export default {
     });
 
     watch(
-      [watchMovies, listMode],
+      [watchMovies.value, listMode],
       ([newMovies, newListMode]) => {
         // Updates watchMovies in localStorage
-        localStorage.setItem("watchMovies", JSON.stringify(newMovies));
+        setLocalStorage("watchMovies", newMovies);
 
         // Updates listMode in localStorage
-        localStorage.setItem("listMode", JSON.stringify(newListMode));
+        setLocalStorage("listMode", newListMode);
       },
       { deep: true }
     );
