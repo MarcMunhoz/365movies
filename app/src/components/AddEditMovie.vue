@@ -49,7 +49,7 @@
                     editMovie();
                 }
               "
-              >Okay</q-btn
+              >{{ dialogAction }} Movie</q-btn
             >
           </q-card-actions>
         </q-card-section>
@@ -69,9 +69,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { Notify } from "quasar";
-import { availableRegions } from "src/utils/availableRegions";
-import { today } from "src/utils/dateToday";
-import { getLocalStorage, setLocalStorage } from "src/composables/useLocalStorage";
+import { availableRegions } from "utils/availableRegions";
+import { today } from "utils/dateToday";
+import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
 
 const props = defineProps({
   dialogAction: {
@@ -104,7 +104,6 @@ const localmovieWatchDate = ref(props.movieWatchDate);
 const movieAddedLoading = ref(false);
 const regionsByMovie = ref(Array);
 const streamingList = ref(Array);
-const watchMovies = ref(Array);
 
 const openMvDialog = () => {
   AddEditMovieDialog.value = true;
@@ -147,15 +146,15 @@ const movieWatchDateOpt = (movieWatchDateOpt) => {
   return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
 };
 
-// Get existing movies from localStorage
-const storedMovies = getLocalStorage("watchMovies");
-
 const clearDialog = () => {
   AddEditMovieDialog.value = false;
   countrySearch.value = "";
 };
 
 const addMovie = () => {
+  // Get existing movies from localStorage
+  const storedMovies = getLocalStorage("watchMovies");
+
   // Loading state
   movieAddedLoading.value = true;
   streamingList.value = [];
@@ -185,6 +184,11 @@ const addMovie = () => {
   setLocalStorage("watchMovies", updated);
 
   movieAddedLoading.value = false;
+
+  Notify.create({
+    type: "positive",
+    message: "Movie added successful. Good fun!",
+  });
   return clearDialog();
 };
 
@@ -205,14 +209,6 @@ const editMovie = () => {
 onMounted(async () => {
   regions.value = await availableRegions();
 });
-
-watch(
-  watchMovies, // ref ou propriedade do reactive
-  (newValue) => {
-    localStorage.watchMovies = JSON.stringify(newValue);
-  },
-  { deep: true }
-);
 
 defineExpose({
   openMvDialog,
