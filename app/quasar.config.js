@@ -11,11 +11,12 @@
 
 import { configure } from "quasar/wrappers";
 import dotenv from "dotenv";
-import os from "os"
+import os from "os";
+import { fileURLToPath } from 'node:url';
 
 const isWSL = os.release().toLowerCase().includes("microsoft");
 
-export default configure(function (/*ctx*/) {
+export default configure(function (ctx) {
  dotenv.config();
 
   return {
@@ -77,14 +78,19 @@ export default configure(function (/*ctx*/) {
         TMDB_API_URL: process.env.TMDB_API_URL,
         TMDB_BEARER_TOKEN: process.env.TMDB_BEARER_TOKEN,
         VITE_API_URL: process.env.VITE_API_URL
-      }
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf, { isServer, isClient }) {
+        Object.assign(viteConf.resolve.alias, {
+          utils: fileURLToPath(new URL('./src/utils', import.meta.url)),
+          composables: fileURLToPath(new URL('./src/composables', import.meta.url))
+        })
+      }
       // viteVuePluginOptions: {},
 
 
@@ -116,7 +122,7 @@ export default configure(function (/*ctx*/) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Notify"]
+      plugins: ["Notify", "Dialog"]
     },
 
     // animations: 'all', // --- includes all animations
