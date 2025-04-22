@@ -99,12 +99,14 @@
       :movie-id="movieTmdbId"
       :movie-title="dialogTitle"
       :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)"
+      :selected-country="selectedCountry"
+      :new-movie="newMovie"
     />
   </q-page>
 </template>
 
 <script setup>
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { Dialog, Notify } from "quasar";
 import { commonWords } from "utils/commonWords";
 import { useTmdb } from "composables/useTmdb";
@@ -121,9 +123,10 @@ const dialogTitle = ref("");
 const luckyMethod = ref(Boolean);
 const movieTmdbId = ref(0);
 const movieWatchDate = ref("");
+const selectedCountry = ref("");
+const newMovie = ref(null);
 const noMovie = ref(false);
 const progressLoader = ref(false);
-const watchMovies = ref([]);
 
 const { fetch } = useTmdb();
 const sMoviesCredits = ref([]);
@@ -231,12 +234,15 @@ const getRandomWord = () => {
 
 const movieBtnAction = (action, movieTitle, movieId) => {
   const storedMovies = getLocalStorage("watchMovies");
+  const hasMovie = storedMovies.find((movie) => movie.movieID === movieId);
 
   return (
     (dialogTitle.value = movieTitle),
     (movieTmdbId.value = movieId),
-    storedMovies.find((movie) => movie.movieID === movieId) ? (movieWatchDate.value = storedMovies.find((movie) => movie.movieID === movieId).watchDate) : (movieWatchDate.value = ""),
+    (movieWatchDate.value = hasMovie ? hasMovie.watchDate : ""),
+    (selectedCountry.value = hasMovie ? hasMovie.streamingCountryName : ""),
     (dialogAction.value = action),
+    action === "Add" && (newMovie.value = true),
     action !== "Delete" && AddEditMovieDialog.value.openMvDialog()
   );
 };

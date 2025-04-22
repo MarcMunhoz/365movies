@@ -71,7 +71,10 @@
             <section v-if="customData.streamingList.length">
               <p class="font-bold">
                 Streaming list for
-                <span class="bg-slate-200 p-1">{{ customData.streamingCountry }}</span>
+                <span class="bg-slate-200 p-1">
+                  <template v-if="customData.streamingCountry.length">{{ customData.streamingCountry }}</template>
+                  <template v-else>{{ customData.streamingCountry.name }}</template>
+                </span>
               </p>
               <ul>
                 <li v-for="stream in customData.streamingList" class="uppercase text-center">
@@ -79,10 +82,6 @@
                 </li>
               </ul>
             </section>
-
-            <p v-else>
-              Unavailable on streaming services in <span class="bg-slate-200 p-1">{{ customData.streamingCountry }}</span> ¯\_(ツ)_/¯
-            </p>
           </li>
         </ul>
       </template>

@@ -16,6 +16,7 @@
             :rules="[(val) => !!val || 'Please select a country']"
             :label="`Available in ${regionsByMovie.length} countries`"
             hint="STREAMING IN"
+            id="field_select-country"
             class="w-full mb-4 select-country"
           >
             <template v-slot:option="scope">
@@ -94,6 +95,14 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  selectedCountry: {
+    type: String,
+    required: false,
+  },
+  newMovie: {
+    type: Boolean,
+    required: false,
+  },
 });
 
 const AddEditMovieDialog = ref(false);
@@ -148,7 +157,8 @@ const movieWatchDateOpt = (movieWatchDateOpt) => {
 
 const clearDialog = () => {
   AddEditMovieDialog.value = false;
-  countrySearch.value = "";
+
+  props.newMovie && ((countrySearch.value = ""), (localmovieWatchDate.value = ""));
 };
 
 const addMovie = () => {
@@ -193,22 +203,54 @@ const addMovie = () => {
 };
 
 const editMovie = () => {
-  return alert("EDIT MOVIE!");
+  // Get existing movies from localStorage
+  const storedMovies = getLocalStorage("watchMovies");
 
-  // Avoid duplicates
-  const alreadyExists = storedMovies.some((movie) => movie.movieID === props.movieId);
-  if (alreadyExists) {
-    Notify.create({
-      type: "warning",
-      message: "Movie already added",
-    });
-    return clearDialog();
-  }
+  const streamings = props.movieProviders?.[0]?.results?.[countrySearch.value.code];
+
+  const updatedMovies = storedMovies.map((movie) => {
+    if (movie.movieID === props.movieId) {
+      return {
+        ...movie,
+        watchDate: localmovieWatchDate.value,
+        streamingCountryName: countrySearch.value,
+        streamingList: [...streamings.flatrate],
+      };
+    }
+    return movie;
+  });
+
+  setLocalStorage("watchMovies", updatedMovies);
+
+  return clearDialog();
 };
 
 onMounted(async () => {
   regions.value = await availableRegions();
 });
+
+watch(
+  () => [props.selectedCountry, props.movieWatchDate],
+  ([newCountry, newWatchDate]) => {
+    if (newCountry) {
+      if (typeof newCountry === "string") {
+        // Quando é uma string ("Brazil"), busca o objeto correspondente
+        const matched = getCountries.value.find((country) => country.name === newCountry);
+        if (matched) {
+          countrySearch.value = matched;
+        }
+      } else if (typeof newCountry === "object") {
+        // Quando já é um objeto { code, name }
+        countrySearch.value = newCountry;
+      }
+    }
+
+    if (newWatchDate) {
+      localmovieWatchDate.value = newWatchDate;
+    }
+  },
+  { immediate: true }
+);
 
 defineExpose({
   openMvDialog,
