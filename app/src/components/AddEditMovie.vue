@@ -215,6 +215,7 @@ const editMovie = () => {
         watchDate: localmovieWatchDate.value,
         streamingCountryName: countrySearch.value,
         streamingList: [...streamings.flatrate],
+        movieLink: streamings.link,
       };
     }
     return movie;

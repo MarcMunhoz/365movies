@@ -107,24 +107,18 @@
 
 <script setup>
 import { onMounted, ref, computed } from "vue";
-import { Dialog, Notify } from "quasar";
 import { commonWords } from "utils/commonWords";
 import { useTmdb } from "composables/useTmdb";
 import { useMovieData } from "composables/useMovieData";
-import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
+import { getLocalStorage } from "composables/useLocalStorage";
+import { movieBtnAction, delMovieAgenda, dialogTitle, movieTmdbId, movieWatchDate, selectedCountry, dialogAction, newMovie, AddEditMovieDialog } from "composables/useMovieActions.js";
 import { today } from "utils/dateToday";
 import Trailers from "components/Trailers.vue";
 import AddEditMovie from "components/AddEditMovie.vue";
 
 const searchTerm = ref("");
 const searchRules = ref([(value) => (value && value.length >= 3) || "Min 3 characters"]);
-const dialogAction = ref("");
-const dialogTitle = ref("");
 const luckyMethod = ref(Boolean);
-const movieTmdbId = ref(0);
-const movieWatchDate = ref("");
-const selectedCountry = ref("");
-const newMovie = ref(null);
 const noMovie = ref(false);
 const progressLoader = ref(false);
 
@@ -150,7 +144,6 @@ const agendaButtons = ref([
 ]);
 const trailerDialog = ref();
 const dialogTrailerId = ref();
-const AddEditMovieDialog = ref();
 const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
 const sFnmovies = async () => {
@@ -232,21 +225,6 @@ const getRandomWord = () => {
   return selectedWord;
 };
 
-const movieBtnAction = (action, movieTitle, movieId) => {
-  const storedMovies = getLocalStorage("watchMovies");
-  const hasMovie = storedMovies.find((movie) => movie.movieID === movieId);
-
-  return (
-    (dialogTitle.value = movieTitle),
-    (movieTmdbId.value = movieId),
-    (movieWatchDate.value = hasMovie ? hasMovie.watchDate : ""),
-    (selectedCountry.value = hasMovie ? hasMovie.streamingCountryName : ""),
-    (dialogAction.value = action),
-    action === "Add" && (newMovie.value = true),
-    action !== "Delete" && AddEditMovieDialog.value.openMvDialog()
-  );
-};
-
 const showHiddenBtns = (mId, btnLabel) => {
   const hasMovieAgenda = getLocalStorage("watchMovies").filter((mvid) => mvid.movieID === mId)[0];
   const label = btnLabel;
@@ -254,27 +232,6 @@ const showHiddenBtns = (mId, btnLabel) => {
   if ((!hasMovieAgenda && label == "Delete") || (hasMovieAgenda && label == "Add") || (!hasMovieAgenda && label == "Edit")) {
     return "hidden";
   }
-};
-
-const delMovieAgenda = (mId, mTitle) => {
-  Dialog.create({
-    title: "Are you sure",
-    message: `Delete <strong>${mTitle.toUpperCase()}</strong> from agenda?`,
-    cancel: true,
-    persistent: true,
-    html: true,
-  }).onOk(() => {
-    // Removing movie from Agenda
-    setLocalStorage(
-      "watchMovies",
-      getLocalStorage("watchMovies").filter((movie) => movie.movieID !== mId)
-    );
-
-    return Notify.create({
-      type: "info",
-      message: "Movie removed successful",
-    });
-  });
 };
 
 const getDirector = (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A");

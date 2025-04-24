@@ -38,7 +38,10 @@
           <q-td class="text-center">
             <div v-if="row.streamingList.length">
               <p class="font-bold">
-                <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span>
+                <span class="bg-slate-200 p-1">
+                  <template v-if="row.streamingCountry.length">{{ row.streamingCountry }}</template>
+                  <template v-else>{{ row.streamingCountry.name }}</template>
+                </span>
               </p>
               <ul class="flex flex-wrap flex-row justify-center gap-4 w-full">
                 <li v-for="(stream, index) in row.streamingList" :key="stream.provider_id">
@@ -46,9 +49,6 @@
                 </li>
               </ul>
             </div>
-            <p v-else>
-              Unavailable on streaming services in <span class="bg-slate-200 p-1">{{ row.streamingCountry }}</span> ¯\_(ツ)_/¯
-            </p>
           </q-td>
         </template>
       </q-table>
@@ -58,7 +58,7 @@
       <template #day-popover="{ attributes }">
         <ul>
           <li v-for="{ key, popover, customData } in attributes" :key="key" class="block text-primary border-dashed border-2 mt-5 first:mt-0" :class="{ 'text-positive': customData.watched }">
-            <a :href="`https://www.imdb.com/title/${customData.movieId}`" target="movie" class="text-lg">{{ popover.label }}</a>
+            <a :href="customData.movieLink" target="movie" class="text-lg">{{ popover.label }}</a>
             <q-checkbox v-model="customData.watched" checked-icon="task_alt" unchecked-icon="highlight_off" color="positive" @click="markWatch(customData.movieId, customData.watched)">
               <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
               <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
