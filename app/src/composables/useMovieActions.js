@@ -2,6 +2,7 @@ import { ref } from "vue";
 import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
 import { Dialog, Notify } from "quasar";
 
+// Movie Administration
 export const dialogTitle = ref("");
 export const movieTmdbId = ref(0);
 export const movieWatchDate = ref("");
