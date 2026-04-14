@@ -52,6 +52,11 @@
 
         <q-card-section class="flex justify-around">
           <div class="text-h6 w-full">{{ sMovie.title }}</div>
+          <div class="text-end w-full">
+            <q-chip color="primary" text-color="white" dense>
+              Age: {{ getAgeRating(sMovie.id) }}
+            </q-chip>
+          </div>
 
           <template v-if="sMovie.vote_average != null">
             <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
@@ -74,15 +79,26 @@
           <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id)?.join(", ") || "N/A" }}</div>
 
           <div class="text-subtitle-1 w-100"><strong>Genres:</strong> {{ getGenres(sMovie.id)?.join(", ") || "N/A" }}</div>
+
+          <div class="text-subtitle-1 w-100"><strong>Country:</strong> {{ getOriginCountry(sMovie.id) }}</div>
         </q-card-section>
 
         <q-separator />
 
-        <q-card-section class="q-pt-none mt-3">
+        <q-card-section class="q-pt-none mt-3 min-h-[190px] flex flex-col">
           <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
           <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
-          <template v-if="sMovie.overview">{{ sMovie.overview }}</template>
-          <template v-else>N/A</template>
+          <p class="mb-2">{{ getOverviewText(sMovie.id, sMovie.overview) }}</p>
+          <q-btn
+            v-if="shouldShowOverviewToggle(sMovie.overview)"
+            flat
+            dense
+            no-caps
+            color="primary"
+            class="self-start"
+            :label="isOverviewExpanded(sMovie.id) ? 'Read less' : 'Read more'"
+            @click="toggleOverview(sMovie.id)"
+          />
         </q-card-section>
       </q-card>
     </section>
@@ -121,12 +137,15 @@ const searchRules = ref([(value) => (value && value.length >= 3) || "Min 3 chara
 const luckyMethod = ref(Boolean);
 const noMovie = ref(false);
 const progressLoader = ref(false);
+const overviewExpanded = ref({});
+const OVERVIEW_MAX_LENGTH = 180;
 
 const { fetch } = useTmdb();
 const sMoviesCredits = ref([]);
 const sMoviesDetails = ref([]);
 const sMoviesProviders = ref([]);
 const sMoviesVideos = ref([]);
+const sMoviesReleaseDates = ref([]);
 const sMovies = ref([]);
 const agendaButtons = ref([
   {
@@ -153,6 +172,8 @@ const sFnmovies = async () => {
   sMoviesCredits.value = [];
   sMoviesProviders.value = [];
   sMoviesVideos.value = [];
+  sMoviesReleaseDates.value = [];
+  overviewExpanded.value = {};
   noMovie.value = false;
   progressLoader.value = true;
 
@@ -184,17 +205,19 @@ const sFnmovies = async () => {
 };
 
 const sFnmoviesInfo = async (movieId) => {
-  const [sDetailsData, sCreditsData, sProvidersData, sVideosData] = await Promise.all([
+  const [sDetailsData, sCreditsData, sProvidersData, sVideosData, sReleaseDatesData] = await Promise.all([
     fetch(`movie/${movieId}`),
     fetch(`movie/${movieId}/credits`),
     fetch(`movie/${movieId}/watch/providers`),
     fetch(`movie/${movieId}/videos`),
+    fetch(`movie/${movieId}/release_dates`),
   ]);
 
   sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
   sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
   sMoviesProviders.value.push({ id: movieId, ...sProvidersData });
   sMoviesVideos.value.push({ id: movieId, ...sVideosData });
+  sMoviesReleaseDates.value.push({ id: movieId, ...sReleaseDatesData });
 };
 
 const getImdb = (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id");
@@ -252,6 +275,48 @@ const getTrailer = (movieId) =>
 
     return trailers?.key || "";
   });
+
+const getAgeRating = (movieId) => {
+  const releaseData = sMoviesReleaseDates.value.find((item) => item.id === movieId);
+  const countries = releaseData?.results || [];
+  if (!countries.length) return "N/A";
+
+  const originCode = getMovieData(sMoviesDetails, movieId, "production_countries", (countries) => countries?.[0]?.iso_3166_1 || "");
+
+  const preferredCountry =
+    countries.find((country) => country.iso_3166_1 === originCode) ||
+    countries.find((country) => country.iso_3166_1 === "US") ||
+    countries.find((country) => country.release_dates?.some((release) => release.certification));
+
+  if (!preferredCountry?.release_dates?.length) return "N/A";
+
+  const certification = preferredCountry.release_dates.find((release) => release.certification?.trim())?.certification;
+
+  return certification?.trim() || "N/A";
+};
+
+const getOriginCountry = (movieId) =>
+  getMovieData(sMoviesDetails, movieId, "production_countries", (countries) => {
+    if (!countries?.length) return "N/A";
+    return countries.map((country) => country.name).join(", ");
+  });
+
+const isOverviewExpanded = (movieId) => Boolean(overviewExpanded.value[movieId]);
+
+const shouldShowOverviewToggle = (overview) => Boolean(overview && overview.length > OVERVIEW_MAX_LENGTH);
+
+const getOverviewText = (movieId, overview) => {
+  if (!overview) return "N/A";
+  if (isOverviewExpanded(movieId) || !shouldShowOverviewToggle(overview)) return overview;
+  return `${overview.slice(0, OVERVIEW_MAX_LENGTH).trim()}...`;
+};
+
+const toggleOverview = (movieId) => {
+  overviewExpanded.value = {
+    ...overviewExpanded.value,
+    [movieId]: !isOverviewExpanded(movieId),
+  };
+};
 
 onMounted(() => {
   movieWatchDate.value = today();
