@@ -1,1 +1,35 @@
-// app global css in SCSS form
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap");
+
+:root {
+  --app-bg: #0e141f;
+  --surface-1: #132235;
+  --surface-2: #18304a;
+  --text-main: #e8f0f8;
+  --text-soft: #93adbf;
+  --accent-main: #4dc8b0;
+  --accent-alt: #ff8f6b;
+}
+
+html,
+body,
+#q-app {
+  background: var(--app-bg);
+  color: var(--text-main);
+  font-family: "Manrope", sans-serif;
+}
+
+a {
+  color: var(--accent-main);
+}
+
+.q-card {
+  border-radius: 18px;
+}
+
+.q-drawer.app-drawer,
+.q-drawer.app-drawer .q-drawer__content,
+.q-drawer.app-drawer .q-scrollarea__content,
+.q-drawer.app-drawer .q-list {
+  background: linear-gradient(180deg, #121f31 0%, #0f1827 100%) !important;
+  color: #e5eff8 !important;
+}

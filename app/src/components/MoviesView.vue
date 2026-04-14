@@ -1,21 +1,29 @@
 <template>
-  <q-page class="w-full px-5">
-    <div class="row w-full">
-      <q-input v-model="searchTerm" label="Type a movie title portion and press ENTER" lazy-rules :rules="searchRules" @keyup.enter="(luckyMethod = false), sFnmovies()" class="w-full" />
-    </div>
-    <div class="row w-full">
-      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" :disable="searchTerm.length < 3" @click="(luckyMethod = false), sFnmovies()">Movie Search</q-btn>
-      <q-btn depressed small color="primary" class="mx-auto mb-5 w-25" @click="(luckyMethod = true), sFnmovies()">I'm lucky</q-btn>
-    </div>
+  <q-page class="w-full px-5 py-4 movies-page">
     <div class="row w-full" v-if="progressLoader === true">
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
       <p class="text-center text-lg font-bold text-primary animate-pulse mt-2 w-full">Please, wait...</p>
     </div>
 
-    <section v-else class="flex flex-wrap justify-center gap-3 mt-5">
-      <q-card v-for="(sMovie, i) in sortedMovies" :key="i" class="relative w-[374px] max-w-[374px]">
-        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px]" />
-        <img v-else src="/img/no-image.jpg" class="object-cover h-[250px]" />
+    <section v-else class="flex flex-wrap justify-center gap-5 mt-5">
+      <q-card
+        v-for="(sMovie, i) in sortedMovies"
+        :key="i"
+        class="relative w-[374px] max-w-[374px] movie-card"
+        :class="{ 'movie-card--agenda': isInAgenda(sMovie.id), 'movie-card--watched': isWatched(sMovie.id) }"
+      >
+        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px] w-full movie-poster" />
+        <img v-else src="/img/no-image.jpg" class="object-cover h-[250px] w-full movie-poster" />
+        <div class="movie-poster-overlay"></div>
+
+        <div class="status-badges">
+          <q-badge v-if="isInAgenda(sMovie.id)" color="info" class="agenda-badge">
+            In agenda
+          </q-badge>
+          <q-badge v-if="isWatched(sMovie.id)" color="positive" class="watched-badge">
+            Watched
+          </q-badge>
+        </div>
 
         <div class="absolute top-[220px] right-[20px] flex gap-x-4">
           <q-fab color="primary" icon="keyboard_arrow_down" direction="down" class="opacity-90">
@@ -50,10 +58,10 @@
           />
         </div>
 
-        <q-card-section class="flex justify-around">
+        <q-card-section class="flex justify-around movie-meta">
           <div class="text-h6 w-full">{{ sMovie.title }}</div>
           <div class="text-end w-full">
-            <q-chip color="primary" text-color="white" dense>
+            <q-chip color="primary" text-color="white" dense class="age-chip">
               Age: {{ getAgeRating(sMovie.id) }}
             </q-chip>
           </div>
@@ -73,7 +81,7 @@
 
         <q-separator />
 
-        <q-card-section>
+        <q-card-section class="movie-details">
           <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
 
           <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id)?.join(", ") || "N/A" }}</div>
@@ -85,8 +93,8 @@
 
         <q-separator />
 
-        <q-card-section class="q-pt-none mt-3 min-h-[190px] flex flex-col">
-          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
+        <q-card-section class="q-pt-none mt-3 min-h-[190px] flex flex-col movie-overview">
+          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4 trailer-btn" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
           <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
           <p class="mb-2">{{ getOverviewText(sMovie.id, sMovie.overview) }}</p>
           <q-btn
@@ -122,7 +130,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
+import { useRoute } from "vue-router";
 import { commonWords } from "utils/commonWords";
 import { useTmdb } from "composables/useTmdb";
 import { useMovieData } from "composables/useMovieData";
@@ -133,12 +142,12 @@ import Trailers from "components/Trailers.vue";
 import AddEditMovie from "components/AddEditMovie.vue";
 
 const searchTerm = ref("");
-const searchRules = ref([(value) => (value && value.length >= 3) || "Min 3 characters"]);
-const luckyMethod = ref(Boolean);
+const luckyMethod = ref(false);
 const noMovie = ref(false);
 const progressLoader = ref(false);
 const overviewExpanded = ref({});
 const OVERVIEW_MAX_LENGTH = 180;
+const route = useRoute();
 
 const { fetch } = useTmdb();
 const sMoviesCredits = ref([]);
@@ -257,6 +266,12 @@ const showHiddenBtns = (mId, btnLabel) => {
   }
 };
 
+const getAgendaMovie = (movieId) => getLocalStorage("watchMovies").find((movie) => movie.movieID === movieId);
+
+const isInAgenda = (movieId) => Boolean(getAgendaMovie(movieId));
+
+const isWatched = (movieId) => Boolean(getAgendaMovie(movieId)?.watched);
+
 const getDirector = (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A");
 
 const getRuntime = (movieId) => getMovieData(sMoviesDetails, movieId, "runtime");
@@ -318,17 +333,130 @@ const toggleOverview = (movieId) => {
   };
 };
 
+const applyRouteSearch = () => {
+  const query = typeof route.query.q === "string" ? route.query.q.trim() : "";
+  const lucky = route.query.lucky === "1";
+
+  if (!query && !lucky) {
+    sMovies.value = [];
+    sMoviesDetails.value = [];
+    sMoviesCredits.value = [];
+    sMoviesProviders.value = [];
+    sMoviesVideos.value = [];
+    sMoviesReleaseDates.value = [];
+    overviewExpanded.value = {};
+    noMovie.value = false;
+    progressLoader.value = false;
+    return;
+  }
+
+  searchTerm.value = query;
+  luckyMethod.value = lucky;
+  return sFnmovies();
+};
+
 onMounted(() => {
   movieWatchDate.value = today();
 });
+
+watch(() => [route.query.q, route.query.lucky, route.query.run], applyRouteSearch, { immediate: true });
 </script>
 
 <style lang="scss" scoped>
+.movies-page {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.movie-card {
+  background: linear-gradient(180deg, #132033 0%, #111f30 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  animation: card-enter 360ms ease both;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 196, 86, 0.45);
+  }
+
+  &--agenda {
+    border-color: rgba(77, 200, 176, 0.7);
+    box-shadow: 0 14px 34px rgba(14, 120, 104, 0.35);
+  }
+
+  &--watched {
+    border-color: rgba(100, 221, 160, 0.9);
+    box-shadow: 0 16px 36px rgba(31, 174, 109, 0.4);
+  }
+}
+
+.movie-poster {
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.movie-poster-overlay {
+  position: absolute;
+  inset: 0;
+  height: 250px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(6, 11, 20, 0.08) 45%, rgba(6, 11, 20, 0.65) 100%);
+}
+
+.status-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .agenda-badge,
+  .watched-badge {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+}
+
+.movie-meta {
+  color: #f0f6ff;
+}
+
+.age-chip {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.movie-details {
+  color: #d9e8f6;
+}
+
+.movie-overview {
+  color: #c2d4e8;
+}
+
+.trailer-btn {
+  max-width: 130px;
+}
+
 .right-\[20px\] {
   right: 20px;
 }
+
 .right-\[90px\] {
   right: 90px;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 :deep(.q-date__header) {
