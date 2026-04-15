@@ -10,9 +10,13 @@ app.use(cors());
 app.use(express.json());
 
 const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN;
-const TMDB_BASE_URL = process.env.TMDB_BASE_URL;
+const TMDB_BASE_URL = process.env.TMDB_BASE_URL || process.env.TMDB_API_URL;
 
 app.get('/api/tmdb/:endpoint', async (req, res) => {
+  if (!TMDB_BASE_URL || !TMDB_BEARER_TOKEN) {
+    return res.status(500).json({ error: 'TMDB server configuration is missing.' });
+  }
+
   try {
     const response = await axios.get(`${TMDB_BASE_URL}/${req.params.endpoint}`, {
       headers: { Authorization: `Bearer ${TMDB_BEARER_TOKEN}` },

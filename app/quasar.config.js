@@ -68,12 +68,8 @@ export default configure(function (ctx) {
       // publicPath: '/',
       // analyze: true,
       env: {
-        OMDBAPI_KEY: process.env.OMDBAPI_KEY,
-        BASEURL: process.env.BASEURL,
-        STREAMING_KEY: process.env.STREAMING_KEY,
-        STREAMING_URL: process.env.STREAMING_URL,
-        TMDB_API_URL: process.env.TMDB_API_URL,
-        TMDB_BEARER_TOKEN: process.env.TMDB_BEARER_TOKEN,
+        // Client-side app only needs the backend endpoint.
+        // Secrets such as TMDB tokens must stay server-side.
         VITE_API_URL: process.env.VITE_API_URL
       },
       // rawDefine: {}
