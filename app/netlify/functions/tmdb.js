@@ -21,8 +21,22 @@ const proxyTmdb = async (req, res, tmdbPath) => {
     });
   }
 
+  let cleanPath = '';
+
   try {
-    const cleanPath = String(tmdbPath || '').replace(/^\/+/, '');
+    cleanPath = String(tmdbPath || '')
+      .replace(/^\/+/, '')
+      .replace(/^\.netlify\/functions\/tmdb\/?/, '')
+      .replace(/^api\/tmdb\/?/, '')
+      .replace(/^\/+/, '');
+
+    if (!cleanPath) {
+      return res.status(400).json({
+        error: 'Invalid TMDB endpoint path.',
+        path: tmdbPath,
+      });
+    }
+
     const response = await axios.get(`${TMDB_BASE_URL}/${cleanPath}`, {
       headers: { Authorization: `Bearer ${TMDB_BEARER_TOKEN}` },
       params: req.query,
@@ -39,6 +53,8 @@ const proxyTmdb = async (req, res, tmdbPath) => {
     });
     res.status(status).json({
       error: 'Erro ao buscar dados do TMDb',
+      path: tmdbPath,
+      normalizedPath: cleanPath,
       details,
     });
   }
