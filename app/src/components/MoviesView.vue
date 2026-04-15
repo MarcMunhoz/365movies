@@ -14,9 +14,30 @@ class="relative w-[374px] max-w-[374px] overflow-hidden border border-white/10 b
         'border-[rgba(100,221,160,0.9)] shadow-[0_16px_36px_rgba(31,174,109,0.4)]': isWatched(sMovie.id),
       }"
       >
-        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="h-[250px] w-full object-cover saturate-[1.08] contrast-[1.03]" />
-        <img v-else src="/img/no-image.jpg" class="h-[250px] w-full object-cover saturate-[1.08] contrast-[1.03]" />
+        <img
+          v-if="sMovie.poster_path != null"
+          :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`"
+          :alt="`${sMovie.title} poster`"
+          class="h-[250px] w-full cursor-zoom-in object-cover saturate-[1.08] contrast-[1.03]"
+          @click="openPosterDialog(sMovie)"
+        />
+        <img
+          v-else
+          src="/img/no-image.jpg"
+          :alt="`${sMovie.title} poster not available`"
+          class="h-[250px] w-full cursor-zoom-in object-cover saturate-[1.08] contrast-[1.03]"
+          @click="openPosterDialog(sMovie)"
+        />
         <div class="pointer-events-none absolute inset-0 h-[250px] bg-[linear-gradient(180deg,rgba(6,11,20,0.08)_45%,rgba(6,11,20,0.65)_100%)]"></div>
+        <q-btn
+          flat
+          dense
+          no-caps
+          icon="zoom_out_map"
+          class="absolute left-[10px] top-[214px] z-[4] bg-[rgba(5,10,18,0.5)] text-[#dbe8f5]"
+          label="View full poster"
+          @click="openPosterDialog(sMovie)"
+        />
 
         <div class="absolute left-[10px] top-[10px] z-[3] flex flex-col gap-1.5">
           <q-badge v-if="isInAgenda(sMovie.id)" color="info" class="font-bold tracking-[0.02em]">
@@ -117,6 +138,18 @@ class="opacity-75 text-white"
       <img src="/img/not-found.gif" class="mt-3 w-[300px] mx-auto" />
     </div>
 
+    <q-dialog v-model="posterDialog" maximized transition-show="fade" transition-hide="fade">
+      <q-card class="flex h-screen w-full flex-col bg-[rgba(6,11,19,0.96)]">
+        <q-card-section class="flex items-center justify-between border-b border-white/10 py-2">
+          <div class="truncate pr-2 text-sm font-semibold text-[#c9dbeb]">{{ dialogPosterTitle }}</div>
+          <q-btn flat round dense icon="close" color="grey-3" v-close-popup />
+        </q-card-section>
+        <q-card-section class="flex-1 p-0">
+          <q-img :src="dialogPosterSrc" fit="contain" class="h-full w-full" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <Trailers ref="trailerDialog" :trailer-id="dialogTrailerId" />
     <AddEditMovie
       ref="AddEditMovieDialog"
@@ -174,6 +207,9 @@ const agendaButtons = ref([
 ]);
 const trailerDialog = ref();
 const dialogTrailerId = ref();
+const posterDialog = ref(false);
+const dialogPosterSrc = ref("");
+const dialogPosterTitle = ref("");
 const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
 const sFnmovies = async () => {
@@ -237,6 +273,12 @@ const openTrailerDialog = (trailerId) => {
   dialogTrailerId.value = trailerId;
 
   return trailerDialog.value.openDialog();
+};
+
+const openPosterDialog = (movie) => {
+  dialogPosterTitle.value = `${movie.title} (${movie.release_date?.split("-")[0] || "N/A"})`;
+  dialogPosterSrc.value = movie.poster_path ? `https://image.tmdb.org/t/p/original${movie.poster_path}` : "/img/no-image.jpg";
+  posterDialog.value = true;
 };
 
 const sortedMovies = computed(() => {
@@ -363,4 +405,3 @@ onMounted(() => {
 
 watch(() => [route.query.q, route.query.lucky, route.query.run], applyRouteSearch, { immediate: true });
 </script>
-
