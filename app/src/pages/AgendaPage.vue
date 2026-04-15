@@ -47,7 +47,14 @@
 
         <template #body-cell-watched="{ row }">
           <q-td class="text-center">
-            <q-checkbox v-model="row.watched" checked-icon="task_alt" unchecked-icon="radio_button_unchecked" color="positive" @click="markWatch(row.movieId, row.watched)" />
+            <q-checkbox
+              v-model="row.watched"
+              checked-icon="task_alt"
+              unchecked-icon="radio_button_unchecked"
+              color="positive"
+              keep-color
+              @click="markWatch(row.movieId, row.watched)"
+            />
           </q-td>
         </template>
 
@@ -94,7 +101,7 @@
               <div class="mb-2 flex items-start justify-between gap-2">
                 <a :href="customData.movieLink" target="movie" class="text-lg leading-tight hover:underline">{{ popover.label }}</a>
                 <div class="flex items-center">
-                  <q-checkbox v-model="customData.watched" checked-icon="task_alt" unchecked-icon="radio_button_unchecked" color="positive" @click="markWatch(customData.movieId, customData.watched)">
+                  <q-checkbox v-model="customData.watched" checked-icon="task_alt" unchecked-icon="radio_button_unchecked" color="positive" keep-color @click="markWatch(customData.movieId, customData.watched)">
                     <q-tooltip v-if="customData.watched">Click to mark as not watched!</q-tooltip>
                     <q-tooltip v-else>Click to mark as Watched!</q-tooltip>
                   </q-checkbox>

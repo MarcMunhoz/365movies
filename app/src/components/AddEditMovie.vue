@@ -9,18 +9,21 @@
           <q-spinner-pie color="primary" size="8em" />
         </q-card-section>
 
-        <q-card-section v-else class="flex justify-center text-[#d9e6f3]">
+        <q-card-section v-else class="flex flex-col justify-center text-[#d9e6f3]">
           <q-select
             v-model="countrySearch"
             :options="getCountries"
             option-label="name"
             autofocus
+            dark
+            hide-bottom-space
             @update:model-value="chosenMesage"
             :rules="[(val) => !!val || 'Please select a country']"
             :label="`Available in ${regionsByMovie.length} countries`"
             hint="STREAMING IN"
             id="field_select-country"
-            class="mb-4 w-full [&_.q-field__control]:border [&_.q-field__control]:border-white/15 [&_.q-field__control]:bg-white/5 [&_.q-field__control]:text-[#e8f0f8] [&_.q-field__label]:!text-[#cbdcec] [&_.q-field__marginal]:!text-[#cbdcec] [&_.q-field__native]:!text-[#cbdcec] [&_.q-field__input]:!text-[#cbdcec] [&_.q-field__hint]:!text-[#cbdcec] [&_.q-field__bottom]:!text-[#cbdcec] [&_.q-field__messages]:!text-[#cbdcec]"
+            input-class="!text-[#dbe9f6]"
+            class="mb-4 w-full [&_.q-field__control]:border [&_.q-field__control]:border-white/15 [&_.q-field__control]:bg-white/5 [&_.q-field__control]:text-[#e8f0f8] [&_.q-field__label]:!text-[#cbdcec] [&_.q-field__marginal]:!text-[#cbdcec] [&_.q-field__native]:!text-[#dbe9f6] [&_.q-field__input]:!text-[#dbe9f6] [&_.q-field__hint]:!text-[#9db7cc] [&_.q-field__bottom]:!text-[#9db7cc] [&_.q-field__messages]:!text-[#cbdcec]"
             popup-content-class="border border-white/15 bg-[#13263a] text-[#e5eff8] shadow-[0_14px_26px_rgba(0,0,0,0.36)] [&_.q-item]:mx-[6px] [&_.q-item]:my-[2px] [&_.q-item]:rounded-lg [&_.q-item]:text-[#d7e7f6] [&_.q-item:hover]:bg-[#4dc8b02e] [&_.q-item.q-manual-focusable--focused]:bg-[#4dc8b042] [&_.q-item.q-item--active]:bg-[#4dc8b042] [&_.q-item.q-manual-focusable--focused]:text-[#f2fffb] [&_.q-item.q-item--active]:text-[#f2fffb] [&_.q-item__label]:text-[#e6f2ff]"
           >
             <template v-slot:option="scope">
@@ -38,31 +41,35 @@
             </template>
           </q-select>
 
+          <div v-if="dialogAction === 'Edit' && formattedCurrentWatchDate" class="mb-3 rounded-md border border-[#4dc8b05e] bg-[rgba(77,200,176,0.12)] px-3 py-2 text-sm text-[#cfeee7]">
+            Current date in agenda: <strong>{{ formattedCurrentWatchDate }}</strong>
+          </div>
+
           <q-date
             v-model="localmovieWatchDate"
             :options="movieWatchDateOpt"
             :title="movieTitle"
             class="border border-white/15 bg-[rgba(17,31,48,0.95)] text-[#e7f0f8] [&_.q-date__header]:bg-[#4dc8b024] [&_.q-date__calendar-item]:text-[#dce8f5] [&_.q-date__view_.q-btn]:text-[#dce8f5]"
           />
-
-          <q-card-actions v-if="movieAddedLoading === false" align="center" class="mt-5 border-t border-white/10 bg-[rgba(8,15,24,0.72)]">
-            <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
-
-            <q-btn
-              color="primary"
-              @click="
-                switch (dialogAction) {
-                  case 'Add':
-                    addMovie();
-                    break;
-                  case 'Edit':
-                    editMovie();
-                }
-              "
-              >{{ dialogAction }} Movie</q-btn
-            >
-          </q-card-actions>
         </q-card-section>
+
+        <q-card-actions v-if="movieAddedLoading === false" align="right" class="mt-5 gap-2 border-t border-white/10 bg-[rgba(8,15,24,0.72)] px-4 py-3">
+          <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
+
+          <q-btn
+            color="primary"
+            @click="
+              switch (dialogAction) {
+                case 'Add':
+                  addMovie();
+                  break;
+                case 'Edit':
+                  editMovie();
+              }
+            "
+            >{{ dialogAction }} Movie</q-btn
+          >
+        </q-card-actions>
       </section>
 
       <section v-if="regionsByMovie.length === 0">
@@ -122,6 +129,12 @@ const localmovieWatchDate = ref(props.movieWatchDate);
 const movieAddedLoading = ref(false);
 const regionsByMovie = ref(Array);
 const streamingList = ref(Array);
+const formattedCurrentWatchDate = computed(() => {
+  if (!props.movieWatchDate) return "";
+  const date = new Date(props.movieWatchDate);
+  if (Number.isNaN(date.getTime())) return props.movieWatchDate;
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+});
 
 const openMvDialog = () => {
   AddEditMovieDialog.value = true;
