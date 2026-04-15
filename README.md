@@ -1,38 +1,15 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
+[![Version](https://img.shields.io/badge/version-2.1.0-1f8b4c)](#)
 
 # 365movies
-
-\* Actual Version: 1.0.2
 
 A simple app that searches for movies by title or any information passed in the search form.
 
 Random searches are possible with the "I'm lucky" button".
 
-## Release Notes
+## Changelog
 
-**VERSION-2.0.0**
-- Nuxt replaced by [Quasar](https://quasar.dev)
-- Agenda added
-- Little layout changes
-
-**VERSION-1.0.2**
-
-- API changed to [OMDB API](https://www.omdbapi.com) because the previous one blocked access
-- Random search removed for now. Maintenance required
-- "Movie Not Found" now has a friendly image
-
-**VERSION-1.0.1**
-
-- API changed to [IMDB API](https://imdb-api.com) because the previous one no longer exists
-- Search scripts improvements
-- About page UX improvements
-- Hack to Volar on VScode
-- favicon added
-
-**VERSION-1.0.0**
-
-- Project started with [NuxtJS](https://nuxtjs.org)
-- Movies API => https://imdb-internet-movie-database-unofficial.p.rapidapi.com
+Release history has been moved to [CHANGELOG.md](./CHANGELOG.md).
 
 ## Build Setup
 

@@ -1,5 +1,5 @@
 # develop stage
-FROM node:18-alpine as develop-stage
+FROM node:22.22-alpine AS develop-stage
 
 LABEL author="Marcelo Munhoz <me@marcelomunhoz.com>" \
   version="2.0.0" \
@@ -16,13 +16,13 @@ RUN apk add exa \
 COPY ./app .
 
 # build stage
-FROM develop-stage as build-stage
+FROM develop-stage AS build-stage
 
 RUN yarn && yarn build \
   && rm -rf /var/cache/apk/* /tmp/* /var/tmp/* /usr/share/man
 
 # production stage
-FROM nginx:1.21-alpine as production-stage
+FROM nginx:1.29-alpine AS production-stage
 
 COPY --from=build-stage /app/dist/spa /var/www
 

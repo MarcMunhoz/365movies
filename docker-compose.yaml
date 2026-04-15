@@ -5,12 +5,15 @@ services:
       target: develop-stage
       no_cache: true
     image: 365movies_img
+    env_file:
+      - ./app/.env
     volumes:
       - ./app:/app
     working_dir: /app
     container_name: "365movies_ctn"
-    hostname: "365movies-vue3_host"
+    hostname: "365movies_host"
     ports:
+      - 3000:3000
       - 3650:3650
     entrypoint: /bin/sh -c "yarn && yarn dev"
     # entrypoint: ["sh", "-c", "sleep 2073600"]
