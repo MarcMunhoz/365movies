@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.1.0
+- Major UI/UX refresh across Home, Agenda, and About pages.
+- Movie cards improved with poster full-view, in-card sharing, and refined metadata/action layout.
+- Search experience improved with persistent previous results and better context feedback.
+- Sidebar active-state behavior fixed and routing flow adjusted.
+- Security hardening: TMDB credentials kept server-side via middleware/Netlify function flow.
+- Infrastructure and dependencies updated (Quasar/Vite tooling, CVE-related lock/package updates, Docker compose modernization).
+
 ### 2.0.0
 - Nuxt replaced by [Quasar](https://quasar.dev).
 - Agenda added.
@@ -25,7 +33,7 @@ All notable changes to this project are documented in this file.
 - Project started with [NuxtJS](https://nuxtjs.org).
 - Movies API: https://imdb-internet-movie-database-unofficial.p.rapidapi.com
 
-## Commit History (through 2026-04-14)
+## Commit History (through 2026-04-15)
 
 ### 2021
 - 2021-12-02 - First commit
@@ -158,3 +166,11 @@ All notable changes to this project are documented in this file.
 - 2026-04-14 - refactor(router): Update page component route targets
 - 2026-04-14 - chore(repo): Update local development configuration
 - 2026-04-14 - fix(security): Upgrade runtime images and dependency locks
+- 2026-04-15 - refactor(ui): Migrate key views to Tailwind utilities
+- 2026-04-15 - refactor(ux): Improve About and Agenda layouts
+- 2026-04-15 - feat(movies): Add full poster preview from card
+- 2026-04-15 - fix(ux): Improve navigation and modal usability
+- 2026-04-15 - chore(config): Clean staged formatting leftovers
+- 2026-04-15 - feat(movies): Refine card interactions and sharing UX
+- 2026-04-15 - merge(develop): Integrate develop into issue_27
+- 2026-04-15 - fix(security): Keep TMDB credentials server-side

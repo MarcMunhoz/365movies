@@ -1,4 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
+[![Version](https://img.shields.io/badge/version-2.1.0-1f8b4c)](#)
 
 # 365movies
 
