@@ -1,14 +1,51 @@
 <template>
-  <q-page class="flex flex-center content-center justify-center p-3 text-[16px]">
-    <h1 class="text-3xl text-center w-full">What's this?!</h1>
+  <q-page class="mx-auto w-full max-w-[1050px] px-3 pb-6 pt-4 md:px-5">
+    <section class="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(130deg,rgba(14,32,50,0.92),rgba(10,22,36,0.9))] p-4 md:p-6">
+      <div class="flex flex-col gap-5 md:flex-row md:items-center md:gap-8">
+        <q-img
+          :src="myPhoto ? `${myPhoto}?s=360` : '/img/no-image.jpg'"
+          loading="lazy"
+          class="mx-auto h-[170px] w-[170px] shrink-0 rounded-2xl border border-white/15 md:mx-0 md:h-[210px] md:w-[210px]"
+        />
 
-    <q-img :src="`${myPhoto}?s=200`" loading="lazy" width="200px" class="rounded-lg mr-5" />
+        <div class="min-w-0">
+          <p class="mb-2 text-xs uppercase tracking-[0.15em] text-[#95b7c2]">About the project</p>
+          <h1 class="font-['Sora'] text-3xl font-bold leading-tight text-[#e8f0f8] md:text-4xl">365 Movies</h1>
+          <p class="mt-3 text-[15px] leading-relaxed text-[#c8d9e9] md:text-base">
+            A personal movie discovery app built with Vue and APIs to search titles, explore details, and plan what to watch.
+          </p>
+        </div>
+      </div>
+    </section>
 
-    <p>
-      I like movies, I like Vue and Rest APIs too. So why not a little search movie project with all that?<br /><br />
-      Here you can search for a movie by title, or keyword. You can mark it on the agenda and have an overview of all the movies you want to watch during the current year.<br /><br />
-      * <strong>Important:</strong> The schedule works locally on the device in which each movie is marked.
-    </p>
+    <section class="mt-4 grid gap-3 md:grid-cols-3">
+      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Search movies</h2>
+        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+          Use manual search for precise results, or the lucky mode to discover random options.
+        </p>
+      </article>
+
+      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Build your agenda</h2>
+        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+          Add movies to your watch plan, edit dates, and track watched status in list or calendar view.
+        </p>
+      </article>
+
+      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Local by design</h2>
+        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+          Your schedule is saved in your browser storage and stays on the current device.
+        </p>
+      </article>
+    </section>
+
+    <section class="mt-4 rounded-xl border border-[#ffb58f4d] bg-[rgba(255,181,143,0.08)] p-4 text-[#ffd8c2]">
+      <p class="text-sm leading-relaxed">
+        <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
+      </p>
+    </section>
   </q-page>
 </template>
 
