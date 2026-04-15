@@ -8,15 +8,17 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
+import { configure } from "quasar/wrappers";
+import dotenv from "dotenv";
+import os from "os";
+import { fileURLToPath } from 'node:url';
 
-const { configure } = require('quasar/wrappers');
+const isWSL = os.release().toLowerCase().includes("microsoft");
 
-
-module.exports = configure(function (/*ctx*/) {
-  require('dotenv').config()
+export default configure(function (ctx) {
+ dotenv.config();
 
   return {
-
 
     // https://v2.quasar.dev/quasar-cli/prefetch-feature
     // preFetch: true,
@@ -25,6 +27,7 @@ module.exports = configure(function (/*ctx*/) {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli/boot-files
     boot: [
+      'tmdb'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
@@ -55,7 +58,6 @@ module.exports = configure(function (/*ctx*/) {
         node: 'node18'
       },
 
-
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
@@ -66,20 +68,23 @@ module.exports = configure(function (/*ctx*/) {
       // publicPath: '/',
       // analyze: true,
       env: {
-        OMDBAPI_KEY: process.env.OMDBAPI_KEY,
-        BASEURL: process.env.BASEURL,
-        STREAMING_KEY: process.env.STREAMING_KEY,
-        STREAMING_URL: process.env.STREAMING_URL
-      }
+        // Client-side app only needs the backend endpoint.
+        // Secrets such as TMDB tokens must stay server-side.
+        VITE_API_URL: process.env.VITE_API_URL
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf, { isServer, isClient }) {
+        Object.assign(viteConf.resolve.alias, {
+          utils: fileURLToPath(new URL('./src/utils', import.meta.url)),
+          composables: fileURLToPath(new URL('./src/composables', import.meta.url))
+        })
+      }
       // viteVuePluginOptions: {},
-
 
       // vitePlugins: [
       //   [ 'package-name', { ..options.. } ]
@@ -90,7 +95,8 @@ module.exports = configure(function (/*ctx*/) {
     devServer: {
       // https: true
       port: 3650,
-      open: false // opens browser window automatically
+      open: false, // opens browser window automatically
+      watch: isWSL ? { usePolling: true, interval: 100 } : {}
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
@@ -108,7 +114,7 @@ module.exports = configure(function (/*ctx*/) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Notify"]
+      plugins: ["Notify", "Dialog"]
     },
 
     // animations: 'all', // --- includes all animations

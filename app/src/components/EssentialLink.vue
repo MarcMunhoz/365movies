@@ -1,7 +1,11 @@
 <template>
-  <q-item :to="link">
+  <q-item
+    :to="link"
+    class="q-mx-sm q-mb-xs rounded-borders border border-transparent text-[#dbe8f5] transition-all duration-200 ease-in hover:translate-x-[2px] hover:border-white/20 hover:bg-white/10 [&.q-router-link--active]:text-[#dbe8f5]"
+    :class="isCurrentRoute(link) ? 'border-[#4dc8b073] bg-[linear-gradient(90deg,rgba(77,200,176,0.3),rgba(77,200,176,0.1))] text-[#e7fff9]' : ''"
+  >
     <q-item-section v-if="icon" avatar>
-      <q-icon :name="icon" />
+      <q-icon :name="icon" class="text-[#b8cee2]" />
     </q-item-section>
 
     <q-item-section>
@@ -12,6 +16,7 @@
 
 <script>
 import { defineComponent } from "vue";
+import { useRoute } from "vue-router";
 
 export default defineComponent({
   name: "EssentialLink",
@@ -29,18 +34,16 @@ export default defineComponent({
       default: "",
     },
   },
+  setup() {
+    const route = useRoute();
+
+    const isCurrentRoute = (targetLink) => {
+      return route.path === targetLink;
+    };
+
+    return {
+      isCurrentRoute,
+    };
+  },
 });
 </script>
-
-<style lang="scss" scoped>
-a {
-  &.q-router-link--active {
-    background-color: $indigo-1 !important;
-  }
-
-  &:not(.q-router-link--exact-active) {
-    background-color: unset !important;
-    color: $blue-grey-5 !important;
-  }
-}
-</style>

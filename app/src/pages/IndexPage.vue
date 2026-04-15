@@ -1,17 +1,17 @@
 <template>
   <q-page class="flex flex-center">
-    <Movies />
+    <MoviesView />
   </q-page>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import Movies from "../components/Movies.vue";
+import MoviesView from "components/MoviesView.vue";
 
 export default defineComponent({
   name: "Home",
   components: {
-    Movies,
+    MoviesView,
   },
 });
 </script>
