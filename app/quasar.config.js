@@ -8,7 +8,6 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-
 import { configure } from "quasar/wrappers";
 import dotenv from "dotenv";
 import os from "os";
@@ -20,7 +19,6 @@ export default configure(function (ctx) {
  dotenv.config();
 
   return {
-
 
     // https://v2.quasar.dev/quasar-cli/prefetch-feature
     // preFetch: true,
@@ -60,7 +58,6 @@ export default configure(function (ctx) {
         node: 'node18'
       },
 
-
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
@@ -92,7 +89,6 @@ export default configure(function (ctx) {
         })
       }
       // viteVuePluginOptions: {},
-
 
       // vitePlugins: [
       //   [ 'package-name', { ..options.. } ]

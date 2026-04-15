@@ -27,7 +27,6 @@ All notable changes to this project are documented in this file.
 
 ## Commit History (through 2026-04-14)
 
-
 ### 2021
 - 2021-12-02 - First commit
 - 2021-12-02 - Uneeded
