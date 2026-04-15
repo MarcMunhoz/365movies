@@ -1,33 +1,27 @@
 <template>
-  <q-layout view="hHh lpR fff" class="app-shell">
-    <q-header class="app-header">
-      <q-toolbar class="px-3 py-2">
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="header-menu-btn" />
+  <q-layout view="hHh lpR fff" class="text-[#f3f6fa] [background:radial-gradient(circle_at_0%_0%,rgba(77,200,176,0.24),transparent_42%),radial-gradient(circle_at_100%_8%,rgba(255,143,107,0.2),transparent_36%),#0e141f]">
+    <q-header class="border-b border-white/10 bg-[rgba(9,16,28,0.8)] backdrop-blur-[10px]">
+      <q-toolbar class="gap-2 px-3 py-2">
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="mr-1.5 border border-white/25" />
 
-        <q-toolbar-title>
-          <div class="header-content">
-            <div class="header-brand">
-              <div class="header-title">365 MOVIES</div>
-              <div class="header-subtitle">{{ $route.name }}</div>
+        <q-toolbar-title class="m-0 min-w-0 flex-1 p-0">
+          <div class="flex w-full flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+            <div class="min-w-0 md:min-w-[170px] md:shrink-0">
+              <div class="font-['Sora'] text-[1.35rem] font-bold leading-tight tracking-[0.02em]">365 MOVIES</div>
+              <div class="text-xs uppercase tracking-[0.08em] text-[#95b7c2]">{{ $route.name }}</div>
             </div>
 
-            <div class="header-search">
-              <q-input
-                v-model="headerSearch"
-                dense
-                standout="bg-blue-grey-10 text-white"
-                placeholder="Search movie title..."
-                class="header-search-input"
-                :error="Boolean(searchValidationMessage)"
-                :error-message="searchValidationMessage"
-                @keyup.enter="runSearch"
-                @update:model-value="clearSearchValidation"
-              >
-                <template #prepend>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-              <q-btn unelevated dense class="header-lucky-btn" @click="runLucky">I'm lucky</q-btn>
+            <div class="flex min-w-0 w-full flex-1 items-start gap-2 md:items-center">
+              <div class="min-w-0 flex-1">
+                <q-input v-model="headerSearch" dense dark hide-bottom-space standout="bg-blue-grey-10 text-white" placeholder="Type movie title... And press Enter" input-class="!text-[#e8f0f8] placeholder:!text-[#9bb4c8]" class="flex-1 [&_.q-field__control]:rounded-[10px] [&_.q-field__bottom]:!text-[#ffb4a0]" :error="Boolean(searchValidationMessage)" :error-message="searchValidationMessage" @keyup.enter="runSearch" @update:model-value="clearSearchValidation">
+                  <template #prepend>
+                    <q-icon name="search" class="text-[#b4cbdd]" />
+                  </template>
+                </q-input>
+              </div>
+              <q-btn outline dense class="min-h-[34px] self-start whitespace-nowrap rounded-lg border-[rgba(255,192,154,0.7)] font-semibold normal-case text-[#ffc09a] md:self-auto" icon="casino" @click="runLucky">
+                I'm lucky
+              </q-btn>
             </div>
           </div>
         </q-toolbar-title>
@@ -36,14 +30,14 @@
 
     <q-drawer v-model="leftDrawerOpen" bordered class="bg-gradient-to-b from-[#121f31] to-[#0f1827]">
       <q-list class="pt-2">
-        <q-item-label header class="drawer-heading">1 movie per day of year, or almost it</q-item-label>
+        <q-item-label header class="font-semibold tracking-[0.05em] text-[#c4d7ea] opacity-95">1 movie per day of year, or almost it</q-item-label>
 
         <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" @click="toggleLeftDrawer" />
       </q-list>
     </q-drawer>
 
-    <q-footer bordered reveal class="app-footer flex justify-around">
-      <q-item v-for="link in socialLinks" clickable tag="a" :href="link.to" target="_blank" class="w-auto md:w-1/5 footer-link">
+    <q-footer bordered reveal class="flex justify-around border-t border-white/10 bg-[rgba(8,14,24,0.88)] text-[#cfe2f4]">
+      <q-item v-for="link in socialLinks" clickable tag="a" :href="link.to" target="_blank" class="w-auto text-inherit md:w-1/5">
         <q-item-section v-if="link.icon" avatar>
           <q-icon :name="link.icon" />
         </q-item-section>
@@ -159,143 +153,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style lang="scss" scoped>
-.app-shell {
-  background: radial-gradient(circle at 0% 0%, rgba(77, 200, 176, 0.24), transparent 42%),
-    radial-gradient(circle at 100% 8%, rgba(255, 143, 107, 0.2), transparent 36%), #0e141f;
-  color: #f3f6fa;
-}
-
-.app-header {
-  background: rgba(9, 16, 28, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
-
-  .header-menu-btn {
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    margin-right: 0.4rem;
-  }
-
-  .header-content {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-  }
-
-  .header-brand {
-    min-width: 170px;
-  }
-
-  .header-title {
-    font-family: "Sora", sans-serif;
-    font-size: 1.35rem;
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: 0.02em;
-  }
-
-  .header-subtitle {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #95b7c2;
-  }
-
-  .header-search {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .header-search-input {
-    flex: 1;
-
-    :deep(.q-field__control) {
-      border-radius: 10px;
-    }
-
-    :deep(.q-field__native),
-    :deep(.q-field__input) {
-      color: #e8f0f8 !important;
-    }
-
-    :deep(.q-field__native::placeholder),
-    :deep(.q-field__input::placeholder) {
-      color: #9bb4c8 !important;
-      opacity: 1;
-    }
-
-    :deep(.q-field__prepend .q-icon) {
-      color: #b4cbdd !important;
-    }
-
-    :deep(.q-field__bottom) {
-      color: #ffb4a0 !important;
-    }
-  }
-
-  .header-search-btn {
-    min-height: 34px;
-    border-radius: 8px;
-    background: #4dc8b0;
-    color: #0e1b2a;
-    font-weight: 700;
-  }
-
-  .header-lucky-btn {
-    min-height: 34px;
-    border-radius: 8px;
-    background: #ff8f6b;
-    color: #151e2d;
-    font-weight: 700;
-  }
-}
-
-.app-drawer {
-
-  :deep(.q-scrollarea),
-  :deep(.q-scrollarea__container),
-  :deep(.q-scrollarea__content),
-  :deep(.q-scrollarea__content > div),
-  :deep(.q-drawer__content > div),
-  :deep(.q-item),
-  :deep(.q-item__section),
-  :deep(.q-item__label) {
-    background-color: transparent !important;
-    color: #e5eff8 !important;
-  }
-
-  .drawer-heading {
-    color: #c4d7ea;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-    opacity: 0.95;
-  }
-}
-
-.app-footer {
-  background: rgba(8, 14, 24, 0.88);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cfe2f4;
-
-  .footer-link {
-    color: inherit;
-  }
-}
-
-@media (max-width: 840px) {
-  .app-header {
-    .header-content {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.4rem;
-    }
-
-    .header-brand {
-      min-width: unset;
-    }
-  }
-}
-</style>

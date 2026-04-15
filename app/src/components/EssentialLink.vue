@@ -1,7 +1,11 @@
 <template>
-  <q-item :to="link" class="drawer-link q-mx-sm q-mb-xs rounded-borders">
+  <q-item
+    :to="link"
+    class="q-mx-sm q-mb-xs rounded-borders border border-transparent text-[#dbe8f5] transition-all duration-200 ease-in hover:translate-x-[2px] hover:border-white/20 hover:bg-white/10"
+    active-class="border-[#4dc8b073] bg-[linear-gradient(90deg,rgba(77,200,176,0.3),rgba(77,200,176,0.1))] text-[#e7fff9]"
+  >
     <q-item-section v-if="icon" avatar>
-      <q-icon :name="icon" />
+      <q-icon :name="icon" class="text-[#b8cee2]" />
     </q-item-section>
 
     <q-item-section>
@@ -31,31 +35,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style lang="scss" scoped>
-.drawer-link {
-  transition: all 0.2s ease;
-  color: #dbe8f5 !important;
-  border: 1px solid transparent;
-
-  :deep(.q-icon) {
-    color: #b8cee2 !important;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.09) !important;
-    border-color: rgba(255, 255, 255, 0.16);
-    transform: translateX(2px);
-  }
-
-  &.q-router-link--exact-active {
-    background: linear-gradient(90deg, rgba(77, 200, 176, 0.3), rgba(77, 200, 176, 0.1)) !important;
-    color: #e7fff9 !important;
-    border: 1px solid rgba(77, 200, 176, 0.45);
-
-    :deep(.q-icon) {
-      color: #c8fff2 !important;
-    }
-  }
-}
-</style>

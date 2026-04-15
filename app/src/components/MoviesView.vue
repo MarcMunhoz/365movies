@@ -1,5 +1,5 @@
 <template>
-  <q-page class="w-full px-5 py-4 movies-page">
+  <q-page class="mx-auto w-full max-w-[1320px] px-5 py-4">
     <div class="row w-full" v-if="progressLoader === true">
       <q-circular-progress size="2rem" color="primary" class="mx-auto" indeterminate></q-circular-progress>
       <p class="text-center text-lg font-bold text-primary animate-pulse mt-2 w-full">Please, wait...</p>
@@ -9,18 +9,20 @@
       <q-card
         v-for="(sMovie, i) in sortedMovies"
         :key="i"
-        class="relative w-[374px] max-w-[374px] movie-card"
-        :class="{ 'movie-card--agenda': isInAgenda(sMovie.id), 'movie-card--watched': isWatched(sMovie.id) }"
+class="relative w-[374px] max-w-[374px] overflow-hidden border border-white/10 bg-[linear-gradient(180deg,#132033_0%,#111f30_100%)] shadow-[0_12px_28px_rgba(0,0,0,0.32)] transition-all duration-200 ease-in hover:-translate-y-1 hover:border-[rgba(255,196,86,0.45)]" :class="{
+        'border-[rgba(77,200,176,0.7)] shadow-[0_14px_34px_rgba(14,120,104,0.35)]': isInAgenda(sMovie.id),
+        'border-[rgba(100,221,160,0.9)] shadow-[0_16px_36px_rgba(31,174,109,0.4)]': isWatched(sMovie.id),
+      }"
       >
-        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="object-cover h-[250px] w-full movie-poster" />
-        <img v-else src="/img/no-image.jpg" class="object-cover h-[250px] w-full movie-poster" />
-        <div class="movie-poster-overlay"></div>
+        <img v-if="sMovie.poster_path != null" :src="`https://image.tmdb.org/t/p/w300${sMovie.poster_path}`" class="h-[250px] w-full object-cover saturate-[1.08] contrast-[1.03]" />
+        <img v-else src="/img/no-image.jpg" class="h-[250px] w-full object-cover saturate-[1.08] contrast-[1.03]" />
+        <div class="pointer-events-none absolute inset-0 h-[250px] bg-[linear-gradient(180deg,rgba(6,11,20,0.08)_45%,rgba(6,11,20,0.65)_100%)]"></div>
 
-        <div class="status-badges">
-          <q-badge v-if="isInAgenda(sMovie.id)" color="info" class="agenda-badge">
+        <div class="absolute left-[10px] top-[10px] z-[3] flex flex-col gap-1.5">
+          <q-badge v-if="isInAgenda(sMovie.id)" color="info" class="font-bold tracking-[0.02em]">
             In agenda
           </q-badge>
-          <q-badge v-if="isWatched(sMovie.id)" color="positive" class="watched-badge">
+          <q-badge v-if="isWatched(sMovie.id)" color="positive" class="font-bold tracking-[0.02em]">
             Watched
           </q-badge>
         </div>
@@ -49,7 +51,7 @@
             v-if="sMovie.imdbId !== 'Unknown'"
             icon="assignment"
             color="primary"
-            class="white--text opacity-75"
+class="opacity-75 text-white"
             :href="`https://www.imdb.com/title/${sMovie.imdbId}`"
             target="movie"
             title="Go to IMDb"
@@ -58,11 +60,11 @@
           />
         </div>
 
-        <q-card-section class="flex justify-around movie-meta">
+        <q-card-section class="flex justify-around text-[#f0f6ff]">
           <div class="text-h6 w-full">{{ sMovie.title }}</div>
           <div class="text-end w-full">
-            <q-chip color="primary" text-color="white" dense class="age-chip">
-              Age: {{ getAgeRating(sMovie.id) }}
+            <q-chip color="primary" text-color="white" dense class="border border-white/20">
+              {{ getAgeRating(sMovie.id) }}
             </q-chip>
           </div>
 
@@ -81,7 +83,7 @@
 
         <q-separator />
 
-        <q-card-section class="movie-details">
+        <q-card-section class="text-[#d9e8f6]">
           <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
 
           <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id)?.join(", ") || "N/A" }}</div>
@@ -93,8 +95,8 @@
 
         <q-separator />
 
-        <q-card-section class="q-pt-none mt-3 min-h-[190px] flex flex-col movie-overview">
-          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="block mb-4 trailer-btn" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
+        <q-card-section class="q-pt-none mt-3 flex min-h-[190px] flex-col text-[#c2d4e8]">
+          <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="mb-4 block max-w-[130px]" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
           <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
           <p class="mb-2">{{ getOverviewText(sMovie.id, sMovie.overview) }}</p>
           <q-btn
@@ -362,106 +364,3 @@ onMounted(() => {
 watch(() => [route.query.q, route.query.lucky, route.query.run], applyRouteSearch, { immediate: true });
 </script>
 
-<style lang="scss" scoped>
-.movies-page {
-  max-width: 1320px;
-  margin: 0 auto;
-}
-
-.movie-card {
-  background: linear-gradient(180deg, #132033 0%, #111f30 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
-  overflow: hidden;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  animation: card-enter 360ms ease both;
-
-  &:hover {
-    transform: translateY(-4px);
-    border-color: rgba(255, 196, 86, 0.45);
-  }
-
-  &--agenda {
-    border-color: rgba(77, 200, 176, 0.7);
-    box-shadow: 0 14px 34px rgba(14, 120, 104, 0.35);
-  }
-
-  &--watched {
-    border-color: rgba(100, 221, 160, 0.9);
-    box-shadow: 0 16px 36px rgba(31, 174, 109, 0.4);
-  }
-}
-
-.movie-poster {
-  filter: saturate(1.08) contrast(1.03);
-}
-
-.movie-poster-overlay {
-  position: absolute;
-  inset: 0;
-  height: 250px;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(6, 11, 20, 0.08) 45%, rgba(6, 11, 20, 0.65) 100%);
-}
-
-.status-badges {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  .agenda-badge,
-  .watched-badge {
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-}
-
-.movie-meta {
-  color: #f0f6ff;
-}
-
-.age-chip {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.movie-details {
-  color: #d9e8f6;
-}
-
-.movie-overview {
-  color: #c2d4e8;
-}
-
-.trailer-btn {
-  max-width: 130px;
-}
-
-.right-\[20px\] {
-  right: 20px;
-}
-
-.right-\[90px\] {
-  right: 90px;
-}
-
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-:deep(.q-date__header) {
-  .q-date__header-subtitle {
-    display: none;
-  }
-}
-</style>

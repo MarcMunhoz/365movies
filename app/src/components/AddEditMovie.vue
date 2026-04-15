@@ -1,12 +1,15 @@
 <template>
-  <q-dialog class="movie-dialog" v-model="AddEditMovieDialog" persistent>
-    <q-card class="movie-modal-card min-h-[290px] min-w-[290px] max-w-[400px]" :class="{ 'flex justify-center content-center': movieAddedLoading === true }">
+  <q-dialog v-model="AddEditMovieDialog" persistent>
+    <q-card
+      class="min-h-[290px] min-w-[290px] max-w-[400px] border border-white/15 bg-[linear-gradient(180deg,#15263a_0%,#111f30_100%)] text-[#e4edf6]"
+      :class="{ 'flex justify-center content-center': movieAddedLoading === true }"
+    >
       <section v-show="regionsByMovie.length !== 0">
         <q-card-section v-if="movieAddedLoading === true">
           <q-spinner-pie color="primary" size="8em" />
         </q-card-section>
 
-        <q-card-section v-else class="movie-modal-section flex justify-center">
+        <q-card-section v-else class="flex justify-center text-[#d9e6f3]">
           <q-select
             v-model="countrySearch"
             :options="getCountries"
@@ -17,8 +20,8 @@
             :label="`Available in ${regionsByMovie.length} countries`"
             hint="STREAMING IN"
             id="field_select-country"
-            class="w-full mb-4 select-country"
-            popup-content-class="country-dropdown"
+            class="mb-4 w-full [&_.q-field__control]:border [&_.q-field__control]:border-white/15 [&_.q-field__control]:bg-white/5 [&_.q-field__control]:text-[#e8f0f8] [&_.q-field__label]:!text-[#cbdcec] [&_.q-field__marginal]:!text-[#cbdcec] [&_.q-field__native]:!text-[#cbdcec] [&_.q-field__input]:!text-[#cbdcec] [&_.q-field__hint]:!text-[#cbdcec] [&_.q-field__bottom]:!text-[#cbdcec] [&_.q-field__messages]:!text-[#cbdcec]"
+            popup-content-class="border border-white/15 bg-[#13263a] text-[#e5eff8] shadow-[0_14px_26px_rgba(0,0,0,0.36)] [&_.q-item]:mx-[6px] [&_.q-item]:my-[2px] [&_.q-item]:rounded-lg [&_.q-item]:text-[#d7e7f6] [&_.q-item:hover]:bg-[#4dc8b02e] [&_.q-item.q-manual-focusable--focused]:bg-[#4dc8b042] [&_.q-item.q-item--active]:bg-[#4dc8b042] [&_.q-item.q-manual-focusable--focused]:text-[#f2fffb] [&_.q-item.q-item--active]:text-[#f2fffb] [&_.q-item__label]:text-[#e6f2ff]"
           >
             <template v-slot:option="scope">
               <q-item v-bind="scope.itemProps">
@@ -35,9 +38,14 @@
             </template>
           </q-select>
 
-          <q-date v-model="localmovieWatchDate" :options="movieWatchDateOpt" :title="movieTitle" />
+          <q-date
+            v-model="localmovieWatchDate"
+            :options="movieWatchDateOpt"
+            :title="movieTitle"
+            class="border border-white/15 bg-[rgba(17,31,48,0.95)] text-[#e7f0f8] [&_.q-date__header]:bg-[#4dc8b024] [&_.q-date__calendar-item]:text-[#dce8f5] [&_.q-date__view_.q-btn]:text-[#dce8f5]"
+          />
 
-          <q-card-actions v-if="movieAddedLoading === false" align="center" class="movie-modal-actions mt-5">
+          <q-card-actions v-if="movieAddedLoading === false" align="center" class="mt-5 border-t border-white/10 bg-[rgba(8,15,24,0.72)]">
             <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
 
             <q-btn
@@ -58,9 +66,9 @@
       </section>
 
       <section v-if="regionsByMovie.length === 0">
-        <h1 class="movie-modal-empty-title">No streaming available</h1>
+        <h1 class="mt-6 text-center text-[1.2rem] text-[#e5f2ff]">No streaming available</h1>
 
-        <q-card-actions v-if="movieAddedLoading === false" align="center" class="movie-modal-actions mt-5">
+        <q-card-actions v-if="movieAddedLoading === false" align="center" class="mt-5 border-t border-white/10 bg-[rgba(8,15,24,0.72)]">
           <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
         </q-card-actions>
       </section>
@@ -260,90 +268,7 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.movie-modal-card {
-  background: linear-gradient(180deg, #15263a 0%, #111f30 100%);
-  color: #e4edf6;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-
-  .movie-modal-section {
-    color: #d9e6f3;
-  }
-
-  .movie-modal-actions {
-    background: rgba(8, 15, 24, 0.72);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  .movie-modal-empty-title {
-    text-align: center;
-    color: #e5f2ff;
-    font-size: 1.2rem;
-    margin-top: 1.4rem;
-  }
-
-  :deep(.select-country .q-field__control) {
-    background: rgba(255, 255, 255, 0.06);
-    color: #e8f0f8;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-  }
-
-  :deep(.select-country .q-field__label),
-  :deep(.select-country .q-field__marginal),
-  :deep(.select-country .q-field__native),
-  :deep(.select-country .q-field__input),
-  :deep(.select-country .q-field__hint),
-  :deep(.select-country .q-field__bottom),
-  :deep(.select-country .q-field__messages) {
-    color: #cbdcec !important;
-    opacity: 1 !important;
-  }
-
-  :deep(.q-date) {
-    background: rgba(17, 31, 48, 0.95);
-    color: #e7f0f8;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  :deep(.q-date__header) {
-    background: rgba(77, 200, 176, 0.14);
-
-    .q-date__header-subtitle {
-      display: none;
-    }
-  }
-
-  :deep(.q-date__calendar-item),
-  :deep(.q-date__view .q-btn) {
-    color: #dce8f5;
-  }
-}
-</style>
-
-<style lang="scss">
-.country-dropdown {
-  background: #13263a !important;
-  color: #e5eff8 !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.36) !important;
-
-  .q-item {
-    color: #d7e7f6 !important;
-    border-radius: 8px;
-    margin: 2px 6px;
-
-    &:hover {
-      background: rgba(77, 200, 176, 0.18) !important;
-    }
-
-    &.q-manual-focusable--focused,
-    &.q-item--active {
-      background: rgba(77, 200, 176, 0.26) !important;
-      color: #f2fffb !important;
-    }
-  }
-
-  .q-item__label {
-    color: #e6f2ff !important;
-  }
+:deep(.q-date__header-subtitle) {
+  display: none;
 }
 </style>

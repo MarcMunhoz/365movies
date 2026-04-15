@@ -7,7 +7,7 @@ const routes = [
       {
         path: "",
         component: () => import("pages/IndexPage.vue"),
-        name: "Home",
+        name: "Movie Search",
       },
       {
         path: "/about",
