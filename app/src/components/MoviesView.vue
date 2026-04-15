@@ -5,7 +5,16 @@
       <p class="text-center text-lg font-bold text-primary animate-pulse mt-2 w-full">Please, wait...</p>
     </div>
 
-    <section v-else class="flex flex-wrap justify-center gap-5 mt-5">
+    <section v-else class="mt-5">
+      <p v-if="searchFeedbackText" class="mb-4 text-center text-sm text-[#9eb6cb] md:text-base">
+        Resultados para <span class="font-semibold text-[#dce9f5]">"{{ searchFeedbackText }}"</span>
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-5">
+
+
+
+ 
       <q-card
         v-for="(sMovie, i) in sortedMovies"
         :key="i"
@@ -47,9 +56,19 @@ class="relative w-[374px] max-w-[374px] overflow-hidden border border-white/10 b
             Watched
           </q-badge>
         </div>
+          <div class="absolute right-[12px] top-[250px] z-[6] -translate-y-1/2 flex items-center gap-x-1.5">
+            <q-fab color="primary" icon="keyboard_arrow_up" direction="up" class="opacity-90 scale-[0.8]">
 
-        <div class="absolute top-[220px] right-[20px] flex gap-x-4">
-          <q-fab color="primary" icon="keyboard_arrow_down" direction="down" class="opacity-90">
+
+
+
+
+
+
+
+
+
+ 
             <q-fab-action
               v-for="btn in agendaButtons"
               color="accent"
@@ -72,34 +91,95 @@ class="relative w-[374px] max-w-[374px] overflow-hidden border border-white/10 b
             v-if="sMovie.imdbId !== 'Unknown'"
             icon="assignment"
             color="primary"
-class="opacity-75 text-white"
+class="opacity-80 text-white scale-[0.8]"
             :href="`https://www.imdb.com/title/${sMovie.imdbId}`"
             target="movie"
             title="Go to IMDb"
             fab
-            small
+size="12px"
           />
         </div>
 
-        <q-card-section class="flex justify-around text-[#f0f6ff]">
-          <div class="text-h6 w-full">{{ sMovie.title }}</div>
-          <div class="text-end w-full">
-            <q-chip color="primary" text-color="white" dense class="border border-white/20">
-              {{ getAgeRating(sMovie.id) }}
-            </q-chip>
-          </div>
+          <q-card-section class="text-[#f0f6ff] pt-7">
+            <div class="mb-3 w-full text-[1.25rem] leading-tight">{{ sMovie.title }}</div>
+            <div class="flex items-center gap-3">
+              <div class="flex min-w-0 w-full justify-between items-center gap-3">
+                <div v-if="sMovie.vote_average != null" class="flex items-center gap-2">
+                  <span class="inline-block">
+                    <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.35em" class="w-50" />
+                    <q-tooltip class="bg-primary" anchor="bottom middle" self="center middle">
+                      {{ sMovie.vote_average }}
+                    </q-tooltip>
+                  </span>
+                </div>
 
-          <template v-if="sMovie.vote_average != null">
-            <q-rating :model-value="Number(sMovie.vote_average)" color="amber" icon-half="star_half" readonly max="10" size="1.4em" class="w-50"></q-rating>
-            <q-tooltip class="bg-primary" anchor="bottom middle" self="center middle">
-              {{ sMovie.vote_average }}
-            </q-tooltip>
-          </template>
+                <q-chip color="primary" text-color="white" dense class="border border-white/20">
+                  {{ getAgeRating(sMovie.id) }}
+                </q-chip>
+                <q-btn flat dense round icon="share" color="blue-grey-3" size="sm" class="opacity-85">
+                  <q-menu anchor="bottom right" self="top right" class="min-w-[210px] bg-[rgba(13,25,40,0.96)] text-[#dbe8f5]">
+                    <q-list dense padding>
+                      <q-item v-if="canNativeShare" clickable v-close-popup @click="shareWithNative(sMovie)">
+                        <q-item-section avatar>
+                          <q-icon name="ios_share" />
+                        </q-item-section>
+                        <q-item-section>Share...</q-item-section>
+                      </q-item>
 
-          <div class="grey--text p-0 w-auto">
-            {{ sMovie.release_date.split("-")[0] }}
-          </div>
-          <div v-if="getRuntime(sMovie.id) > 0" class="grey--text pl-0 w-auto">{{ getRuntime(sMovie.id) }}min</div>
+
+
+                      <q-item clickable v-close-popup @click="openSharePlatform('x', sMovie)">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-twitter" />
+                        </q-item-section>
+                        <q-item-section>X</q-item-section>
+                      </q-item>
+
+
+
+                      <q-item clickable v-close-popup @click="openSharePlatform('facebook', sMovie)">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-facebook" />
+                        </q-item-section>
+                        <q-item-section>Facebook</q-item-section>
+                      </q-item>
+
+                      <q-item clickable v-close-popup @click="openSharePlatform('whatsapp', sMovie)">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-whatsapp" />
+                        </q-item-section>
+                        <q-item-section>WhatsApp</q-item-section>
+                      </q-item>
+
+                      <q-separator dark class="my-1" />
+
+                      <q-item clickable v-close-popup @click="copySharePayload(sMovie, true)">
+                        <q-item-section avatar>
+                          <q-icon name="mdi-instagram" />
+                        </q-item-section>
+                        <q-item-section>Instagram Direct (copy)</q-item-section>
+                      </q-item>
+
+                      <q-item clickable v-close-popup @click="copySharePayload(sMovie)">
+                        <q-item-section avatar>
+                          <q-icon name="content_copy" />
+                        </q-item-section>
+                        <q-item-section>Copy link</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-btn>
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <div class="grey--text text-[1.05rem]">
+                  {{ sMovie.release_date.split("-")[0] }}
+                </div>
+                <div v-if="getRuntime(sMovie.id) > 0" class="grey--text text-[1.05rem]">{{ getRuntime(sMovie.id) }}min</div>
+              </div>
+            </div>
+
+
+ 
         </q-card-section>
 
         <q-separator />
@@ -132,6 +212,7 @@ class="opacity-75 text-white"
           />
         </q-card-section>
       </q-card>
+      </div>
     </section>
 
     <div v-if="noMovie === true" class="text-center">
@@ -166,6 +247,7 @@ class="opacity-75 text-white"
 
 <script setup>
 import { onMounted, ref, computed, watch } from "vue";
+import { Notify } from "quasar";
 import { useRoute } from "vue-router";
 import { commonWords } from "utils/commonWords";
 import { useTmdb } from "composables/useTmdb";
@@ -212,6 +294,7 @@ const dialogTrailerId = ref();
 const posterDialog = ref(false);
 const dialogPosterSrc = ref("");
 const dialogPosterTitle = ref("");
+const canNativeShare = ref(false);
 const { getMovieData } = useMovieData(sMoviesCredits, sMoviesDetails, sMoviesProviders, sMoviesVideos);
 
 const resetMovieState = () => {
@@ -323,6 +406,65 @@ const openPosterDialog = (movie) => {
   posterDialog.value = true;
 };
 
+const getShareMovieUrl = (movie) => {
+  if (movie.imdbId && movie.imdbId !== "Unknown") {
+    return `https://www.imdb.com/title/${movie.imdbId}`;
+  }
+  return `https://www.themoviedb.org/movie/${movie.id}`;
+};
+
+const getShareMovieText = (movie) => {
+  const year = movie.release_date?.split("-")[0] || "N/A";
+  return `Watch this movie: ${movie.title} (${year})`;
+};
+
+const openSharePlatform = (platform, movie) => {
+  const shareUrl = getShareMovieUrl(movie);
+  const shareText = getShareMovieText(movie);
+  const encodedUrl = encodeURIComponent(shareUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  const links = {
+    x: `https://x.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+  };
+
+  const targetUrl = links[platform];
+  targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer");
+};
+
+const copySharePayload = async (movie, toInstagram = false) => {
+  const payload = `${getShareMovieText(movie)}\n${getShareMovieUrl(movie)}`;
+
+  try {
+    await navigator.clipboard.writeText(payload);
+    Notify.create({
+      type: "positive",
+      message: toInstagram ? "Copied. Paste it in Instagram Direct." : "Movie link copied.",
+    });
+  } catch (error) {
+    Notify.create({
+      type: "negative",
+      message: "Could not copy the share text.",
+    });
+  }
+};
+
+const shareWithNative = async (movie) => {
+  if (!canNativeShare.value) return;
+
+  try {
+    await navigator.share({
+      title: movie.title,
+      text: getShareMovieText(movie),
+      url: getShareMovieUrl(movie),
+    });
+  } catch (_error) {
+    // User cancel is expected in share flow.
+  }
+};
+
 const sortedMovies = computed(() => {
   const today = new Date();
   return [...sMovies.value]
@@ -342,6 +484,10 @@ const getRandomWord = () => {
 
   return selectedWord;
 };
+
+const searchFeedbackText = computed(() => {
+  return typeof searchTerm.value === "string" ? searchTerm.value.trim() : "";
+});
 
 const showHiddenBtns = (mId, btnLabel) => {
   const hasMovieAgenda = getLocalStorage("watchMovies").filter((mvid) => mvid.movieID === mId)[0];
@@ -447,6 +593,7 @@ const applyRouteSearch = () => {
 };
 
 onMounted(() => {
+  canNativeShare.value = typeof navigator !== "undefined" && typeof navigator.share === "function";
   movieWatchDate.value = today();
 });
 
