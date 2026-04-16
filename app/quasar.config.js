@@ -19,46 +19,40 @@ export default configure(function (ctx) {
  dotenv.config();
 
   return {
-
     // https://v2.quasar.dev/quasar-cli/prefetch-feature
     // preFetch: true,
 
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli/boot-files
-    boot: [
-      'tmdb'
-    ],
+    boot: ["tmdb"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
-    css: [
-      'app.scss',
-      'tailwind.scss',
-    ],
+    css: ["app.scss", "tailwind.scss"],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      'mdi-v5',
+      "mdi-v5",
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
-      'roboto-font', // optional, you are not bound to it
-      'material-icons', // optional, you are not bound to it
-      'material-icons-outlined'
+      "roboto-font", // optional, you are not bound to it
+      "material-icons", // optional, you are not bound to it
+      "material-icons-outlined",
     ],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       target: {
-        browser: [ 'es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1' ],
-        node: 'node18'
+        browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
+        node: "node18",
       },
 
-      vueRouterMode: 'history', // available values: 'hash', 'history'
+      vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -70,7 +64,7 @@ export default configure(function (ctx) {
       env: {
         // Client-side app only needs the backend endpoint.
         // Secrets such as TMDB tokens must stay server-side.
-        VITE_API_URL: process.env.VITE_API_URL
+        VITE_API_URL: process.env.VITE_API_URL,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -78,12 +72,14 @@ export default configure(function (ctx) {
       // polyfillModulePreload: true,
       // distDir
 
-      extendViteConf (viteConf, { isServer, isClient }) {
+      extendViteConf(viteConf, { isServer, isClient }) {
         Object.assign(viteConf.resolve.alias, {
-          utils: fileURLToPath(new URL('./src/utils', import.meta.url)),
-          composables: fileURLToPath(new URL('./src/composables', import.meta.url))
-        })
-      }
+          utils: fileURLToPath(new URL("./src/utils", import.meta.url)),
+          composables: fileURLToPath(
+            new URL("./src/composables", import.meta.url),
+          ),
+        });
+      },
       // viteVuePluginOptions: {},
 
       // vitePlugins: [
@@ -96,7 +92,7 @@ export default configure(function (ctx) {
       // https: true
       port: 3650,
       open: false, // opens browser window automatically
-      watch: isWSL ? { usePolling: true, interval: 100 } : {}
+      watch: isWSL ? { usePolling: true, interval: 100 } : {},
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
@@ -114,7 +110,7 @@ export default configure(function (ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Notify", "Dialog"]
+      plugins: ["Notify", "Dialog"],
     },
 
     // animations: 'all', // --- includes all animations
@@ -136,7 +132,7 @@ export default configure(function (ctx) {
     // https://v2.quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
       // ssrPwaHtmlFilename: 'offline.html', // do NOT use index.html as name!
-                                          // will mess up SSR
+      // will mess up SSR
 
       // extendSSRWebserverConf (esbuildConf) {},
       // extendPackageJson (json) {},
@@ -147,20 +143,56 @@ export default configure(function (ctx) {
       // manualPostHydrationTrigger: true,
 
       prodPort: 3000, // The default port that the production server should use
-                      // (gets superseded if process.env.PORT is specified at runtime)
+      // (gets superseded if process.env.PORT is specified at runtime)
 
       middlewares: [
-        'render' // keep this as last one
-      ]
+        "render", // keep this as last one
+      ],
     },
 
     // https://v2.quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'generateSW', // or 'injectManifest'
+      workboxMode: "GenerateSW", // or 'injectManifest'
+      manifest: {
+        name: `365movies`,
+        description: `Search, track and get notified about movies release dates`,
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#000000",
+        theme_color: "#1e1e1e",
+        start_url: "/",
+        scope: "/",
+        icons: [
+          {
+            src: "icons/icon-128x128.png",
+            sizes: "128x128",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-256x256.png",
+            sizes: "256x256",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-384x384.png",
+            sizes: "384x384",
+            type: "image/png",
+          },
+          {
+            src: "icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+      },
       injectPwaMetaTags: true,
-      swFilename: 'sw.js',
-      manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
+      // swFilename: 'sw.js',
       // useFilenameHashes: true,
       // extendGenerateSWOptions (cfg) {}
       // extendInjectManifestOptions (cfg) {},
@@ -175,7 +207,7 @@ export default configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
     capacitor: {
-      hideSplashscreen: true
+      hideSplashscreen: true,
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
@@ -186,17 +218,15 @@ export default configure(function (ctx) {
       // specify the debugging port to use for the Electron app when running in development mode
       inspectPort: 5858,
 
-      bundler: 'packager', // 'packager' or 'builder'
+      bundler: "packager", // 'packager' or 'builder'
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
         // Windows only
         // win32metadata: { ... }
       },
@@ -204,18 +234,16 @@ export default configure(function (ctx) {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: '365movies'
-      }
+        appId: "365movies",
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
     bex: {
-      contentScripts: [
-        'my-content-script'
-      ],
+      contentScripts: ["my-content-script"],
 
       // extendBexScriptsConf (esbuildConf) {}
       // extendBexManifestJson (json) {}
-    }
-  }
+    },
+  };
 });
