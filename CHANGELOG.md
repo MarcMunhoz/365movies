@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.2.0
+- PWA build flow enabled for production, including manifest/service worker setup and app icon assets.
+- Netlify TMDB proxy hardened to support nested paths, route shape variations, normalized endpoints, and clearer diagnostics.
+- Layout/navigation behavior refined: desktop drawer is fixed and always available, with mobile-specific menu behavior.
+- Agenda UX refined: list view starts by default and local-data warning is surfaced directly in Agenda.
+- About page adjusted to centralize project/contact information previously shown in footer.
+
 ### 2.1.0
 - Major UI/UX refresh across Home, Agenda, and About pages.
 - Movie cards improved with poster full-view, in-card sharing, and refined metadata/action layout.
@@ -33,7 +40,7 @@ All notable changes to this project are documented in this file.
 - Project started with [NuxtJS](https://nuxtjs.org).
 - Movies API: https://imdb-internet-movie-database-unofficial.p.rapidapi.com
 
-## Commit History (through 2026-04-15)
+## Commit History (through 2026-04-16)
 
 ### 2021
 - 2021-12-02 - First commit
@@ -174,3 +181,10 @@ All notable changes to this project are documented in this file.
 - 2026-04-15 - feat(movies): Refine card interactions and sharing UX
 - 2026-04-15 - merge(develop): Integrate develop into issue_27
 - 2026-04-15 - fix(security): Keep TMDB credentials server-side
+- 2026-04-15 - chore(release): Prepare version 2.1.0
+- 2026-04-15 - fix(netlify): Handle nested TMDB endpoint paths
+- 2026-04-15 - fix(netlify): Support both TMDB proxy route shapes
+- 2026-04-15 - fix(netlify): Improve TMDB proxy error diagnostics
+- 2026-04-15 - fix(netlify): Normalize TMDB proxy endpoint path
+- 2026-04-16 - refactor(layout): Improve drawer and agenda information flow
+- 2026-04-16 - feat(pwa): Configure production PWA setup
