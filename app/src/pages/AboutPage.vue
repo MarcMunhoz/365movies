@@ -41,10 +41,18 @@
       </article>
     </section>
 
-    <section class="mt-4 rounded-xl border border-[#ffb58f4d] bg-[rgba(255,181,143,0.08)] p-4 text-[#ffd8c2]">
-      <p class="text-sm leading-relaxed">
-        <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
-      </p>
+    <section class="mt-4 rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
+      <h2 class="mb-3 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Connect</h2>
+      <q-list class="rounded-lg border border-white/10 bg-[rgba(8,15,25,0.55)]">
+        <q-item v-for="link in socialLinks" :key="link.title" clickable tag="a" :href="link.to" target="_blank" class="text-[#d5e6f6]">
+          <q-item-section avatar>
+            <q-icon :name="link.icon" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ link.title }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
     </section>
   </q-page>
 </template>
@@ -57,6 +65,23 @@ export default defineComponent({
   data() {
     return {
       myPhoto: "",
+      socialLinks: [
+        {
+          title: "Marcelo Munhoz website",
+          icon: "mdi-post-outline",
+          to: "https://www.marcelomunhoz.com",
+        },
+        {
+          title: "Marcelo Munhoz on LinkedIn",
+          icon: "mdi-linkedin",
+          to: "https://www.linkedin.com/in/marcelomunhoz",
+        },
+        {
+          title: "MarcMunhoz on Github",
+          icon: "mdi-github",
+          to: "https://github.com/MarcMunhoz",
+        },
+      ],
     };
   },
   mounted() {

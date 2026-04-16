@@ -14,19 +14,25 @@
       </div>
     </section>
 
-    <section class="mb-4 flex flex-wrap items-center justify-end gap-2">
-      <q-chip outline color="primary" size="sm" :ripple="false" :label="`Total: ${tableData.length}`" />
-      <q-chip outline color="positive" size="sm" :ripple="false" :label="`Watched: ${watchedMoviesCount}`" />
-      <q-chip outline color="grey-7" size="sm" :ripple="false" :label="`Unwatched: ${unwatchedMoviesCount}`" />
-      <q-chip outline color="primary" size="sm" :ripple="false" icon="circle" label="Scheduled movie" />
-      <q-chip outline color="grey-7" size="sm" :ripple="false" icon="radio_button_unchecked" label="Unwatched" />
-      <q-chip outline color="positive" size="sm" :ripple="false" icon="task_alt" label="Watched" />
-      <q-chip outline color="secondary" size="sm" :ripple="false" icon="edit" label="Date edit" />
-      <q-chip outline color="negative" size="sm" :ripple="false" icon="delete" label="Delete from Agenda" />
+    <section class="mb-4 ml-auto rounded-xl border border-[#ffb58f4d] bg-[rgba(255,181,143,0.08)] p-2 leading-relaxed text-xs text-center text-[#ffd8c2] w-fit">
+      <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
+    </section>
+
+    <section class="mb-4 flex flex-wrap items-center justify-center gap-2">
+      <span class="text-xs uppercase">Legend</span>
+      <q-chip outline color="primary" size="md" :ripple="false" :label="`Total: ${tableData.length}`" />
+      <q-chip outline color="positive" size="md" :ripple="false" :label="`Watched: ${watchedMoviesCount}`" />
+      <q-chip outline color="grey-7" size="md" :ripple="false" :label="`Unwatched: ${unwatchedMoviesCount}`" />
+      <q-chip outline color="primary" size="md" :ripple="false" icon="circle" label="Scheduled movie" />
+      <q-chip outline color="grey-7" size="md" :ripple="false" icon="radio_button_unchecked" label="Unwatched" />
+      <q-chip outline color="positive" size="md" :ripple="false" icon="task_alt" label="Watched" />
+      <q-chip outline color="secondary" size="md" :ripple="false" icon="edit" label="Date edit" />
+      <q-chip outline color="negative" size="md" :ripple="false" icon="delete" label="Delete from Agenda" />
     </section>
 
     <section v-if="listMode" class="w-full overflow-hidden rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)]">
       <q-table
+        dark
         flat
         bordered
         :rows="tableData"
@@ -38,7 +44,7 @@
       >
         <template #body-cell-title="{ row }">
           <q-td>
-            <a :href="row.movieLink" target="movie" class="inline-flex max-w-[320px] items-center gap-2 truncate text-lg text-primary hover:underline">
+            <a :href="row.movieLink" target="movie" class="inline-flex w-fit items-center gap-2 truncate text-lg text-primary hover:underline">
               {{ row.title }}
               <q-icon name="open_in_new" size="16px" />
             </a>
@@ -166,8 +172,8 @@ const editDateMovie = ref("");
 const events = ref([]);
 const openAgendaDialog = ref(false);
 
-// NEW CODE
-const listMode = ref(getLocalStorage("listMode") === "true");
+// Agenda list mode (table) state
+const listMode = ref(true);
 const tableData = ref([]);
 
 // Definição das colunas da tabela
@@ -180,6 +186,9 @@ const tableColumns = [
 ];
 
 onMounted(async () => {
+  listMode.value = true;
+  localStorage.removeItem("listMode");
+
   await nextTick();
   const months = document.querySelectorAll(".vc-title");
   months.forEach((e) => {
@@ -315,13 +324,10 @@ const watchedMoviesCount = computed(() => tableData.value.filter((movie) => movi
 const unwatchedMoviesCount = computed(() => tableData.value.length - watchedMoviesCount.value);
 
 watch(
-  [watchMovies, listMode],
-  ([newMovies, newListMode]) => {
+  watchMovies,
+  (newMovies) => {
     // Updates watchMovies in localStorage
     setLocalStorage("watchMovies", newMovies);
-
-    // Updates listMode in localStorage
-    setLocalStorage("listMode", newListMode);
   },
   { deep: true }
 );
