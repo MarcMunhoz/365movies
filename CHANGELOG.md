@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.2.1
+- Frontend dependency lockfile refreshed for maintenance/security updates.
+- Application version metadata aligned across package, Docker image label, and README badge.
+
 ### 2.2.0
 - PWA build flow enabled for production, including manifest/service worker setup and app icon assets.
 - Netlify TMDB proxy hardened to support nested paths, route shape variations, normalized endpoints, and clearer diagnostics.
