@@ -2,7 +2,7 @@
 FROM node:22.22-alpine AS develop-stage
 
 LABEL author="Marcelo Munhoz <me@marcelomunhoz.com>" \
-  version="2.0.0" \
+  version="2.2.1" \
   date_created="2023-07-12"
 
 WORKDIR /app
