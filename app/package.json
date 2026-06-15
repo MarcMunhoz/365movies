@@ -47,7 +47,9 @@
   "resolutions": {
     "braces": "^3.0.3",
     "micromatch": "^4.0.8",
-    "serialize-javascript": "^7.0.5"
+    "serialize-javascript": "^7.0.5",
+    "shell-quote": "^1.8.4",
+    "esbuild": "^0.28.1"
   },
   "engines": {
     "node": "^22.22.0",
