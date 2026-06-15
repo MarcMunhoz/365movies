@@ -252,7 +252,12 @@ import { useRoute } from "vue-router";
 import { commonWords } from "utils/commonWords";
 import { useTmdb } from "composables/useTmdb";
 import { useMovieData } from "composables/useMovieData";
-import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
+import {
+  getLocalStorage,
+  getSessionStorage,
+  removeSessionStorage,
+  setSessionStorage,
+} from "composables/useLocalStorage";
 import { movieBtnAction, delMovieAgenda, dialogTitle, movieTmdbId, movieWatchDate, selectedCountry, dialogAction, newMovie, AddEditMovieDialog } from "composables/useMovieActions.js";
 import { today } from "utils/dateToday";
 import Trailers from "components/Trailers.vue";
@@ -267,6 +272,7 @@ const OVERVIEW_MAX_LENGTH = 180;
 const LAST_SEARCH_KEY = "lastMovieSearch";
 const LAST_SEARCH_SNAPSHOT_KEY = "lastMovieSearchSnapshot";
 const route = useRoute();
+let searchRequestId = 0;
 
 const { fetch } = useTmdb();
 const sMoviesCredits = ref([]);
@@ -310,7 +316,7 @@ const resetMovieState = () => {
 };
 
 const saveSearchSnapshot = () => {
-  setLocalStorage(LAST_SEARCH_SNAPSHOT_KEY, {
+  setSessionStorage(LAST_SEARCH_SNAPSHOT_KEY, {
     query: searchTerm.value,
     movies: sMovies.value,
     details: sMoviesDetails.value,
@@ -324,7 +330,7 @@ const saveSearchSnapshot = () => {
 };
 
 const restoreSearchSnapshot = (query) => {
-  const snapshot = getLocalStorage(LAST_SEARCH_SNAPSHOT_KEY, null);
+  const snapshot = getSessionStorage(LAST_SEARCH_SNAPSHOT_KEY, null);
   if (!snapshot || snapshot.query !== query) return false;
 
   sMovies.value = Array.isArray(snapshot.movies) ? snapshot.movies : [];
@@ -340,6 +346,8 @@ const restoreSearchSnapshot = (query) => {
 };
 
 const sFnmovies = async () => {
+  const requestId = ++searchRequestId;
+
   // Resetando estado
   resetMovieState();
   progressLoader.value = true;
@@ -350,19 +358,29 @@ const sFnmovies = async () => {
   }
 
   luckyMethod.value && (searchTerm.value = getRandomWord());
-  setLocalStorage(LAST_SEARCH_KEY, {
+  setSessionStorage(LAST_SEARCH_KEY, {
     query: searchTerm.value,
     lucky: false,
   });
 
   // Fazendo a busca
   const data = await fetch("search/movie", { query: searchTerm.value });
+
+  if (requestId !== searchRequestId) {
+    return false;
+  }
+
   const movies = data?.results || [];
 
   if (movies.length) {
     await Promise.all(
       movies.map(async (movie) => {
-        await sFnmoviesInfo(movie.id);
+        const movieLoaded = await sFnmoviesInfo(movie.id, requestId);
+
+        if (!movieLoaded || requestId !== searchRequestId) {
+          return;
+        }
+
         movie.imdbId = getImdb(movie.id);
 
         sMovies.value.push(movie); // Adiciona só depois de carregar os detalhes
@@ -372,11 +390,15 @@ const sFnmovies = async () => {
     noMovie.value = true;
   }
 
+  if (requestId !== searchRequestId) {
+    return false;
+  }
+
   saveSearchSnapshot();
   progressLoader.value = false;
 };
 
-const sFnmoviesInfo = async (movieId) => {
+const sFnmoviesInfo = async (movieId, requestId) => {
   const [sDetailsData, sCreditsData, sProvidersData, sVideosData, sReleaseDatesData] = await Promise.all([
     fetch(`movie/${movieId}`),
     fetch(`movie/${movieId}/credits`),
@@ -385,11 +407,17 @@ const sFnmoviesInfo = async (movieId) => {
     fetch(`movie/${movieId}/release_dates`),
   ]);
 
+  if (requestId !== searchRequestId) {
+    return false;
+  }
+
   sMoviesDetails.value.push({ id: movieId, ...sDetailsData });
   sMoviesCredits.value.push({ id: movieId, ...sCreditsData });
   sMoviesProviders.value.push({ id: movieId, ...sProvidersData });
   sMoviesVideos.value.push({ id: movieId, ...sVideosData });
   sMoviesReleaseDates.value.push({ id: movieId, ...sReleaseDatesData });
+
+  return true;
 };
 
 const getImdb = (movieId) => getMovieData(sMoviesDetails, movieId, "imdb_id");
@@ -568,9 +596,20 @@ const toggleOverview = (movieId) => {
 const applyRouteSearch = () => {
   const query = typeof route.query.q === "string" ? route.query.q.trim() : "";
   const lucky = route.query.lucky === "1";
+  const clearRequested = typeof route.query.clear === "string";
+
+  if (clearRequested) {
+    searchRequestId += 1;
+    removeSessionStorage(LAST_SEARCH_KEY);
+    removeSessionStorage(LAST_SEARCH_SNAPSHOT_KEY);
+    searchTerm.value = "";
+    luckyMethod.value = false;
+    resetMovieState();
+    return;
+  }
 
   if (!query && !lucky) {
-    const lastSearch = getLocalStorage(LAST_SEARCH_KEY, null);
+    const lastSearch = getSessionStorage(LAST_SEARCH_KEY, null);
     const restoredQuery = typeof lastSearch?.query === "string" ? lastSearch.query.trim() : "";
     if (restoredQuery.length >= 3) {
       if (restoreSearchSnapshot(restoredQuery)) {
@@ -583,6 +622,7 @@ const applyRouteSearch = () => {
       return sFnmovies();
     }
 
+    searchRequestId += 1;
     resetMovieState();
     return;
   }
@@ -593,9 +633,15 @@ const applyRouteSearch = () => {
 };
 
 onMounted(() => {
+  localStorage.removeItem(LAST_SEARCH_KEY);
+  localStorage.removeItem(LAST_SEARCH_SNAPSHOT_KEY);
   canNativeShare.value = typeof navigator !== "undefined" && typeof navigator.share === "function";
   movieWatchDate.value = today();
 });
 
-watch(() => [route.query.q, route.query.lucky, route.query.run], applyRouteSearch, { immediate: true });
+watch(
+  () => [route.query.q, route.query.lucky, route.query.run, route.query.clear],
+  applyRouteSearch,
+  { immediate: true }
+);
 </script>

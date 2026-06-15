@@ -22,6 +22,18 @@
               <q-btn outline dense class="min-h-[34px] self-start whitespace-nowrap rounded-lg border-[rgba(255,192,154,0.7)] font-semibold normal-case text-[#ffc09a] md:self-auto" icon="casino" @click="runLucky">
                 I'm lucky
               </q-btn>
+              <q-btn
+                v-if="hasSearchToClear"
+                flat
+                dense
+                round
+                icon="close"
+                aria-label="Clear search"
+                class="min-h-[34px] self-start text-[#b4cbdd] md:self-auto"
+                @click="clearSearch"
+              >
+                <q-tooltip>Clear search</q-tooltip>
+              </q-btn>
             </div>
           </div>
         </q-toolbar-title>
@@ -89,6 +101,15 @@ export default defineComponent({
     const headerSearch = ref("");
     const searchValidationMessage = ref("");
     const miniState = ref(true);
+    const hasSearchToClear = computed(() =>
+      Boolean(
+        headerSearch.value.trim() ||
+          route.query.q ||
+          route.query.lucky ||
+          sessionStorage.getItem("lastMovieSearch") ||
+          sessionStorage.getItem("lastMovieSearchSnapshot")
+      )
+    );
 
     watch(
       () => route.query.q,
@@ -125,6 +146,7 @@ export default defineComponent({
       isMobile,
       leftDrawerOpen,
       headerSearch,
+      hasSearchToClear,
       searchValidationMessage,
       miniState,
       handleDrawerMouseEnter() {
@@ -163,6 +185,14 @@ export default defineComponent({
       runLucky() {
         searchValidationMessage.value = "";
         return goHomeWithQuery({ lucky: "1", run: Date.now().toString() });
+      },
+      clearSearch() {
+        headerSearch.value = "";
+        searchValidationMessage.value = "";
+        sessionStorage.removeItem("lastMovieSearch");
+        sessionStorage.removeItem("lastMovieSearchSnapshot");
+
+        return goHomeWithQuery({ clear: Date.now().toString() });
       },
     };
   },
