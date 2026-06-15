@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.2.2
+- Yearly movie challenge added to the Agenda with progress tracking.
+- Search results retained only for the current browser session.
+- Frontend dependencies updated to address known vulnerabilities.
+- Development agent rules added and AI-related repository files organized.
+
 ### 2.2.1
 - Frontend dependency lockfile refreshed for maintenance/security updates.
 - Application version metadata aligned across package, Docker image label, and README badge.
