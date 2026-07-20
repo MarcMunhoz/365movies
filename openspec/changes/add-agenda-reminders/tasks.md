@@ -1,3 +1,7 @@
+## 0. Prerequisite
+
+- [ ] 0.1 Confirm `add-test-platform` is implemented and its unit and Cypress commands pass before starting reminder implementation.
+
 ## 1. Reminder State and UI
 
 - [ ] 1.1 Define reminder preference values and local storage keys for preference, e-mail address, and installation identifier.
@@ -28,7 +32,7 @@
 
 ## 5. Verification
 
-- [ ] 5.1 Add focused tests or fixtures for reminder date matching, `.ics` generation, and duplicate marker keys.
+- [ ] 5.1 Add focused tests or fixtures for reminder date matching, `.ics` generation, duplicate marker keys, Brevo payload construction, and reminder preference E2E flow.
 - [ ] 5.2 Manually verify reminder preference flows for none, e-mail, calendar, and both modes.
 - [ ] 5.3 Manually verify Netlify Function request validation and scheduled-function dry runs.
 - [ ] 5.4 Run project build or package-manager checks inside the container context.

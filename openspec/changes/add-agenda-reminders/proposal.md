@@ -22,6 +22,7 @@ Users currently plan watch dates in the local agenda but must remember those dat
 
 ## Impact
 
+- Depends on `add-test-platform`; implement this change only after the Vitest and Cypress harnesses from that change are available.
 - Affects the agenda UI, local storage model, and reminder preference handling.
 - Adds Netlify Functions for saving reminder snapshots and running daily scheduled reminder delivery.
 - Adds Netlify Blobs usage as a small key/value store for reminder subscriptions, agenda snapshots, and sent-reminder markers.

@@ -1,6 +1,7 @@
 <template>
   <q-item
     :to="link"
+    :data-cy="navDataCy"
     class="q-mx-sm q-mb-xs rounded-borders border border-transparent text-[#dbe8f5] transition-all duration-200 ease-in hover:translate-x-[2px] hover:border-white/20 hover:bg-white/10 [&.q-router-link--active]:text-[#dbe8f5]"
     :class="isCurrentRoute(link) ? 'border-[#4dc8b073] bg-[linear-gradient(90deg,rgba(77,200,176,0.3),rgba(77,200,176,0.1))] text-[#e7fff9]' : ''"
   >
@@ -15,7 +16,7 @@
 </template>
 
 <script>
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { useRoute } from "vue-router";
 
 export default defineComponent({
@@ -34,8 +35,9 @@ export default defineComponent({
       default: "",
     },
   },
-  setup() {
+  setup(props) {
     const route = useRoute();
+    const navDataCy = computed(() => `nav-${props.title.toLowerCase().replace(/\s+/g, "-")}`);
 
     const isCurrentRoute = (targetLink) => {
       return route.path === targetLink;
@@ -43,6 +45,7 @@ export default defineComponent({
 
     return {
       isCurrentRoute,
+      navDataCy,
     };
   },
 });
