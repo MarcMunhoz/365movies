@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.3.1
+- Dependabot-reported CVEs remediated for `happy-dom`, `js-yaml`, `qs`, `uuid`, and the removed `elliptic` dependency path.
+- Runtime and development package ranges refreshed within the current Quasar/Vite/Yarn stack.
+- `netlify-lambda` removed because it was unused and pulled the vulnerable `elliptic` transitive dependency.
+- README security maintenance guidance updated with the audit command and current dependency policy.
+
 ### 2.3.0
 - Vitest and Cypress testing platforms added for unit, component, and E2E coverage.
 - Baseline tests added for storage helpers, agenda date formatting, challenge metrics, agenda editing UI, TMDB proxy helpers, navigation, and agenda loading.
