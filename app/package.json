@@ -21,6 +21,8 @@
     "cypress:install": "cross-env CYPRESS_CACHE_FOLDER=.cache/Cypress cypress install"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.9",
+    "@netlify/functions": "^5.3.0",
     "@popperjs/core": "^2.11.8",
     "@quasar/extras": "^1.18.0",
     "axios": "^1.18.1",

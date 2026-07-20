@@ -98,6 +98,17 @@ TMDB_BEARER_TOKEN
 
 `TMDB_API_URL` is still accepted as a fallback for the base URL.
 
+Agenda e-mail reminders use Netlify Functions, Netlify Blobs, and Brevo Transactional Email. Configure these server-side variables in Netlify before enabling production e-mail reminders:
+
+```text
+BREVO_API_KEY
+BREVO_SENDER_EMAIL
+BREVO_SENDER_NAME
+BREVO_APP_URL
+```
+
+Netlify Blobs uses the site context provided by Netlify in production. Local function dry runs require the Netlify CLI/site context configured for Blobs.
+
 ## Releases
 
 Release notes live in [CHANGELOG.md](./CHANGELOG.md).
