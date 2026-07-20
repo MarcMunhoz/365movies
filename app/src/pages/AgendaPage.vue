@@ -1,5 +1,5 @@
 <template>
-  <q-page class="mx-auto w-full max-w-[1320px] px-3 pb-6 pt-4 md:px-5">
+  <q-page data-cy="agenda-page" class="mx-auto w-full max-w-[1320px] px-3 pb-6 pt-4 md:px-5">
     <section class="mb-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-[rgba(10,18,30,0.62)] p-3 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 class="font-['Sora'] text-2xl font-bold text-[#e8f0f8] md:text-[1.75rem]">Agenda</h1>
@@ -7,10 +7,10 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <q-btn @click="listMode = !listMode" color="secondary" unelevated :icon="listMode ? 'calendar_month' : 'view_list'">
+        <q-btn data-cy="agenda-toggle-view" @click="listMode = !listMode" color="secondary" unelevated :icon="listMode ? 'calendar_month' : 'view_list'">
           {{ listMode ? "Calendar view" : "List view" }}
         </q-btn>
-        <q-btn @click="clearCalendar" color="accent" outline icon="delete_sweep">Clear calendar</q-btn>
+        <q-btn data-cy="agenda-clear-calendar" @click="clearCalendar" color="accent" outline icon="delete_sweep">Clear calendar</q-btn>
       </div>
     </section>
 
@@ -18,7 +18,7 @@
       <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
     </section>
 
-    <Challenge365 :movie-logs="challengeMovieLogs" class="mb-4" />
+    <Challenge365 data-cy="challenge-365" :movie-logs="challengeMovieLogs" class="mb-4" />
 
     <section class="mb-4 flex flex-wrap items-center justify-center gap-2">
       <span class="text-xs uppercase">Legend</span>
@@ -164,6 +164,7 @@ import "v-calendar/style.css";
 import { Notify } from "quasar";
 import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
 import Challenge365 from "components/Challenge365.vue";
+import { formatChallengeDate } from "utils/agendaDates";
 
 const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
 const columns = mapCurrent({ lg: 3 }, 1);
@@ -325,32 +326,6 @@ const maxDate = computed(() => {
 
 const watchedMoviesCount = computed(() => tableData.value.filter((movie) => movie.watched).length);
 const unwatchedMoviesCount = computed(() => tableData.value.length - watchedMoviesCount.value);
-
-function formatChallengeDate(watchDate) {
-  if (typeof watchDate !== "string") {
-    return "";
-  }
-
-  const dateParts = watchDate.split(/[/-]/).map(Number);
-
-  if (dateParts.length !== 3 || dateParts.some((part) => !Number.isInteger(part))) {
-    return "";
-  }
-
-  const [year, month, day] = dateParts;
-  const date = new Date(year, month - 1, day);
-
-  if (
-    year < 1000 ||
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return "";
-  }
-
-  return `${String(day).padStart(2, "0")}-${String(month).padStart(2, "0")}-${year}`;
-}
 
 const challengeMovieLogs = computed(() =>
   (watchMovies.value ?? [])

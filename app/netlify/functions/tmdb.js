@@ -2,6 +2,10 @@ const express = require('express');
 const serverless = require('serverless-http');
 const cors = require('cors');
 const axios = require('axios');
+const {
+  buildMissingTmdbConfigResponse,
+  normalizeTmdbPath,
+} = require('./tmdbProxy');
 require('dotenv').config();
 
 const app = express();
@@ -14,21 +18,13 @@ const TMDB_BASE_URL = (process.env.TMDB_BASE_URL || process.env.TMDB_API_URL || 
 
 const proxyTmdb = async (req, res, tmdbPath) => {
   if (!TMDB_BASE_URL || !TMDB_BEARER_TOKEN) {
-    return res.status(500).json({
-      error: 'TMDB server configuration is missing.',
-      hasBaseUrl: Boolean(TMDB_BASE_URL),
-      hasBearerToken: Boolean(TMDB_BEARER_TOKEN),
-    });
+    return res.status(500).json(buildMissingTmdbConfigResponse(TMDB_BASE_URL, TMDB_BEARER_TOKEN));
   }
 
   let cleanPath = '';
 
   try {
-    cleanPath = String(tmdbPath || '')
-      .replace(/^\/+/, '')
-      .replace(/^\.netlify\/functions\/tmdb\/?/, '')
-      .replace(/^api\/tmdb\/?/, '')
-      .replace(/^\/+/, '');
+    cleanPath = normalizeTmdbPath(tmdbPath);
 
     if (!cleanPath) {
       return res.status(400).json({

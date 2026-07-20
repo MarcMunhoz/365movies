@@ -32,7 +32,3 @@
 
 # local .env files
 */.env*
-
-# AI files
-.codex
-.agents/specs
