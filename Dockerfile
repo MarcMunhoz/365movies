@@ -2,7 +2,7 @@
 FROM node:22.22-bookworm-slim AS develop-stage
 
 LABEL author="Marcelo Munhoz <me@marcelomunhoz.com>" \
-  version="2.2.2" \
+  version="2.3.0" \
   date_created="2023-07-12"
 
 WORKDIR /app

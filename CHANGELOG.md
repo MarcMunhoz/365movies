@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.3.0
+- Vitest and Cypress testing platforms added for unit, component, and E2E coverage.
+- Baseline tests added for storage helpers, agenda date formatting, challenge metrics, agenda editing UI, TMDB proxy helpers, navigation, and agenda loading.
+- Docker development image updated for Cypress-compatible browser execution.
+- README refreshed with current stack, workflow, environment, and verification guidance.
+- `add-agenda-reminders` documented as dependent on the test platform.
+
 ### 2.2.2
 - Yearly movie challenge added to the Agenda with progress tracking.
 - Search results retained only for the current browser session.
