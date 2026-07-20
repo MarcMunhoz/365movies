@@ -1,5 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
-[![Version](https://img.shields.io/badge/version-2.3.0-1f8b4c)](#)
+[![Version](https://img.shields.io/badge/version-2.3.1-1f8b4c)](#)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/Quasar-2-1976d2)](https://quasar.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev/)
@@ -20,6 +20,7 @@
 - TMDB access through server-side proxy code so bearer tokens stay out of the client.
 - PWA production build with generated service worker and manifest assets.
 - Automated baseline coverage with Vitest and Cypress.
+- Dependency security hardening with patched transitive resolutions for current Dependabot advisories.
 
 ## Stack
 
@@ -30,6 +31,12 @@
 - Cypress for end-to-end coverage
 - Netlify Functions for TMDB proxying
 - Docker Compose for the local development environment
+
+## Security Maintenance
+
+Dependency updates are managed through Yarn v1 inside the Docker Compose app container. Current security remediation keeps known Dependabot advisories out of the resolved dependency graph and uses targeted `resolutions` only when upstream packages still request vulnerable transitive ranges.
+
+The `netlify-lambda` package is intentionally not part of the runtime dependency graph; Netlify Functions are served from `app/netlify/functions` without that package.
 
 ## Project Layout
 
@@ -72,6 +79,12 @@ If Cypress needs to be bootstrapped in a fresh container volume:
 
 ```sh
 docker compose run --rm --entrypoint yarn app cypress:install
+```
+
+Security checks:
+
+```sh
+docker compose run --rm --entrypoint yarn app audit --groups dependencies --groups devDependencies
 ```
 
 ## Environment
