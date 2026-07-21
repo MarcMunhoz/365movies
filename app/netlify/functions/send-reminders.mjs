@@ -1,5 +1,7 @@
-const { getStore } = require('@netlify/blobs');
-const { schedule } = require('@netlify/functions');
+import { getStore } from '@netlify/blobs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 const {
   REMINDER_OFFSET_DAYS,
   SENT_MARKER_STORE_NAME,
@@ -8,13 +10,7 @@ const {
   buildMissingBrevoConfigResponse,
   buildSentMarkerKey,
   findReminderMatches,
-} = require('./reminderCore');
-
-const jsonResponse = (statusCode, body) => ({
-  statusCode,
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
-});
+} = require('./reminderCore.js');
 
 const loadSnapshots = async (snapshotStore) => {
   const listed = await snapshotStore.list();
@@ -49,7 +45,7 @@ const sendBrevoEmail = async ({ apiKey, payload }) => {
   }
 };
 
-const runReminderDelivery = async ({ env = process.env, runDate = new Date(), dryRun = false } = {}) => {
+export const runReminderDelivery = async ({ env = process.env, runDate = new Date(), dryRun = false } = {}) => {
   if (!env.BREVO_API_KEY || !env.BREVO_SENDER_EMAIL || !env.BREVO_SENDER_NAME || !env.BREVO_APP_URL) {
     console.error('Brevo reminder configuration is missing.', buildMissingBrevoConfigResponse(env));
     return {
@@ -103,16 +99,17 @@ const runReminderDelivery = async ({ env = process.env, runDate = new Date(), dr
   return { ok: true, sent, skippedDuplicates, snapshots: snapshots.length, dryRun };
 };
 
-const handler = async (event) => {
+export default async (request) => {
   try {
-    const dryRun = event?.queryStringParameters?.dryRun === 'true';
+    const dryRun = new URL(request.url).searchParams.get('dryRun') === 'true';
     const result = await runReminderDelivery({ dryRun });
-    return jsonResponse(result.ok ? 200 : 500, result);
+    return Response.json(result, { status: result.ok ? 200 : 500 });
   } catch (error) {
     console.error('Scheduled reminder delivery failed.', error);
-    return jsonResponse(500, { ok: false, error: 'Scheduled reminder delivery failed.' });
+    return Response.json({ ok: false, error: 'Scheduled reminder delivery failed.' }, { status: 500 });
   }
 };
 
-exports.runReminderDelivery = runReminderDelivery;
-exports.handler = schedule('@daily', handler);
+export const config = {
+  schedule: '@daily',
+};

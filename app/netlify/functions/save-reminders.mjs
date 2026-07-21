@@ -1,41 +1,43 @@
-const { getStore } = require('@netlify/blobs');
+import { getStore } from '@netlify/blobs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 const {
   SNAPSHOT_STORE_NAME,
   buildSnapshotKey,
   validateReminderSnapshot,
-} = require('./reminderCore');
+} = require('./reminderCore.js');
 
-const jsonResponse = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(body),
-});
+const jsonResponse = (status, body) =>
+  Response.json(body, {
+    status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+    },
+  });
 
-const parseBody = (event) => {
+const parseBody = async (request) => {
   try {
-    return event.body ? JSON.parse(event.body) : {};
+    return await request.json();
   } catch (error) {
     return null;
   }
 };
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
+export default async (request) => {
+  if (request.method === 'OPTIONS') {
     return jsonResponse(204, {});
   }
 
-  const body = parseBody(event);
+  const body = await parseBody(request);
 
   if (body === null) {
     return jsonResponse(400, { error: 'Invalid JSON body.' });
   }
 
-  if (event.httpMethod === 'DELETE') {
+  if (request.method === 'DELETE') {
     const installationId = String(body.installationId || '').trim();
 
     if (!installationId) {
@@ -47,7 +49,7 @@ exports.handler = async (event) => {
     return jsonResponse(200, { ok: true, disabled: true });
   }
 
-  if (event.httpMethod !== 'POST') {
+  if (request.method !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
   }
 
