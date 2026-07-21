@@ -1,9 +1,11 @@
 import { getStore } from '@netlify/blobs';
 import reminderCore from './reminderCore.js';
+import { deliverReminderSnapshots } from './send-reminders.mjs';
 
 const {
   SNAPSHOT_STORE_NAME,
   buildSnapshotKey,
+  findReminderMatches,
   validateReminderSnapshot,
 } = reminderCore;
 
@@ -61,9 +63,53 @@ export default async (request) => {
   const store = getStore(SNAPSHOT_STORE_NAME);
   await store.set(buildSnapshotKey(validation.snapshot.installationId), JSON.stringify(validation.snapshot));
 
-  return jsonResponse(200, {
-    ok: true,
-    installationId: validation.snapshot.installationId,
-    movieCount: validation.snapshot.movies.length,
-  });
+  if (findReminderMatches(validation.snapshot).length === 0) {
+    return jsonResponse(200, {
+      ok: true,
+      installationId: validation.snapshot.installationId,
+      movieCount: validation.snapshot.movies.length,
+      catchUp: {
+        ok: true,
+        sent: 0,
+        skippedDuplicates: 0,
+      },
+    });
+  }
+
+  try {
+    const catchUp = await deliverReminderSnapshots({ snapshots: [validation.snapshot] });
+
+    if (!catchUp.ok) {
+      return jsonResponse(200, {
+        ok: true,
+        installationId: validation.snapshot.installationId,
+        movieCount: validation.snapshot.movies.length,
+        warning: 'Reminder settings were saved, but immediate catch-up delivery could not be completed.',
+        catchUp: {
+          ok: false,
+          sent: catchUp.sent,
+          skippedDuplicates: catchUp.skippedDuplicates,
+        },
+      });
+    }
+
+    return jsonResponse(200, {
+      ok: true,
+      installationId: validation.snapshot.installationId,
+      movieCount: validation.snapshot.movies.length,
+      catchUp: {
+        ok: true,
+        sent: catchUp.sent,
+        skippedDuplicates: catchUp.skippedDuplicates,
+      },
+    });
+  } catch (error) {
+    console.error('Immediate reminder catch-up failed after snapshot save.', error);
+    return jsonResponse(200, {
+      ok: true,
+      installationId: validation.snapshot.installationId,
+      movieCount: validation.snapshot.movies.length,
+      warning: 'Reminder settings were saved, but immediate catch-up delivery could not be completed.',
+    });
+  }
 };
