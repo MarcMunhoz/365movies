@@ -11,7 +11,10 @@ const buildMissingTmdbConfigResponse = (baseUrl, bearerToken) => ({
   hasBearerToken: Boolean(bearerToken),
 });
 
+const resolveTmdbBaseUrl = (env = process.env) => String(env.TMDB_BASE_URL || '').replace(/\/+$/, '');
+
 module.exports = {
   buildMissingTmdbConfigResponse,
   normalizeTmdbPath,
+  resolveTmdbBaseUrl,
 };

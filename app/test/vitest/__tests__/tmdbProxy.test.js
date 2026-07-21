@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildMissingTmdbConfigResponse,
+  resolveTmdbBaseUrl,
   normalizeTmdbPath,
 } from '../../../netlify/functions/tmdbProxy';
 
@@ -14,6 +15,11 @@ describe('tmdbProxy', () => {
   it('returns an empty path for invalid proxy paths', () => {
     expect(normalizeTmdbPath('')).toBe('');
     expect(normalizeTmdbPath(null)).toBe('');
+  });
+
+  it('resolves TMDB base URL from the current environment name', () => {
+    expect(resolveTmdbBaseUrl({ TMDB_BASE_URL: 'https://api.themoviedb.org/3/' })).toBe('https://api.themoviedb.org/3');
+    expect(resolveTmdbBaseUrl({ TMDB_API_URL: 'https://api.themoviedb.org/3/' })).toBe('');
   });
 
   it('shapes missing TMDB configuration errors without exposing secrets', () => {

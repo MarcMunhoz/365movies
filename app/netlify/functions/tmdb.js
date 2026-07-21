@@ -5,6 +5,7 @@ const axios = require('axios');
 const {
   buildMissingTmdbConfigResponse,
   normalizeTmdbPath,
+  resolveTmdbBaseUrl,
 } = require('./tmdbProxy');
 require('dotenv').config();
 
@@ -14,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN;
-const TMDB_BASE_URL = (process.env.TMDB_BASE_URL || process.env.TMDB_API_URL || '').replace(/\/+$/, '');
+const TMDB_BASE_URL = resolveTmdbBaseUrl();
 
 const proxyTmdb = async (req, res, tmdbPath) => {
   if (!TMDB_BASE_URL || !TMDB_BEARER_TOKEN) {
