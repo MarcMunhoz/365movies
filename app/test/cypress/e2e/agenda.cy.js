@@ -17,12 +17,12 @@ describe('agenda page', () => {
     cy.dataCy('agenda-reminder-settings').within(() => {
       cy.contains('None').click();
       cy.dataCy('agenda-export-calendar').should('not.exist');
-      cy.dataCy('agenda-reminder-email').should('be.visible').and('be.disabled');
+      cy.dataCy('agenda-reminder-email').should('be.visible').and('not.be.disabled');
       cy.contains('E-mail').click();
       cy.dataCy('agenda-reminder-email').should('be.visible').and('not.be.disabled');
       cy.contains('Calendar').click();
       cy.dataCy('agenda-export-calendar').should('be.visible');
-      cy.dataCy('agenda-reminder-email').should('be.visible').and('be.disabled');
+      cy.dataCy('agenda-reminder-email').should('be.visible').and('not.be.disabled');
       cy.contains('Both').click();
       cy.dataCy('agenda-reminder-email').should('be.visible').and('not.be.disabled');
     });

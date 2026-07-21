@@ -1,7 +1,6 @@
 import { getStore } from '@netlify/blobs';
-import { createRequire } from 'node:module';
+import reminderCore from './reminderCore.js';
 
-const require = createRequire(import.meta.url);
 const {
   REMINDER_OFFSET_DAYS,
   SENT_MARKER_STORE_NAME,
@@ -10,7 +9,7 @@ const {
   buildMissingBrevoConfigResponse,
   buildSentMarkerKey,
   findReminderMatches,
-} = require('./reminderCore.js');
+} = reminderCore;
 
 const loadSnapshots = async (snapshotStore) => {
   const listed = await snapshotStore.list();

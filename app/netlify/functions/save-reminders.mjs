@@ -1,12 +1,11 @@
 import { getStore } from '@netlify/blobs';
-import { createRequire } from 'node:module';
+import reminderCore from './reminderCore.js';
 
-const require = createRequire(import.meta.url);
 const {
   SNAPSHOT_STORE_NAME,
   buildSnapshotKey,
   validateReminderSnapshot,
-} = require('./reminderCore.js');
+} = reminderCore;
 
 const jsonResponse = (status, body) =>
   Response.json(body, {

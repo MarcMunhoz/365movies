@@ -38,11 +38,12 @@
         </q-btn>
       </div>
 
-      <div class="grid gap-3 lg:grid-cols-[1fr_320px_auto] lg:items-end">
+      <div class="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_minmax(260px,320px)_auto] lg:items-center">
         <q-option-group
           v-model="selectedReminderPreference"
           data-cy="agenda-reminder-preference"
           color="primary"
+          class="min-h-[40px]"
           inline
           :options="reminderPreferenceOptions"
         />
@@ -50,11 +51,13 @@
         <q-input
           v-model="reminderEmail"
           data-cy="agenda-reminder-email"
+          class="w-full self-center"
+          dark
           filled
           dense
+          hide-bottom-space
           type="email"
           label="Reminder e-mail"
-          :disable="!emailReminderSelected"
           :error="emailReminderSelected && reminderEmail.length > 0 && !reminderEmailIsValid"
           error-message="Enter a valid e-mail address"
         />
@@ -64,6 +67,7 @@
           color="secondary"
           unelevated
           icon="notifications_active"
+          class="self-center"
           :loading="reminderSyncing"
           @click="saveReminderSettings"
         >
