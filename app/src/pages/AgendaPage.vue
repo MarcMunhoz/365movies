@@ -18,6 +18,64 @@
       <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
     </section>
 
+    <section data-cy="agenda-reminder-settings" class="mb-4 rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)] p-3">
+      <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="font-['Sora'] text-lg font-semibold text-[#e8f0f8]">Reminders</h2>
+          <p class="text-sm text-[#9db4c8]">One setting for the whole agenda.</p>
+        </div>
+
+        <q-btn
+          v-if="calendarExportEnabled"
+          data-cy="agenda-export-calendar"
+          color="primary"
+          unelevated
+          icon="event"
+          :disable="!calendarExportAvailable"
+          @click="exportAgendaCalendar"
+        >
+          Export calendar
+        </q-btn>
+      </div>
+
+      <div class="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_minmax(260px,320px)_auto] lg:items-center">
+        <q-option-group
+          v-model="selectedReminderPreference"
+          data-cy="agenda-reminder-preference"
+          color="primary"
+          class="min-h-[40px]"
+          inline
+          :options="reminderPreferenceOptions"
+        />
+
+        <q-input
+          v-model="reminderEmail"
+          data-cy="agenda-reminder-email"
+          class="w-full self-center"
+          dark
+          filled
+          dense
+          hide-bottom-space
+          type="email"
+          label="Reminder e-mail"
+          :error="emailReminderSelected && reminderEmail.length > 0 && !reminderEmailIsValid"
+          error-message="Enter a valid e-mail address"
+        />
+
+        <q-btn
+          data-cy="agenda-save-reminders"
+          color="secondary"
+          unelevated
+          icon="notifications_active"
+          class="self-center"
+          :loading="reminderSyncing"
+          @click="saveReminderSettings"
+        >
+          Save reminders
+        </q-btn>
+      </div>
+    </section>
+
     <Challenge365 data-cy="challenge-365" :movie-logs="challengeMovieLogs" class="mb-4" />
 
     <section class="mb-4 flex flex-wrap items-center justify-center gap-2">
@@ -165,6 +223,20 @@ import { Notify } from "quasar";
 import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
 import Challenge365 from "components/Challenge365.vue";
 import { formatChallengeDate } from "utils/agendaDates";
+import { buildAgendaIcs, getFutureUnwatchedAgendaItems } from "utils/calendarExport";
+import {
+  REMINDER_PREFERENCES,
+  buildReminderSnapshot,
+  getInstallationId,
+  getOrCreateInstallationId,
+  getReminderEmail,
+  getReminderPreference,
+  isCalendarReminderPreference,
+  isEmailReminderPreference,
+  isValidEmail,
+  setReminderEmail,
+  setReminderPreference,
+} from "utils/reminderPreferences";
 
 const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
 const columns = mapCurrent({ lg: 3 }, 1);
@@ -175,10 +247,21 @@ const editCountryNameMovie = ref("");
 const editDateMovie = ref("");
 const events = ref([]);
 const openAgendaDialog = ref(false);
+const selectedReminderPreference = ref(getReminderPreference());
+const reminderEmail = ref(getReminderEmail());
+const reminderSyncing = ref(false);
+let reminderSyncTimeout = null;
 
 // Agenda list mode (table) state
 const listMode = ref(true);
 const tableData = ref([]);
+const reminderFunctionBaseUrl = "/.netlify/functions";
+const reminderPreferenceOptions = [
+  { label: "None", value: REMINDER_PREFERENCES.none },
+  { label: "E-mail", value: REMINDER_PREFERENCES.email },
+  { label: "Calendar", value: REMINDER_PREFERENCES.calendar },
+  { label: "Both", value: REMINDER_PREFERENCES.emailCalendar },
+];
 
 // Definição das colunas da tabela
 const tableColumns = [
@@ -213,6 +296,127 @@ const clearCalendar = () => {
     type: "info",
     message: message,
   });
+};
+
+const emailReminderSelected = computed(() => isEmailReminderPreference(selectedReminderPreference.value));
+const calendarExportEnabled = computed(() => isCalendarReminderPreference(selectedReminderPreference.value));
+const reminderEmailIsValid = computed(() => isValidEmail(reminderEmail.value));
+const calendarExportAvailable = computed(() => getFutureUnwatchedAgendaItems(watchMovies.value).length > 0);
+
+const persistReminderSettings = () => {
+  setReminderPreference(selectedReminderPreference.value);
+  setReminderEmail(reminderEmail.value);
+};
+
+const buildCurrentReminderSnapshot = () =>
+  buildReminderSnapshot({
+    installationId: getOrCreateInstallationId(),
+    email: reminderEmail.value,
+    preference: selectedReminderPreference.value,
+    movies: watchMovies.value,
+  });
+
+const postReminderSnapshot = async (snapshot) => {
+  const response = await fetch(`${reminderFunctionBaseUrl}/save-reminders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(snapshot),
+  });
+
+  if (!response.ok) {
+    throw new Error("Reminder sync failed");
+  }
+};
+
+const disableServerReminders = async () => {
+  const installationId = getInstallationId();
+
+  if (!installationId) {
+    return;
+  }
+
+  const response = await fetch(`${reminderFunctionBaseUrl}/save-reminders`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ installationId }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Reminder disable failed");
+  }
+};
+
+const syncEmailReminders = async ({ showNotification = false } = {}) => {
+  if (!isEmailReminderPreference(selectedReminderPreference.value)) {
+    return;
+  }
+
+  reminderSyncing.value = true;
+
+  try {
+    await postReminderSnapshot(buildCurrentReminderSnapshot());
+
+    if (showNotification) {
+      Notify.create({ type: "positive", timeout: 2500, message: "E-mail reminders saved." });
+    }
+  } catch (error) {
+    console.error("Reminder sync failed", error);
+    Notify.create({ type: "negative", timeout: 3500, message: "Could not sync e-mail reminders." });
+  } finally {
+    reminderSyncing.value = false;
+  }
+};
+
+const scheduleReminderSync = () => {
+  if (!isEmailReminderPreference(selectedReminderPreference.value) || !isValidEmail(reminderEmail.value)) {
+    return;
+  }
+
+  window.clearTimeout(reminderSyncTimeout);
+  reminderSyncTimeout = window.setTimeout(() => {
+    syncEmailReminders();
+  }, 500);
+};
+
+const saveReminderSettings = async () => {
+  if (emailReminderSelected.value && !reminderEmailIsValid.value) {
+    Notify.create({ type: "warning", timeout: 3000, message: "Enter a valid e-mail address to enable e-mail reminders." });
+    return;
+  }
+
+  persistReminderSettings();
+
+  if (selectedReminderPreference.value === REMINDER_PREFERENCES.none || !emailReminderSelected.value) {
+    try {
+      await disableServerReminders();
+      Notify.create({ type: "info", timeout: 2500, message: "Reminder settings saved." });
+    } catch (error) {
+      console.error("Reminder disable failed", error);
+      Notify.create({ type: "warning", timeout: 3500, message: "Reminder preference saved locally. Server sync did not complete." });
+    }
+    return;
+  }
+
+  await syncEmailReminders({ showNotification: true });
+};
+
+const exportAgendaCalendar = () => {
+  const futureMovies = getFutureUnwatchedAgendaItems(watchMovies.value);
+
+  if (futureMovies.length === 0) {
+    Notify.create({ type: "info", timeout: 2500, message: "No future unwatched movies to export." });
+    return;
+  }
+
+  getOrCreateInstallationId();
+
+  const calendarFile = buildAgendaIcs(watchMovies.value);
+  const url = URL.createObjectURL(new Blob([calendarFile], { type: "text/calendar;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "365movies-agenda.ics";
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 const addDates = () => {
@@ -343,9 +547,12 @@ watch(
   (newMovies) => {
     // Updates watchMovies in localStorage
     setLocalStorage("watchMovies", newMovies);
+    scheduleReminderSync();
   },
   { deep: true }
 );
+
+watch([selectedReminderPreference, reminderEmail], persistReminderSettings);
 </script>
 
 <style lang="scss" scoped>

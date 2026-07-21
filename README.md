@@ -1,5 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
-[![Version](https://img.shields.io/badge/version-2.3.1-1f8b4c)](#)
+[![Version](https://img.shields.io/badge/version-2.4.0-1f8b4c)](#)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/Quasar-2-1976d2)](https://quasar.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev/)
@@ -15,6 +15,7 @@
 - Movie search with manual queries and an "I'm lucky" discovery flow.
 - Movie detail cards with poster preview, metadata, trailers, providers, and sharing actions.
 - Local agenda with list and calendar views.
+- Agenda reminders with e-mail delivery, whole-agenda calendar export, and two-day reminder timing.
 - Country-aware streaming provider selection when adding movies to the agenda.
 - Watched/unwatched tracking with a yearly 365 Movie Challenge progress grid.
 - TMDB access through server-side proxy code so bearer tokens stay out of the client.
@@ -29,7 +30,8 @@
 - Tailwind CSS and Sass
 - Vitest for unit/component coverage
 - Cypress for end-to-end coverage
-- Netlify Functions for TMDB proxying
+- Netlify Functions and Netlify Blobs for TMDB proxying and agenda reminder snapshots
+- Brevo Transactional Email for agenda reminder delivery
 - Docker Compose for the local development environment
 
 ## Security Maintenance
@@ -97,6 +99,19 @@ TMDB_BEARER_TOKEN
 ```
 
 `TMDB_API_URL` is still accepted as a fallback for the base URL.
+
+Agenda e-mail reminders use Netlify Functions, Netlify Scheduled Functions, Netlify Blobs, and Brevo Transactional Email. Configure these server-side variables in Netlify before enabling production e-mail reminders:
+
+```text
+BREVO_API_KEY
+BREVO_SENDER_EMAIL
+BREVO_SENDER_NAME
+BREVO_APP_URL
+```
+
+Netlify Blobs uses the site context provided by Netlify in production. Local function dry runs require the Netlify CLI/site context configured for Blobs.
+
+Reminder delivery is global for the local browser installation. Users can choose no reminders, e-mail reminders, calendar export, or both. E-mail reminders are sent two days before unwatched agenda items, and calendar exports generate one `.ics` file with matching two-day alarms.
 
 ## Releases
 
