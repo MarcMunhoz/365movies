@@ -5,6 +5,16 @@ describe('core navigation', () => {
 
     cy.contains('365 MOVIES').should('be.visible');
     cy.get('[placeholder="Type movie title... And press Enter"]').should('be.visible');
+    cy.dataCy('home-reminder-discovery').should('be.visible').and('contain', 'agenda reminders');
+    cy.get('[placeholder="Type movie title... And press Enter"]').should('be.visible');
+
+    cy.dataCy('home-reminder-discovery').within(() => {
+      cy.contains('Agenda').click();
+    });
+    cy.location('pathname').should('eq', '/agenda');
+    cy.dataCy('agenda-reminder-settings').should('be.visible');
+
+    cy.visit('/');
 
     cy.get('.q-drawer').trigger('mouseenter', { force: true });
     cy.dataCy('nav-about').click();
