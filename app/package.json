@@ -1,6 +1,6 @@
 {
   "name": "365movies",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Search, track and get notified about movies release dates",
   "productName": "Movies365 App",
   "author": "Marcelo Munhoz <me@marcelomunhoz.com>",
@@ -62,6 +62,8 @@
   },
   "resolutions": {
     "braces": "^3.0.3",
+    "brace-expansion": "^5.0.7",
+    "body-parser": "^1.20.6",
     "micromatch": "^4.0.8",
     "serialize-javascript": "^7.0.7",
     "shell-quote": "^1.10.0",

@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.4.0
+- Agenda reminder preferences added for none, e-mail, calendar export, and combined reminder modes.
+- Whole-agenda `.ics` export added for future unwatched movies with two-day alarms.
+- Netlify reminder persistence added with Blobs-backed snapshots, disable/unsubscribe handling, and duplicate-send markers.
+- Daily scheduled reminder delivery added through Brevo Transactional Email.
+- README environment and feature documentation updated for Netlify Scheduled Functions, Netlify Blobs, and Brevo setup.
+
 ### 2.3.1
 - Dependabot-reported CVEs remediated for `happy-dom`, `js-yaml`, `qs`, `uuid`, and the removed `elliptic` dependency path.
 - Runtime and development package ranges refreshed within the current Quasar/Vite/Yarn stack.
