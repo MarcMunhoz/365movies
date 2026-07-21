@@ -1,4 +1,7 @@
 const REMINDER_OFFSET_DAYS = 2;
+const REMINDER_WINDOW_START_DAYS = 0;
+const REMINDER_WINDOW_END_DAYS = 2;
+const REMINDER_MARKER_TYPE = 'catch-up';
 const SNAPSHOT_STORE_NAME = 'agenda-reminder-snapshots';
 const SENT_MARKER_STORE_NAME = 'agenda-reminder-sent-markers';
 
@@ -49,13 +52,34 @@ const normalizeRunDate = (runDate = new Date()) =>
 
 const buildSnapshotKey = (installationId) => `${sanitizeKeyPart(installationId)}.json`;
 
-const buildSentMarkerKey = ({ installationId, movieID, watchDate, offsetDays = REMINDER_OFFSET_DAYS }) =>
+const buildMarkerKey = ({ installationId, movieID, watchDate, suffix }) =>
   [
     sanitizeKeyPart(installationId),
     sanitizeKeyPart(movieID),
     sanitizeKeyPart(watchDate),
-    `${offsetDays}d`,
+    sanitizeKeyPart(suffix),
   ].join('__');
+
+const buildSentMarkerKey = ({ installationId, movieID, watchDate }) =>
+  buildMarkerKey({
+    installationId,
+    movieID,
+    watchDate,
+    suffix: REMINDER_MARKER_TYPE,
+  });
+
+const buildLegacySentMarkerKey = ({ installationId, movieID, watchDate, offsetDays = REMINDER_OFFSET_DAYS }) =>
+  buildMarkerKey({
+    installationId,
+    movieID,
+    watchDate,
+    suffix: `${offsetDays}d`,
+  });
+
+const buildSentMarkerLookupKeys = ({ installationId, movieID, watchDate }) => [
+  buildSentMarkerKey({ installationId, movieID, watchDate }),
+  buildLegacySentMarkerKey({ installationId, movieID, watchDate }),
+];
 
 const normalizeSnapshot = (snapshot) => ({
   installationId: String(snapshot.installationId || '').trim(),
@@ -91,32 +115,70 @@ const validateReminderSnapshot = (snapshot) => {
   return { valid: true, snapshot: normalizedSnapshot };
 };
 
-const findReminderMatches = (snapshot, runDate = new Date()) => {
-  const targetDateKey = formatDateKey(addDays(normalizeRunDate(runDate), REMINDER_OFFSET_DAYS));
+const getDaysUntilWatchDate = (watchDate, runDate = new Date()) => {
+  const parsedWatchDate = parseAgendaDate(watchDate);
 
-  return (snapshot.movies || []).filter((movie) => {
+  if (!parsedWatchDate) {
+    return null;
+  }
+
+  const normalizedRunDate = normalizeRunDate(runDate);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((parsedWatchDate.getTime() - normalizedRunDate.getTime()) / millisecondsPerDay);
+};
+
+const findReminderMatches = (snapshot, runDate = new Date()) => {
+  return (snapshot.movies || []).flatMap((movie) => {
     if (movie.watched) {
-      return false;
+      return [];
     }
 
-    const watchDate = parseAgendaDate(movie.watchDate);
-    return watchDate && formatDateKey(watchDate) === targetDateKey;
+    const daysUntilWatchDate = getDaysUntilWatchDate(movie.watchDate, runDate);
+
+    if (
+      daysUntilWatchDate === null ||
+      daysUntilWatchDate < REMINDER_WINDOW_START_DAYS ||
+      daysUntilWatchDate > REMINDER_WINDOW_END_DAYS
+    ) {
+      return [];
+    }
+
+    return [{ ...movie, reminderDaysUntil: daysUntilWatchDate }];
   });
 };
 
-const buildBrevoPayload = ({ snapshot, movie, appUrl, senderEmail, senderName }) => ({
-  sender: {
-    email: senderEmail,
-    name: senderName,
-  },
-  to: [{ email: snapshot.email }],
-  subject: `365movies reminder: ${movie.movieTitle}`,
-  htmlContent: [
-    `<p>Your planned watch date for <strong>${movie.movieTitle}</strong> is in two days.</p>`,
-    movie.movieLink ? `<p><a href="${movie.movieLink}">Open movie details</a></p>` : '',
-    appUrl ? `<p><a href="${appUrl}">Open 365movies</a></p>` : '',
-  ].join(''),
-});
+const getRelativeWatchDateLabel = ({ movie, runDate = new Date() }) => {
+  const daysUntilWatchDate =
+    Number.isInteger(movie.reminderDaysUntil) ? movie.reminderDaysUntil : getDaysUntilWatchDate(movie.watchDate, runDate);
+
+  if (daysUntilWatchDate === 0) {
+    return 'today';
+  }
+
+  if (daysUntilWatchDate === 1) {
+    return 'tomorrow';
+  }
+
+  return 'in two days';
+};
+
+const buildBrevoPayload = ({ snapshot, movie, appUrl, senderEmail, senderName, runDate = new Date() }) => {
+  const relativeWatchDate = getRelativeWatchDateLabel({ movie, runDate });
+
+  return {
+    sender: {
+      email: senderEmail,
+      name: senderName,
+    },
+    to: [{ email: snapshot.email }],
+    subject: `365movies reminder: ${movie.movieTitle}`,
+    htmlContent: [
+      `<p>Your planned watch date for <strong>${movie.movieTitle}</strong> is ${relativeWatchDate}.</p>`,
+      movie.movieLink ? `<p><a href="${movie.movieLink}">Open movie details</a></p>` : '',
+      appUrl ? `<p><a href="${appUrl}">Open 365movies</a></p>` : '',
+    ].join(''),
+  };
+};
 
 const buildMissingBrevoConfigResponse = (env) => ({
   error: 'Brevo reminder configuration is missing.',
@@ -128,13 +190,19 @@ const buildMissingBrevoConfigResponse = (env) => ({
 
 module.exports = {
   REMINDER_OFFSET_DAYS,
+  REMINDER_MARKER_TYPE,
+  REMINDER_WINDOW_END_DAYS,
+  REMINDER_WINDOW_START_DAYS,
   SENT_MARKER_STORE_NAME,
   SNAPSHOT_STORE_NAME,
+  buildLegacySentMarkerKey,
   buildBrevoPayload,
   buildMissingBrevoConfigResponse,
   buildSentMarkerKey,
+  buildSentMarkerLookupKeys,
   buildSnapshotKey,
   findReminderMatches,
+  getDaysUntilWatchDate,
   isValidEmail,
   validateReminderSnapshot,
 };

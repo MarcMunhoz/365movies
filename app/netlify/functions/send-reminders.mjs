@@ -2,12 +2,12 @@ import { getStore } from '@netlify/blobs';
 import reminderCore from './reminderCore.js';
 
 const {
-  REMINDER_OFFSET_DAYS,
   SENT_MARKER_STORE_NAME,
   SNAPSHOT_STORE_NAME,
   buildBrevoPayload,
   buildMissingBrevoConfigResponse,
   buildSentMarkerKey,
+  buildSentMarkerLookupKeys,
   findReminderMatches,
 } = reminderCore;
 
@@ -44,7 +44,25 @@ const sendBrevoEmail = async ({ apiKey, payload }) => {
   }
 };
 
-export const runReminderDelivery = async ({ env = process.env, runDate = new Date(), dryRun = false } = {}) => {
+const hasSentMarker = async ({ sentMarkerStore, installationId, movie }) => {
+  const markerKeys = buildSentMarkerLookupKeys({
+    installationId,
+    movieID: movie.movieID,
+    watchDate: movie.watchDate,
+  });
+
+  for (const markerKey of markerKeys) {
+    const existingMarker = await sentMarkerStore.get(markerKey);
+
+    if (existingMarker) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const deliverReminderSnapshots = async ({ snapshots, env = process.env, runDate = new Date(), dryRun = false } = {}) => {
   if (!env.BREVO_API_KEY || !env.BREVO_SENDER_EMAIL || !env.BREVO_SENDER_NAME || !env.BREVO_APP_URL) {
     console.error('Brevo reminder configuration is missing.', buildMissingBrevoConfigResponse(env));
     return {
@@ -52,28 +70,20 @@ export const runReminderDelivery = async ({ env = process.env, runDate = new Dat
       configurationError: buildMissingBrevoConfigResponse(env),
       sent: 0,
       skippedDuplicates: 0,
+      snapshots: snapshots?.length || 0,
+      dryRun,
     };
   }
 
-  const snapshotStore = getStore(SNAPSHOT_STORE_NAME);
   const sentMarkerStore = getStore(SENT_MARKER_STORE_NAME);
-  const snapshots = await loadSnapshots(snapshotStore);
   let sent = 0;
   let skippedDuplicates = 0;
 
-  for (const snapshot of snapshots) {
+  for (const snapshot of snapshots || []) {
     const matches = findReminderMatches(snapshot, runDate);
 
     for (const movie of matches) {
-      const markerKey = buildSentMarkerKey({
-        installationId: snapshot.installationId,
-        movieID: movie.movieID,
-        watchDate: movie.watchDate,
-        offsetDays: REMINDER_OFFSET_DAYS,
-      });
-      const existingMarker = await sentMarkerStore.get(markerKey);
-
-      if (existingMarker) {
+      if (await hasSentMarker({ sentMarkerStore, installationId: snapshot.installationId, movie })) {
         skippedDuplicates += 1;
         continue;
       }
@@ -82,11 +92,17 @@ export const runReminderDelivery = async ({ env = process.env, runDate = new Dat
         snapshot,
         movie,
         appUrl: env.BREVO_APP_URL,
+        runDate,
         senderEmail: env.BREVO_SENDER_EMAIL,
         senderName: env.BREVO_SENDER_NAME,
       });
 
       if (!dryRun) {
+        const markerKey = buildSentMarkerKey({
+          installationId: snapshot.installationId,
+          movieID: movie.movieID,
+          watchDate: movie.watchDate,
+        });
         await sendBrevoEmail({ apiKey: env.BREVO_API_KEY, payload });
         await sentMarkerStore.set(markerKey, JSON.stringify({ sentAt: new Date().toISOString() }));
       }
@@ -96,6 +112,13 @@ export const runReminderDelivery = async ({ env = process.env, runDate = new Dat
   }
 
   return { ok: true, sent, skippedDuplicates, snapshots: snapshots.length, dryRun };
+};
+
+export const runReminderDelivery = async ({ env = process.env, runDate = new Date(), dryRun = false } = {}) => {
+  const snapshotStore = getStore(SNAPSHOT_STORE_NAME);
+  const snapshots = await loadSnapshots(snapshotStore);
+
+  return deliverReminderSnapshots({ snapshots, env, runDate, dryRun });
 };
 
 export default async (request) => {

@@ -19,9 +19,13 @@ describe('send-reminders function', () => {
     snapshotStore.get.mockReset();
     sentMarkerStore.get.mockReset();
     sentMarkerStore.set.mockReset();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: vi.fn().mockResolvedValue(''),
+    });
   });
 
-  it('runs reminder delivery through the modern Netlify function module', async () => {
+  it('runs reminder delivery for the inclusive catch-up window', async () => {
     const { runReminderDelivery } = await import('../../../netlify/functions/send-reminders.mjs');
     snapshotStore.list.mockResolvedValue({ blobs: [{ key: 'install-1.json' }] });
     snapshotStore.get.mockResolvedValue({
@@ -33,7 +37,28 @@ describe('send-reminders function', () => {
           movieID: '550',
           movieTitle: 'Fight Club',
           movieLink: 'https://example.test/550',
+          watchDate: '2026-07-21',
+          watched: false,
+        },
+        {
+          movieID: '551',
+          movieTitle: 'Arrival',
+          movieLink: 'https://example.test/551',
+          watchDate: '2026-07-22',
+          watched: false,
+        },
+        {
+          movieID: '552',
+          movieTitle: 'Heat',
+          movieLink: 'https://example.test/552',
           watchDate: '2026-07-23',
+          watched: false,
+        },
+        {
+          movieID: '553',
+          movieTitle: 'Later',
+          movieLink: 'https://example.test/553',
+          watchDate: '2026-07-24',
           watched: false,
         },
       ],
@@ -51,7 +76,42 @@ describe('send-reminders function', () => {
       dryRun: true,
     });
 
-    expect(result).toMatchObject({ ok: true, sent: 1, skippedDuplicates: 0, snapshots: 1, dryRun: true });
+    expect(result).toMatchObject({ ok: true, sent: 3, skippedDuplicates: 0, snapshots: 1, dryRun: true });
     expect(sentMarkerStore.set).not.toHaveBeenCalled();
+  });
+
+  it('skips reminders when the catch-up or legacy marker already exists', async () => {
+    const { runReminderDelivery } = await import('../../../netlify/functions/send-reminders.mjs');
+    snapshotStore.list.mockResolvedValue({ blobs: [{ key: 'install-1.json' }] });
+    snapshotStore.get.mockResolvedValue({
+      installationId: 'install-1',
+      email: 'viewer@example.test',
+      preference: 'email',
+      movies: [
+        {
+          movieID: '550',
+          movieTitle: 'Fight Club',
+          movieLink: 'https://example.test/550',
+          watchDate: '2026-07-23',
+          watched: false,
+        },
+      ],
+    });
+    sentMarkerStore.get
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(JSON.stringify({ sentAt: '2026-07-21T00:00:00.000Z' }));
+
+    const result = await runReminderDelivery({
+      env: {
+        BREVO_API_KEY: 'secret',
+        BREVO_SENDER_EMAIL: 'sender@example.test',
+        BREVO_SENDER_NAME: '365movies',
+        BREVO_APP_URL: 'https://365movies.example.test',
+      },
+      runDate: new Date(Date.UTC(2026, 6, 21)),
+    });
+
+    expect(result).toMatchObject({ ok: true, sent: 0, skippedDuplicates: 1 });
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
