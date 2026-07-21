@@ -1,5 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
-[![Version](https://img.shields.io/badge/version-2.4.0-1f8b4c)](#)
+[![Version](https://img.shields.io/badge/version-2.5.0-1f8b4c)](#)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/Quasar-2-1976d2)](https://quasar.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev/)
@@ -15,7 +15,7 @@
 - Movie search with manual queries and an "I'm lucky" discovery flow.
 - Movie detail cards with poster preview, metadata, trailers, providers, and sharing actions.
 - Local agenda with list and calendar views.
-- Agenda reminders with e-mail delivery, whole-agenda calendar export, and two-day reminder timing.
+- Agenda reminders with e-mail delivery, same-day through two-day catch-up delivery, whole-agenda calendar export, and relative reminder copy.
 - Country-aware streaming provider selection when adding movies to the agenda.
 - Watched/unwatched tracking with a yearly 365 Movie Challenge progress grid.
 - TMDB access through server-side proxy code so bearer tokens stay out of the client.
