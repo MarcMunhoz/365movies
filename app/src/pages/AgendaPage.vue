@@ -48,13 +48,13 @@
         />
 
         <q-input
-          v-if="emailReminderSelected"
           v-model="reminderEmail"
           data-cy="agenda-reminder-email"
           filled
           dense
           type="email"
           label="Reminder e-mail"
+          :disable="!emailReminderSelected"
           :error="emailReminderSelected && reminderEmail.length > 0 && !reminderEmailIsValid"
           error-message="Enter a valid e-mail address"
         />
