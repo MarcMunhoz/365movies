@@ -1,4 +1,11 @@
 describe('core navigation', () => {
+  it('collapses the desktop sidebar until hover', () => {
+    cy.viewport(1440, 900);
+    cy.visit('/');
+
+    cy.get('.q-drawer').should('have.class', 'q-drawer--mini');
+  });
+
   it('marks only the current sidebar route as active', () => {
     cy.viewport(1440, 900);
     cy.visit('/about');

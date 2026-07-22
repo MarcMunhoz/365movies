@@ -133,7 +133,7 @@ export default defineComponent({
     const leftDrawerOpen = ref(true);
     const headerSearch = ref("");
     const searchValidationMessage = ref("");
-    const miniState = ref(false);
+    const miniState = ref(true);
     const hasSearchToClear = computed(() =>
       Boolean(
         headerSearch.value.trim() ||
@@ -176,7 +176,7 @@ export default defineComponent({
         }
 
         leftDrawerOpen.value = true;
-        miniState.value = false;
+        miniState.value = true;
       },
       { immediate: true }
     );
@@ -193,10 +193,14 @@ export default defineComponent({
       miniState,
       t,
       handleDrawerMouseEnter() {
-        miniState.value = false;
+        if (!isMobile.value) {
+          miniState.value = false;
+        }
       },
       handleDrawerMouseLeave() {
-        miniState.value = false;
+        if (!isMobile.value) {
+          miniState.value = true;
+        }
       },
       toggleLeftDrawer() {
         if (!isMobile.value) {
