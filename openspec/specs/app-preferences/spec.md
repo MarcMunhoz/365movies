@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define app-wide local preferences for settings navigation, visual theme, accessibility behavior, English-owned interface copy, and form completion ergonomics.
+
+## Requirements
 
 ### Requirement: Settings navigation
 The system SHALL provide a Settings or Preferences surface for app-wide configuration.
@@ -41,20 +44,16 @@ The system SHALL integrate an in-app accessibility toolbar using the `accessibil
 - **WHEN** the user activates a toolbar control such as text size, text spacing, line height, contrast inversion, grayscale, large cursor, or reading guide
 - **THEN** the system MUST apply the corresponding runtime accessibility behavior supplied by the toolbar package
 
-### Requirement: Language preference
-The system SHALL allow the user to choose the global application language between English and Portuguese.
+### Requirement: English app-owned interface copy
+The system SHALL keep app-owned interface copy in English until a complete and correct Portuguese translation is available.
 
 #### Scenario: Default language is English
-- **WHEN** no language preference has been saved
-- **THEN** the system MUST render app-owned UI text in English
+- **WHEN** the application renders app-owned UI text
+- **THEN** the system MUST render that text in English
 
-#### Scenario: User selects Portuguese
-- **WHEN** the user selects Portuguese
-- **THEN** the system MUST persist the preference and render app-owned UI text in Portuguese
-
-#### Scenario: User selects English
-- **WHEN** the user selects English
-- **THEN** the system MUST persist the preference and render app-owned UI text in English
+#### Scenario: Unsupported language is requested
+- **WHEN** a saved or requested language is not supported
+- **THEN** the system MUST fall back to English app-owned UI text
 
 #### Scenario: External content is displayed
 - **WHEN** the system displays externally supplied movie titles, provider names, or TMDB content
