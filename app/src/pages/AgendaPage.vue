@@ -6,15 +6,27 @@
         <p class="text-sm text-[#9db4c8]">Plan movies, update watch status, and keep your year organized.</p>
       </div>
 
-      <div class="flex flex-wrap gap-2">
-        <q-btn data-cy="agenda-toggle-view" @click="listMode = !listMode" color="secondary" unelevated :icon="listMode ? 'calendar_month' : 'view_list'">
-          {{ listMode ? "Calendar view" : "List view" }}
-        </q-btn>
-        <q-btn data-cy="agenda-clear-calendar" @click="clearCalendar" color="accent" outline icon="delete_sweep">Clear calendar</q-btn>
+      <div class="flex flex-col gap-2 md:items-end">
+        <div class="flex flex-wrap gap-2">
+          <q-btn data-cy="agenda-toggle-view" @click="listMode = !listMode" color="secondary" unelevated :icon="listMode ? 'calendar_month' : 'view_list'">
+            {{ listMode ? "Calendar view" : "List view" }}
+          </q-btn>
+          <q-btn data-cy="agenda-clear-calendar" @click="clearCalendar" color="accent" outline icon="delete_sweep">Clear calendar</q-btn>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs text-[#9db4c8]" data-cy="agenda-context-legend">
+          <span class="uppercase">Legend</span>
+          <q-chip v-if="listMode" outline color="primary" size="sm" :ripple="false" :label="`Total: ${tableData.length}`" />
+          <q-chip v-if="listMode" outline color="positive" size="sm" :ripple="false" :label="`Watched: ${watchedMoviesCount}`" />
+          <q-chip v-if="listMode" outline color="grey-7" size="sm" :ripple="false" :label="`Unwatched: ${unwatchedMoviesCount}`" />
+          <q-chip v-if="!listMode" outline color="primary" size="sm" :ripple="false" icon="circle" label="Scheduled" />
+          <q-chip v-if="!listMode" outline color="positive" size="sm" :ripple="false" icon="task_alt" label="Watched" />
+          <q-chip v-if="!listMode" outline color="grey-7" size="sm" :ripple="false" icon="radio_button_unchecked" label="Unwatched" />
+        </div>
       </div>
     </section>
 
-    <section class="mb-4 ml-auto rounded-xl border border-[#ffb58f4d] bg-[rgba(255,181,143,0.08)] p-2 leading-relaxed text-xs text-center text-[#ffd8c2] w-fit">
+    <section data-cy="agenda-local-notice" class="agenda-local-notice mb-4 ml-auto rounded-xl p-2 leading-relaxed text-xs text-center w-fit">
       <strong>Important:</strong> The agenda is local to each device/browser. If you switch devices or clear local data, your schedule will not be shared automatically.
     </section>
 
@@ -22,75 +34,40 @@
       <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 class="font-['Sora'] text-lg font-semibold text-[#e8f0f8]">Reminders</h2>
-          <p class="text-sm text-[#9db4c8]">One setting for the whole agenda.</p>
+          <p class="text-sm text-[#9db4c8]">Saved reminder settings for this browser.</p>
         </div>
 
-        <q-btn
-          v-if="calendarExportEnabled"
-          data-cy="agenda-export-calendar"
-          color="primary"
-          unelevated
-          icon="event"
-          :disable="!calendarExportAvailable"
-          @click="exportAgendaCalendar"
-        >
-          Export calendar
-        </q-btn>
+        <div class="flex flex-wrap gap-2">
+          <q-btn data-cy="agenda-edit-reminders" to="/settings" color="secondary" outline icon="settings">
+            Settings
+          </q-btn>
+          <q-btn
+            v-if="calendarExportEnabled"
+            data-cy="agenda-export-calendar"
+            color="primary"
+            unelevated
+            icon="event"
+            :disable="!calendarExportAvailable"
+            @click="exportAgendaCalendar"
+          >
+            Export calendar
+          </q-btn>
+        </div>
       </div>
 
-      <div class="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_minmax(260px,320px)_auto] lg:items-center">
-        <q-option-group
-          v-model="selectedReminderPreference"
-          data-cy="agenda-reminder-preference"
-          color="primary"
-          class="min-h-[40px]"
-          inline
-          :options="reminderPreferenceOptions"
-        />
-
-        <q-input
-          v-model="reminderEmail"
-          data-cy="agenda-reminder-email"
-          class="w-full self-center"
-          dark
-          filled
-          dense
-          hide-bottom-space
-          type="email"
-          label="Reminder e-mail"
-          :error="emailReminderSelected && reminderEmail.length > 0 && !reminderEmailIsValid"
-          error-message="Enter a valid e-mail address"
-        />
-
-        <q-btn
-          data-cy="agenda-save-reminders"
-          color="secondary"
-          unelevated
-          icon="notifications_active"
-          class="self-center"
-          :loading="reminderSyncing"
-          @click="saveReminderSettings"
-        >
-          Save reminders
-        </q-btn>
+      <div class="grid gap-2 text-sm text-[#dce8f5] md:grid-cols-2">
+        <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+          <span class="block text-xs uppercase tracking-[0.05em] text-[#9db4c8]">Method</span>
+          <strong data-cy="agenda-reminder-method">{{ reminderPreferenceLabel }}</strong>
+        </div>
+        <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+          <span class="block text-xs uppercase tracking-[0.05em] text-[#9db4c8]">E-mail</span>
+          <strong data-cy="agenda-reminder-email-summary">{{ savedReminderEmail || "No e-mail saved" }}</strong>
+        </div>
       </div>
     </section>
 
-    <Challenge365 data-cy="challenge-365" :movie-logs="challengeMovieLogs" class="mb-4" />
-
-    <section class="mb-4 flex flex-wrap items-center justify-center gap-2">
-      <span class="text-xs uppercase">Legend</span>
-      <q-chip outline color="primary" size="md" :ripple="false" :label="`Total: ${tableData.length}`" />
-      <q-chip outline color="positive" size="md" :ripple="false" :label="`Watched: ${watchedMoviesCount}`" />
-      <q-chip outline color="grey-7" size="md" :ripple="false" :label="`Unwatched: ${unwatchedMoviesCount}`" />
-      <q-chip outline color="primary" size="md" :ripple="false" icon="circle" label="Scheduled movie" />
-      <q-chip outline color="grey-7" size="md" :ripple="false" icon="radio_button_unchecked" label="Unwatched" />
-      <q-chip outline color="positive" size="md" :ripple="false" icon="task_alt" label="Watched" />
-      <q-chip outline color="secondary" size="md" :ripple="false" icon="edit" label="Date edit" />
-      <q-chip outline color="negative" size="md" :ripple="false" icon="delete" label="Delete from Agenda" />
-    </section>
-
-    <section v-if="listMode" class="w-full overflow-hidden rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)]">
+    <section v-if="listMode" data-cy="agenda-primary-content" class="w-full overflow-hidden rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)]">
       <q-table
         dark
         flat
@@ -154,7 +131,7 @@
       </q-table>
     </section>
 
-    <section v-else class="w-full overflow-hidden rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)] p-2 md:p-3">
+    <section v-else data-cy="agenda-primary-content" class="w-full overflow-hidden rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)] p-2 md:p-3">
       <Calendar expanded borderless is-double-paned :columns="columns" :rows="5" :attributes="events" :min-date="minDate" :max-date="maxDate">
         <template #day-popover="{ attributes }">
           <ul class="min-w-[230px]">
@@ -198,17 +175,37 @@
       </Calendar>
     </section>
 
+    <section data-cy="agenda-analytics-summary" class="mt-4 rounded-xl border border-white/10 bg-[rgba(11,19,31,0.74)] p-3">
+      <div data-cy="agenda-challenge-summary" class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-start gap-3">
+          <q-icon name="emoji_events" color="primary" size="28px" class="mt-1" />
+          <div>
+            <h2 class="font-['Sora'] text-lg font-semibold text-[#e8f0f8]">365 Movie Challenge</h2>
+            <p class="text-sm text-[#9db4c8]">
+              {{ challengeSummaryText }}
+            </p>
+          </div>
+        </div>
+
+        <q-btn data-cy="agenda-challenge-link" to="/challenge" color="primary" unelevated icon="open_in_new">
+          Open challenge
+        </q-btn>
+      </div>
+    </section>
+
     <q-dialog v-model="openAgendaDialog" persistent>
       <q-card class="min-h-[290px] min-w-[290px] max-w-[400px] border border-white/15 bg-[linear-gradient(180deg,#15263a_0%,#111f30_100%)] text-[#e4edf6]">
-        <q-card-section class="flex flex-col justify-center text-[#d9e6f3]">
-          <q-input filled disable v-model="editCountryNameMovie" label="Watching from" class="mb-4 w-full capitalize" />
-          <q-date v-model="editDateMovie" :options="movieWatchDateOpt" subtitle="" :title="editMovieTitle" class="border border-white/15 bg-[rgba(17,31,48,0.95)] text-[#e7f0f8] [&_.q-date__header]:bg-[#4dc8b024] [&_.q-date__calendar-item]:text-[#dce8f5] [&_.q-date__view_.q-btn]:text-[#dce8f5]" />
-        </q-card-section>
+        <q-form @submit.prevent="editMovieAgenda">
+          <q-card-section class="flex flex-col justify-center text-[#d9e6f3]">
+            <q-input filled disable v-model="editCountryNameMovie" label="Watching from" class="mb-4 w-full capitalize" />
+            <q-date v-model="editDateMovie" :options="movieWatchDateOpt" subtitle="" :title="editMovieTitle" class="border border-white/15 bg-[rgba(17,31,48,0.95)] text-[#e7f0f8] [&_.q-date__header]:bg-[#4dc8b024] [&_.q-date__calendar-item]:text-[#dce8f5] [&_.q-date__view_.q-btn]:text-[#dce8f5]" />
+          </q-card-section>
 
-        <q-card-actions align="center" class="border-t border-white/10 bg-[rgba(8,15,24,0.72)]">
-          <q-btn color="negative" @click="openAgendaDialog = false">Cancel</q-btn>
-          <q-btn color="primary" @click="editMovieAgenda">Okay</q-btn>
-        </q-card-actions>
+          <q-card-actions align="center" class="border-t border-white/10 bg-[rgba(8,15,24,0.72)]">
+            <q-btn color="negative" type="button" @click="openAgendaDialog = false">Cancel</q-btn>
+            <q-btn color="primary" type="submit">Okay</q-btn>
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -221,21 +218,16 @@ import { useScreens } from "vue-screen-utils";
 import "v-calendar/style.css";
 import { Notify } from "quasar";
 import { getLocalStorage, setLocalStorage } from "composables/useLocalStorage";
-import Challenge365 from "components/Challenge365.vue";
 import { formatChallengeDate } from "utils/agendaDates";
 import { buildAgendaIcs, getFutureUnwatchedAgendaItems } from "utils/calendarExport";
 import {
   REMINDER_PREFERENCES,
   buildReminderSnapshot,
-  getInstallationId,
   getOrCreateInstallationId,
   getReminderEmail,
   getReminderPreference,
   isCalendarReminderPreference,
   isEmailReminderPreference,
-  isValidEmail,
-  setReminderEmail,
-  setReminderPreference,
 } from "utils/reminderPreferences";
 
 const { mapCurrent } = useScreens({ xs: "0px", sm: "640px", md: "768px", lg: "1024px" });
@@ -247,8 +239,8 @@ const editCountryNameMovie = ref("");
 const editDateMovie = ref("");
 const events = ref([]);
 const openAgendaDialog = ref(false);
-const selectedReminderPreference = ref(getReminderPreference());
-const reminderEmail = ref(getReminderEmail());
+const savedReminderPreference = ref(getReminderPreference());
+const savedReminderEmail = ref(getReminderEmail());
 const reminderSyncing = ref(false);
 let reminderSyncTimeout = null;
 
@@ -256,12 +248,12 @@ let reminderSyncTimeout = null;
 const listMode = ref(true);
 const tableData = ref([]);
 const reminderFunctionBaseUrl = "/.netlify/functions";
-const reminderPreferenceOptions = [
-  { label: "None", value: REMINDER_PREFERENCES.none },
-  { label: "E-mail", value: REMINDER_PREFERENCES.email },
-  { label: "Calendar", value: REMINDER_PREFERENCES.calendar },
-  { label: "Both", value: REMINDER_PREFERENCES.emailCalendar },
-];
+const reminderPreferenceLabels = {
+  [REMINDER_PREFERENCES.none]: "None",
+  [REMINDER_PREFERENCES.email]: "E-mail",
+  [REMINDER_PREFERENCES.calendar]: "Calendar",
+  [REMINDER_PREFERENCES.emailCalendar]: "Both",
+};
 
 // Definição das colunas da tabela
 const tableColumns = [
@@ -298,21 +290,15 @@ const clearCalendar = () => {
   });
 };
 
-const emailReminderSelected = computed(() => isEmailReminderPreference(selectedReminderPreference.value));
-const calendarExportEnabled = computed(() => isCalendarReminderPreference(selectedReminderPreference.value));
-const reminderEmailIsValid = computed(() => isValidEmail(reminderEmail.value));
+const calendarExportEnabled = computed(() => isCalendarReminderPreference(savedReminderPreference.value));
 const calendarExportAvailable = computed(() => getFutureUnwatchedAgendaItems(watchMovies.value).length > 0);
-
-const persistReminderSettings = () => {
-  setReminderPreference(selectedReminderPreference.value);
-  setReminderEmail(reminderEmail.value);
-};
+const reminderPreferenceLabel = computed(() => reminderPreferenceLabels[savedReminderPreference.value] || reminderPreferenceLabels[REMINDER_PREFERENCES.none]);
 
 const buildCurrentReminderSnapshot = () =>
   buildReminderSnapshot({
     installationId: getOrCreateInstallationId(),
-    email: reminderEmail.value,
-    preference: selectedReminderPreference.value,
+    email: savedReminderEmail.value,
+    preference: savedReminderPreference.value,
     movies: watchMovies.value,
   });
 
@@ -328,26 +314,11 @@ const postReminderSnapshot = async (snapshot) => {
   }
 };
 
-const disableServerReminders = async () => {
-  const installationId = getInstallationId();
-
-  if (!installationId) {
-    return;
-  }
-
-  const response = await fetch(`${reminderFunctionBaseUrl}/save-reminders`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ installationId }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Reminder disable failed");
-  }
-};
-
 const syncEmailReminders = async ({ showNotification = false } = {}) => {
-  if (!isEmailReminderPreference(selectedReminderPreference.value)) {
+  savedReminderPreference.value = getReminderPreference();
+  savedReminderEmail.value = getReminderEmail();
+
+  if (!isEmailReminderPreference(savedReminderPreference.value)) {
     return;
   }
 
@@ -368,7 +339,10 @@ const syncEmailReminders = async ({ showNotification = false } = {}) => {
 };
 
 const scheduleReminderSync = () => {
-  if (!isEmailReminderPreference(selectedReminderPreference.value) || !isValidEmail(reminderEmail.value)) {
+  savedReminderPreference.value = getReminderPreference();
+  savedReminderEmail.value = getReminderEmail();
+
+  if (!isEmailReminderPreference(savedReminderPreference.value) || !savedReminderEmail.value) {
     return;
   }
 
@@ -376,28 +350,6 @@ const scheduleReminderSync = () => {
   reminderSyncTimeout = window.setTimeout(() => {
     syncEmailReminders();
   }, 500);
-};
-
-const saveReminderSettings = async () => {
-  if (emailReminderSelected.value && !reminderEmailIsValid.value) {
-    Notify.create({ type: "warning", timeout: 3000, message: "Enter a valid e-mail address to enable e-mail reminders." });
-    return;
-  }
-
-  persistReminderSettings();
-
-  if (selectedReminderPreference.value === REMINDER_PREFERENCES.none || !emailReminderSelected.value) {
-    try {
-      await disableServerReminders();
-      Notify.create({ type: "info", timeout: 2500, message: "Reminder settings saved." });
-    } catch (error) {
-      console.error("Reminder disable failed", error);
-      Notify.create({ type: "warning", timeout: 3500, message: "Reminder preference saved locally. Server sync did not complete." });
-    }
-    return;
-  }
-
-  await syncEmailReminders({ showNotification: true });
 };
 
 const exportAgendaCalendar = () => {
@@ -542,6 +494,15 @@ const challengeMovieLogs = computed(() =>
     .filter((movie) => movie.watchedAt !== "")
 );
 
+const challengeSummaryText = computed(() => {
+  const watchedCount = challengeMovieLogs.value.length;
+  const plannedCount = tableData.value.length;
+  const watchedLabel = watchedCount === 1 ? "movie watched" : "movies watched";
+  const plannedLabel = plannedCount === 1 ? "movie planned" : "movies planned";
+
+  return `${watchedCount} ${watchedLabel} this year from ${plannedCount} ${plannedLabel}. Open the full challenge for the yearly grid, metrics, and streaks.`;
+});
+
 watch(
   watchMovies,
   (newMovies) => {
@@ -552,7 +513,6 @@ watch(
   { deep: true }
 );
 
-watch([selectedReminderPreference, reminderEmail], persistReminderSettings);
 </script>
 
 <style lang="scss" scoped>

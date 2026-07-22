@@ -30,6 +30,64 @@ describe('reminderCore', () => {
     });
   });
 
+  it('normalizes optional rich metadata while preserving legacy snapshot compatibility', () => {
+    expect(validateReminderSnapshot({
+      installationId: 'install-1',
+      email: 'viewer@example.test',
+      preference: 'email',
+      movies: [
+        {
+          movieID: 550,
+          movieTitle: 'Fight Club',
+          watchDate: '2026-07-22',
+          watched: false,
+        },
+      ],
+    }).snapshot.movies[0]).toEqual({
+      movieID: '550',
+      movieTitle: 'Fight Club',
+      movieLink: '',
+      watchDate: '2026-07-22',
+      watched: false,
+    });
+
+    expect(validateReminderSnapshot({
+      installationId: 'install-1',
+      email: 'viewer@example.test',
+      preference: 'email',
+      movies: [
+        {
+          movieID: 551,
+          movieTitle: 'Arrival',
+          movieLink: 'https://example.test/551',
+          watchDate: '2026-07-23',
+          watched: false,
+          posterPath: '/arrival.jpg',
+          posterUrl: 'https://image.tmdb.org/t/p/w300/arrival.jpg',
+          overview: 'A linguist works with alien visitors.',
+          runtime: '116',
+          releaseYear: '2016',
+          streamingProviders: [
+            { providerName: 'Example+', logoPath: '/example.png', ignored: 'value' },
+            { providerName: '', logoPath: '/empty.png' },
+          ],
+        },
+      ],
+    }).snapshot.movies[0]).toEqual({
+      movieID: '551',
+      movieTitle: 'Arrival',
+      movieLink: 'https://example.test/551',
+      watchDate: '2026-07-23',
+      watched: false,
+      posterPath: '/arrival.jpg',
+      posterUrl: 'https://image.tmdb.org/t/p/w300/arrival.jpg',
+      overview: 'A linguist works with alien visitors.',
+      runtime: 116,
+      releaseYear: 2016,
+      streamingProviders: [{ providerName: 'Example+', logoPath: '/example.png' }],
+    });
+  });
+
   it('finds unwatched movies scheduled from today through two days after the run date', () => {
     const matches = findReminderMatches(
       {
@@ -103,7 +161,7 @@ describe('reminderCore', () => {
     ).toMatchObject({
       sender: { email: 'sender@example.test', name: '365movies' },
       to: [{ email: 'viewer@example.test' }],
-      subject: '365movies reminder: Fight Club',
+      subject: 'Fight Club is planned for today | 365movies',
     });
     expect(
       buildBrevoPayload({
@@ -143,5 +201,67 @@ describe('reminderCore', () => {
       hasSenderName: false,
       hasAppUrl: false,
     });
+  });
+
+  it('builds branded escaped Brevo payloads with rich metadata and clear actions', () => {
+    const payload = buildBrevoPayload({
+      snapshot,
+      movie: {
+        movieID: '550',
+        movieTitle: 'Fight <Club> & Friends',
+        movieLink: 'https://example.test/movie?title=<bad>&safe=1',
+        watchDate: '2026-07-22',
+        watched: false,
+        posterUrl: 'https://image.tmdb.org/t/p/w300/poster.jpg?name=<poster>',
+        overview: 'A <script>alert("x")</script> office worker & soap maker.',
+        runtime: 139,
+        releaseYear: 1999,
+        streamingProviders: [
+          { providerName: 'Example+ <Now>', logoPath: '/example.png' },
+          { providerName: 'Cinema & Home' },
+        ],
+      },
+      appUrl: 'https://365movies.example.test/app?next=<agenda>',
+      runDate: new Date(Date.UTC(2026, 6, 21)),
+      senderEmail: 'sender@example.test',
+      senderName: '365movies',
+    });
+
+    expect(payload.subject).toBe('Fight <Club> & Friends is planned for tomorrow | 365movies');
+    expect(payload.htmlContent).toContain('365movies');
+    expect(payload.htmlContent).toContain('Watch-date reminder');
+    expect(payload.htmlContent).toContain('Fight &lt;Club&gt; &amp; Friends');
+    expect(payload.htmlContent).toContain('July 22, 2026');
+    expect(payload.htmlContent).toContain('139 min');
+    expect(payload.htmlContent).toContain('1999');
+    expect(payload.htmlContent).toContain('A &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; office worker &amp; soap maker.');
+    expect(payload.htmlContent).toContain('Example+ &lt;Now&gt;');
+    expect(payload.htmlContent).toContain('Cinema &amp; Home');
+    expect(payload.htmlContent).toContain('alt="Fight &lt;Club&gt; &amp; Friends poster"');
+    expect(payload.htmlContent).toContain('href="https://example.test/movie?title=%3Cbad%3E&amp;safe=1"');
+    expect(payload.htmlContent).toContain('href="https://365movies.example.test/app?next=%3Cagenda%3E"');
+    expect(payload.htmlContent).not.toContain('<script>');
+  });
+
+  it('builds valid fallback Brevo HTML without optional metadata or links', () => {
+    const payload = buildBrevoPayload({
+      snapshot,
+      movie: {
+        movieID: '550',
+        movieTitle: 'Fallback Movie',
+        watchDate: '2026-07-23',
+        watched: false,
+      },
+      appUrl: '',
+      runDate: new Date(Date.UTC(2026, 6, 21)),
+      senderEmail: 'sender@example.test',
+      senderName: '365movies',
+    });
+
+    expect(payload.subject).toBe('Fallback Movie is planned for in two days | 365movies');
+    expect(payload.htmlContent).toContain('Fallback Movie');
+    expect(payload.htmlContent).toContain('No streaming provider saved for this reminder.');
+    expect(payload.htmlContent).not.toContain('<img');
+    expect(payload.htmlContent).not.toContain('<a href=""');
   });
 });

@@ -1,6 +1,6 @@
 <template>
   <q-page class="mx-auto w-full max-w-[1050px] px-3 pb-6 pt-4 md:px-5">
-    <section class="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(130deg,rgba(14,32,50,0.92),rgba(10,22,36,0.9))] p-4 md:p-6">
+    <section data-cy="about-hero" class="about-hero-panel overflow-hidden rounded-2xl p-4 md:p-6">
       <div class="flex flex-col gap-5 md:flex-row md:items-center md:gap-8">
         <q-img
           :src="myPhoto ? `${myPhoto}?s=360` : '/img/no-image.jpg'"
@@ -9,9 +9,9 @@
         />
 
         <div class="min-w-0">
-          <p class="mb-2 text-xs uppercase tracking-[0.15em] text-[#95b7c2]">About the project</p>
-          <h1 class="font-['Sora'] text-3xl font-bold leading-tight text-[#e8f0f8] md:text-4xl">365 Movies</h1>
-          <p class="mt-3 text-[15px] leading-relaxed text-[#c8d9e9] md:text-base">
+          <p class="about-kicker mb-2 text-xs uppercase tracking-[0.15em]">About the project</p>
+          <h1 data-cy="about-title" class="font-['Sora'] text-3xl font-bold leading-tight md:text-4xl">365 Movies</h1>
+          <p class="about-copy mt-3 text-[15px] leading-relaxed md:text-base">
             A personal movie discovery app built with Vue and APIs to search titles, explore details, and plan what to watch.
           </p>
         </div>
@@ -19,32 +19,32 @@
     </section>
 
     <section class="mt-4 grid gap-3 md:grid-cols-3">
-      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
-        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Search movies</h2>
-        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+      <article class="about-card rounded-xl p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold">Search movies</h2>
+        <p class="text-sm leading-relaxed">
           Use manual search for precise results, or the lucky mode to discover random options.
         </p>
       </article>
 
-      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
-        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Build your agenda</h2>
-        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+      <article class="about-card rounded-xl p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold">Build your agenda</h2>
+        <p class="text-sm leading-relaxed">
           Add movies to your watch plan, edit dates, and track watched status in list or calendar view.
         </p>
       </article>
 
-      <article class="rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
-        <h2 class="mb-2 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Local by design</h2>
-        <p class="text-sm leading-relaxed text-[#b8cbe0]">
+      <article class="about-card rounded-xl p-4">
+        <h2 class="mb-2 font-['Sora'] text-lg font-semibold">Local by design</h2>
+        <p class="text-sm leading-relaxed">
           Your schedule is saved in your browser storage and stays on the current device.
         </p>
       </article>
     </section>
 
-    <section class="mt-4 rounded-xl border border-white/10 bg-[rgba(10,20,33,0.72)] p-4">
-      <h2 class="mb-3 font-['Sora'] text-lg font-semibold text-[#e7f1fb]">Connect</h2>
-      <q-list class="rounded-lg border border-white/10 bg-[rgba(8,15,25,0.55)]">
-        <q-item v-for="link in socialLinks" :key="link.title" clickable tag="a" :href="link.to" target="_blank" class="text-[#d5e6f6]">
+    <section class="about-card mt-4 rounded-xl p-4">
+      <h2 class="mb-3 font-['Sora'] text-lg font-semibold">Connect</h2>
+      <q-list class="about-link-list rounded-lg">
+        <q-item v-for="link in socialLinks" :key="link.title" clickable tag="a" :href="link.to" target="_blank">
           <q-item-section avatar>
             <q-icon :name="link.icon" />
           </q-item-section>

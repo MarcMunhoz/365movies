@@ -1,6 +1,6 @@
 <template>
-  <q-layout view="hHh LpR fff" class="text-[#f3f6fa] [background:radial-gradient(circle_at_0%_0%,rgba(77,200,176,0.24),transparent_42%),radial-gradient(circle_at_100%_8%,rgba(255,143,107,0.2),transparent_36%),#0e141f]">
-    <q-header class="border-b border-white/10 bg-[rgba(9,16,28,0.8)] backdrop-blur-[10px]">
+  <q-layout view="hHh LpR fff" class="app-shell">
+    <q-header class="app-header border-b backdrop-blur-[10px]">
       <q-toolbar class="gap-2 px-3 py-2">
         <q-btn v-if="isMobile" flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="mr-1.5 border border-white/25" />
 
@@ -8,33 +8,34 @@
           <div class="flex w-full flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
             <div class="min-w-0 md:min-w-[170px] md:shrink-0">
               <div class="font-['Sora'] text-[1.35rem] font-bold leading-tight tracking-[0.02em]">365 MOVIES</div>
-              <div class="text-xs uppercase tracking-[0.08em] text-[#95b7c2]">{{ $route.name }}</div>
+              <div class="app-route-label text-xs uppercase tracking-[0.08em]">{{ routeTitle }}</div>
             </div>
 
-            <div class="flex min-w-0 w-full flex-1 items-start gap-2 md:items-center">
+            <q-form class="flex min-w-0 w-full flex-1 items-start gap-2 md:items-center" @submit.prevent="runSearch">
               <div class="min-w-0 flex-1">
-                <q-input v-model="headerSearch" dense dark hide-bottom-space standout="bg-blue-grey-10 text-white" placeholder="Type movie title... And press Enter" input-class="!text-[#e8f0f8] placeholder:!text-[#9bb4c8]" class="flex-1 [&_.q-field__control]:rounded-[10px] [&_.q-field__bottom]:!text-[#ffb4a0]" :error="Boolean(searchValidationMessage)" :error-message="searchValidationMessage" @keyup.enter="runSearch" @update:model-value="clearSearchValidation">
+                <q-input v-model="headerSearch" dense hide-bottom-space standout="bg-blue-grey-10 text-white" :placeholder="t('settings.search.placeholder')" class="app-search-input flex-1 [&_.q-field__control]:rounded-[10px] [&_.q-field__bottom]:!text-[#ffb4a0]" :error="Boolean(searchValidationMessage)" :error-message="searchValidationMessage" @update:model-value="clearSearchValidation">
                   <template #prepend>
-                    <q-icon name="search" class="text-[#b4cbdd]" />
+                    <q-icon name="search" />
                   </template>
                 </q-input>
               </div>
-              <q-btn outline dense class="min-h-[34px] self-start whitespace-nowrap rounded-lg border-[rgba(255,192,154,0.7)] font-semibold normal-case text-[#ffc09a] md:self-auto" icon="casino" @click="runLucky">
-                I'm lucky
+              <q-btn outline dense type="button" class="app-accent-button min-h-[34px] self-start whitespace-nowrap rounded-lg font-semibold normal-case md:self-auto" icon="casino" @click="runLucky">
+                {{ t("settings.actions.lucky") }}
               </q-btn>
               <q-btn
                 v-if="hasSearchToClear"
                 flat
                 dense
                 round
+                type="button"
                 icon="close"
-                aria-label="Clear search"
-                class="min-h-[34px] self-start text-[#b4cbdd] md:self-auto"
+                :aria-label="t('settings.actions.clearSearch')"
+                class="app-clear-search min-h-[34px] self-start md:self-auto"
                 @click="clearSearch"
               >
-                <q-tooltip>Clear search</q-tooltip>
+                <q-tooltip>{{ t("settings.actions.clearSearch") }}</q-tooltip>
               </q-btn>
-            </div>
+            </q-form>
           </div>
         </q-toolbar-title>
       </q-toolbar>
@@ -46,13 +47,32 @@
       @mouseenter="handleDrawerMouseEnter"
       @mouseleave="handleDrawerMouseLeave"
       bordered
-      class="bg-gradient-to-b from-[#121f31] to-[#0f1827]"
+      class="app-drawer"
     >
-      <q-list class="pt-2">
-        <q-item-label header class="font-semibold tracking-[0.05em] text-[#c4d7ea] opacity-95">1 movie per day of year, or almost it</q-item-label>
+      <div class="flex h-full flex-col">
+        <q-list class="pt-2">
+          <q-item-label header class="app-drawer-label font-semibold tracking-[0.05em] opacity-95">{{ t("layout.tagline") }}</q-item-label>
 
-        <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" @click="toggleLeftDrawer" />
-      </q-list>
+          <EssentialLink v-for="link in essentialLinks" :key="link.link" v-bind="link" @click="toggleLeftDrawer" />
+        </q-list>
+
+        <q-list class="app-settings-nav mt-auto pb-3 pt-3">
+          <q-item
+            clickable
+            data-cy="nav-accessibility"
+            class="app-nav-link q-mx-sm q-mb-xs rounded-borders border border-transparent transition-all duration-200 ease-in hover:translate-x-[2px]"
+            @click="toggleAccessibilityMenu"
+          >
+            <q-item-section avatar>
+              <q-icon name="accessibility_new" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Accessibility</q-item-label>
+            </q-item-section>
+          </q-item>
+          <EssentialLink v-bind="settingsLink" @click="toggleLeftDrawer" />
+        </q-list>
+      </div>
     </q-drawer>
 
     <q-page-container class="mb-8">
@@ -66,24 +86,36 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import EssentialLink from "components/EssentialLink.vue";
+import { useTranslations } from "composables/useTranslations";
 
 const linksList = [
   {
-    title: "Movie search",
+    titleKey: "navigation.search",
     icon: "movie",
     link: "/",
   },
   {
-    title: "Agenda",
+    titleKey: "navigation.agenda",
     icon: "calendar_month",
     link: "/agenda",
   },
   {
-    title: "About",
+    titleKey: "navigation.challenge",
+    icon: "emoji_events",
+    link: "/challenge",
+  },
+  {
+    titleKey: "navigation.about",
     icon: "info",
     link: "/about",
   },
 ];
+
+const settingsNavLink = {
+  titleKey: "navigation.settings",
+  icon: "settings",
+  link: "/settings",
+};
 
 export default defineComponent({
   name: "MainLayout",
@@ -96,11 +128,12 @@ export default defineComponent({
     const $q = useQuasar();
     const route = useRoute();
     const router = useRouter();
+    const { t } = useTranslations();
     const isMobile = computed(() => $q.screen.lt.md);
     const leftDrawerOpen = ref(true);
     const headerSearch = ref("");
     const searchValidationMessage = ref("");
-    const miniState = ref(true);
+    const miniState = ref(false);
     const hasSearchToClear = computed(() =>
       Boolean(
         headerSearch.value.trim() ||
@@ -110,6 +143,13 @@ export default defineComponent({
           sessionStorage.getItem("lastMovieSearchSnapshot")
       )
     );
+    const localizeLink = (link) => ({
+      ...link,
+      title: t(link.titleKey),
+    });
+    const essentialLinks = computed(() => linksList.map(localizeLink));
+    const settingsLink = computed(() => localizeLink(settingsNavLink));
+    const routeTitle = computed(() => t(route.meta.titleKey || "navigation.search"));
 
     watch(
       () => route.query.q,
@@ -136,28 +176,27 @@ export default defineComponent({
         }
 
         leftDrawerOpen.value = true;
-        miniState.value = true;
+        miniState.value = false;
       },
       { immediate: true }
     );
 
     return {
-      essentialLinks: linksList,
+      essentialLinks,
       isMobile,
       leftDrawerOpen,
       headerSearch,
       hasSearchToClear,
+      routeTitle,
       searchValidationMessage,
+      settingsLink,
       miniState,
+      t,
       handleDrawerMouseEnter() {
-        if (!isMobile.value) {
-          miniState.value = false;
-        }
+        miniState.value = false;
       },
       handleDrawerMouseLeave() {
-        if (!isMobile.value) {
-          miniState.value = true;
-        }
+        miniState.value = false;
       },
       toggleLeftDrawer() {
         if (!isMobile.value) {
@@ -173,10 +212,13 @@ export default defineComponent({
       clearSearchValidation() {
         searchValidationMessage.value = "";
       },
+      toggleAccessibilityMenu() {
+        window.__movies365Accessibility?.toggleMenu?.();
+      },
       runSearch() {
         const query = headerSearch.value.trim();
         if (query.length < 3) {
-          searchValidationMessage.value = "Please type at least 3 letters.";
+          searchValidationMessage.value = t("settings.search.invalid");
           return false;
         }
         searchValidationMessage.value = "";

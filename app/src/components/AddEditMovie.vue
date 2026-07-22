@@ -4,7 +4,7 @@
       class="min-h-[290px] min-w-[290px] max-w-[400px] border border-white/15 bg-[linear-gradient(180deg,#15263a_0%,#111f30_100%)] text-[#e4edf6]"
       :class="{ 'flex justify-center content-center': movieAddedLoading === true }"
     >
-      <section v-show="regionsByMovie.length !== 0">
+      <q-form v-show="regionsByMovie.length !== 0" @submit.prevent="submitMovie">
         <q-card-section v-if="movieAddedLoading === true">
           <q-spinner-pie color="primary" size="8em" />
         </q-card-section>
@@ -54,23 +54,15 @@
         </q-card-section>
 
         <q-card-actions v-if="movieAddedLoading === false" align="right" class="mt-5 gap-2 border-t border-white/10 bg-[rgba(8,15,24,0.72)] px-4 py-3">
-          <q-btn color="negative" @click="clearDialog()">Cancel</q-btn>
+          <q-btn color="negative" type="button" @click="clearDialog()">Cancel</q-btn>
 
           <q-btn
             color="primary"
-            @click="
-              switch (dialogAction) {
-                case 'Add':
-                  addMovie();
-                  break;
-                case 'Edit':
-                  editMovie();
-              }
-            "
+            type="submit"
             >{{ dialogAction }} Movie</q-btn
           >
         </q-card-actions>
-      </section>
+      </q-form>
 
       <section v-if="regionsByMovie.length === 0">
         <h1 class="mt-6 text-center text-[1.2rem] text-[#e5f2ff]">No streaming available</h1>
@@ -110,6 +102,26 @@ const props = defineProps({
   movieProviders: {
     type: Array,
     required: true,
+  },
+  moviePosterPath: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  movieOverview: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  movieRuntime: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  movieReleaseYear: {
+    type: Number,
+    required: false,
+    default: 0,
   },
   selectedCountry: {
     type: String,
@@ -177,10 +189,28 @@ const movieWatchDateOpt = (movieWatchDateOpt) => {
   return movieWatchDateOpt >= new Date().toISOString().split("T")[0].replace(/-/g, "/");
 };
 
+const buildMovieMetadata = () => ({
+  ...(props.moviePosterPath ? { posterPath: props.moviePosterPath } : {}),
+  ...(props.movieOverview ? { overview: props.movieOverview } : {}),
+  ...(props.movieRuntime > 0 ? { runtime: props.movieRuntime } : {}),
+  ...(props.movieReleaseYear > 0 ? { releaseYear: props.movieReleaseYear } : {}),
+});
+
 const clearDialog = () => {
   AddEditMovieDialog.value = false;
 
   props.newMovie && ((countrySearch.value = ""), (localmovieWatchDate.value = ""));
+};
+
+const submitMovie = () => {
+  switch (props.dialogAction) {
+    case "Add":
+      return addMovie();
+    case "Edit":
+      return editMovie();
+    default:
+      return false;
+  }
 };
 
 const addMovie = () => {
@@ -209,6 +239,7 @@ const addMovie = () => {
     streamingList: streamingList.value,
     streamingCountryName: countrySearch.value.name,
     watched: false,
+    ...buildMovieMetadata(),
   };
 
   // Save to localStorage
@@ -276,7 +307,9 @@ watch(
 );
 
 defineExpose({
+  addMovie,
   openMvDialog,
+  submitMovie,
 });
 </script>
 

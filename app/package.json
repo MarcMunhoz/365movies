@@ -25,6 +25,7 @@
     "@netlify/functions": "^5.3.0",
     "@popperjs/core": "^2.11.8",
     "@quasar/extras": "^1.18.0",
+    "accessibility": "^6.1.0",
     "axios": "^1.18.1",
     "cors": "^2.8.5",
     "express": "^4.22.2",

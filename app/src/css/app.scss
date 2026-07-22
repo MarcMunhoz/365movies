@@ -2,12 +2,31 @@
 
 :root {
   --app-bg: #0e141f;
+  --app-bg-aura: radial-gradient(circle at 0% 0%, rgba(77, 200, 176, 0.24), transparent 42%),
+    radial-gradient(circle at 100% 8%, rgba(255, 143, 107, 0.2), transparent 36%), #0e141f;
   --surface-1: #132235;
   --surface-2: #18304a;
+  --surface-overlay: rgba(9, 16, 28, 0.8);
+  --border-soft: rgba(255, 255, 255, 0.1);
   --text-main: #e8f0f8;
   --text-soft: #93adbf;
   --accent-main: #4dc8b0;
   --accent-alt: #ff8f6b;
+  --accent-warm: #ffc09a;
+}
+
+:root[data-app-theme="light"] {
+  --app-bg: #eef4f8;
+  --app-bg-aura: linear-gradient(135deg, #eef8f7 0%, #f5f7fb 54%, #fff3ef 100%);
+  --surface-1: #ffffff;
+  --surface-2: #e7eef5;
+  --surface-overlay: rgba(255, 255, 255, 0.94);
+  --border-soft: rgba(36, 54, 74, 0.22);
+  --text-main: #142236;
+  --text-soft: #455b73;
+  --accent-main: #087568;
+  --accent-alt: #9b3f27;
+  --accent-warm: #8a3b24;
 }
 
 html,
@@ -24,4 +43,423 @@ a {
 
 .q-card {
   border-radius: 18px;
+}
+
+.app-shell {
+  background: var(--app-bg-aura);
+  color: var(--text-main);
+}
+
+.app-header {
+  background: var(--surface-overlay);
+  border-color: var(--border-soft);
+  color: var(--text-main);
+}
+
+.app-drawer {
+  background: linear-gradient(180deg, var(--surface-1), color-mix(in srgb, var(--surface-2) 62%, var(--app-bg)));
+  color: var(--text-main);
+}
+
+.app-drawer-label,
+.app-route-label {
+  color: var(--text-soft);
+}
+
+.app-settings-nav {
+  border-top: 1px solid var(--border-soft);
+}
+
+.app-nav-link {
+  color: var(--text-main);
+}
+
+.app-nav-link:hover {
+  border-color: var(--border-soft);
+  background: color-mix(in srgb, var(--accent-main) 12%, transparent);
+}
+
+.app-nav-link .q-icon {
+  color: color-mix(in srgb, var(--text-soft) 76%, var(--accent-main));
+}
+
+.app-nav-link-active {
+  border-color: color-mix(in srgb, var(--accent-main) 58%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-main) 24%, transparent), color-mix(in srgb, var(--accent-main) 8%, transparent));
+  color: var(--text-main);
+}
+
+.app-accent-button {
+  border-color: color-mix(in srgb, var(--accent-warm) 70%, transparent);
+  color: var(--accent-warm);
+}
+
+.app-search-input {
+  color: var(--text-main);
+}
+
+.app-search-input .q-field__control {
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent) !important;
+  color: var(--text-main) !important;
+}
+
+.app-search-input .q-field__native,
+.app-search-input .q-field__input,
+.app-search-input .q-icon {
+  color: var(--text-main) !important;
+}
+
+.app-search-input .q-field__native::placeholder,
+.app-search-input .q-field__input::placeholder {
+  color: var(--text-soft) !important;
+  opacity: 1;
+}
+
+.app-clear-search {
+  color: var(--text-soft);
+}
+
+.home-reminder-banner {
+  border: 1px solid color-mix(in srgb, var(--accent-main) 28%, transparent);
+  background: color-mix(in srgb, var(--surface-1) 86%, transparent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  color: var(--text-main);
+}
+
+.home-reminder-icon {
+  color: var(--accent-main);
+}
+
+.home-reminder-action {
+  background: var(--accent-main);
+  color: #ffffff;
+}
+
+.trailer-dialog-surface {
+  border: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  color: var(--text-main);
+}
+
+.trailer-dialog-header {
+  min-height: 4rem;
+  border-bottom: 1px solid var(--border-soft);
+  padding: 0.75rem 1rem;
+}
+
+.trailer-dialog-close {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-2) 68%, transparent);
+  color: var(--text-main);
+}
+
+.challenge-panel {
+  border: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  color: var(--text-main);
+}
+
+.challenge-title {
+  color: var(--text-main);
+}
+
+.challenge-description,
+.challenge-icon-muted,
+.challenge-metric-label,
+.challenge-legend {
+  color: var(--text-soft);
+}
+
+.challenge-metric {
+  background: color-mix(in srgb, var(--surface-2) 64%, var(--surface-1));
+  color: var(--text-main);
+}
+
+.challenge-day-empty {
+  background: color-mix(in srgb, var(--text-soft) 34%, transparent);
+}
+
+.challenge-day-future {
+  background: color-mix(in srgb, var(--surface-2) 42%, var(--surface-1));
+  opacity: 0.42;
+}
+
+.movie-card {
+  border: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, var(--surface-1) 0%, color-mix(in srgb, var(--surface-2) 72%, var(--surface-1)) 100%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  color: var(--text-main);
+}
+
+.movie-card:hover {
+  border-color: color-mix(in srgb, var(--accent-warm) 50%, transparent);
+}
+
+.movie-card .q-separator {
+  background: var(--border-soft);
+}
+
+.movie-card-heading,
+.movie-card-details {
+  color: var(--text-main);
+}
+
+.movie-card-muted,
+.movie-card-overview {
+  color: var(--text-soft);
+}
+
+.agenda-local-notice {
+  border: 1px solid color-mix(in srgb, var(--accent-alt) 36%, transparent);
+  background: color-mix(in srgb, var(--accent-alt) 10%, var(--surface-1));
+  color: var(--accent-warm);
+}
+
+.about-hero-panel,
+.about-card {
+  border: 1px solid var(--border-soft);
+  background-color: var(--surface-1);
+  color: var(--text-main);
+}
+
+.about-hero-panel {
+  background-image: linear-gradient(130deg, color-mix(in srgb, var(--surface-2) 80%, var(--surface-1)), var(--surface-1));
+}
+
+.about-kicker {
+  color: var(--accent-main);
+}
+
+.about-copy,
+.about-card p {
+  color: var(--text-soft);
+}
+
+.about-card h2 {
+  color: var(--text-main);
+}
+
+.about-link-list {
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-2) 52%, var(--surface-1));
+  color: var(--text-main);
+}
+
+.app-shell [class*="bg-\\[rgba\\(10\\,18\\,30"],
+.app-shell [class*="bg-\\[rgba\\(11\\,19\\,31"],
+.app-shell [class*="bg-\\[linear-gradient\\(180deg\\,\\#15263a"],
+.app-shell [class*="bg-\\[linear-gradient\\(180deg\\,\\#132033"],
+.app-shell [class*="bg-\\[rgba\\(6\\,11\\,19"] {
+  background: color-mix(in srgb, var(--surface-1) 90%, transparent) !important;
+  color: var(--text-main) !important;
+}
+
+.app-shell [class*="text-\\[\\#e8f0f8"],
+.app-shell [class*="text-\\[\\#e4edf6"],
+.app-shell [class*="text-\\[\\#dce8f5"],
+.app-shell [class*="text-\\[\\#d9e6f3"],
+.app-shell [class*="text-\\[\\#dbe8f5"],
+.app-shell [class*="text-\\[\\#d9e8f6"],
+.app-shell [class*="text-\\[\\#f0f6ff"],
+.app-shell [class*="text-\\[\\#ffd8c2"],
+.app-shell [class*="text-\\[\\#e7f1fb"],
+.app-shell [class*="text-\\[\\#d5e6f6"],
+.app-shell [class*="text-\\[\\#cde2f6"],
+.app-shell [class*="text-\\[\\#dce9f5"] {
+  color: var(--text-main) !important;
+}
+
+.app-shell [class*="text-\\[\\#9db4c8"],
+.app-shell [class*="text-\\[\\#9db7cc"],
+.app-shell [class*="text-\\[\\#95b7c2"],
+.app-shell [class*="text-\\[\\#8fa8bd"],
+.app-shell [class*="text-\\[\\#9eb6cb"],
+.app-shell [class*="text-\\[\\#c8d9e9"],
+.app-shell [class*="text-\\[\\#b8cbe0"],
+.app-shell [class*="text-\\[\\#c2d4e8"],
+.app-shell [class*="text-\\[\\#c8dbec"] {
+  color: var(--text-soft) !important;
+}
+
+:root[data-app-theme="light"] .movie-card {
+  box-shadow: 0 16px 32px rgba(36, 54, 74, 0.14);
+}
+
+:root[data-app-theme="light"] .home-reminder-banner {
+  background: #ffffff;
+  border-color: var(--border-soft);
+  box-shadow: 0 16px 28px rgba(36, 54, 74, 0.12);
+}
+
+:root[data-app-theme="light"] .home-reminder-action {
+  background: #2ba99a;
+  color: #ffffff;
+}
+
+:root[data-app-theme="light"] .challenge-panel {
+  background: #ffffff;
+  box-shadow: 0 18px 36px rgba(36, 54, 74, 0.12);
+}
+
+:root[data-app-theme="light"] .challenge-metric {
+  background: #eef4f8;
+}
+
+:root[data-app-theme="light"] .challenge-day-empty {
+  background: #c8d4e2;
+}
+
+:root[data-app-theme="light"] .challenge-day-future {
+  background: #e4ebf2;
+  opacity: 0.78;
+}
+
+:root[data-app-theme="light"] .agenda-local-notice {
+  background: #fff7f2;
+  color: #73331e;
+}
+
+:root[data-app-theme="light"] .about-hero-panel,
+:root[data-app-theme="light"] .about-card {
+  background-color: var(--surface-1);
+}
+
+:root[data-app-theme="light"] .about-hero-panel {
+  background-image: linear-gradient(130deg, #ffffff 0%, #eef4f8 100%);
+}
+
+:root[data-app-theme="light"] .app-shell [class*="border-white\\/10"],
+:root[data-app-theme="light"] .app-shell [class*="border-white\\/15"] {
+  border-color: var(--border-soft) !important;
+}
+
+:root[data-app-theme="light"] .q-table,
+:root[data-app-theme="light"] .q-table__card,
+:root[data-app-theme="light"] .q-table th,
+:root[data-app-theme="light"] .q-table td {
+  background: var(--surface-1) !important;
+  color: var(--text-main) !important;
+}
+
+:root[data-app-theme="light"] .q-field--dark .q-field__control,
+:root[data-app-theme="light"] .q-field--dark .q-field__native,
+:root[data-app-theme="light"] .q-field--dark .q-field__label,
+:root[data-app-theme="light"] .q-field--dark .q-field__input {
+  color: var(--text-main) !important;
+}
+
+._access-icon {
+  display: none !important;
+}
+
+._access-menu {
+  max-width: min(320px, calc(100vw - 24px));
+}
+
+._access-menu button[data-access-action="underlineLinks"],
+._access-menu button[data-access-action="disableAnimations"] {
+  display: none !important;
+}
+
+.settings-page {
+  color: var(--text-main);
+}
+
+.settings-hero {
+  display: grid;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 1.25rem;
+}
+
+.settings-hero h1 {
+  margin: 0;
+  font-family: "Sora", sans-serif;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.settings-hero p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--text-soft);
+}
+
+.settings-kicker {
+  color: var(--accent-main) !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
+  gap: 1.25rem;
+  align-items: start;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-1) 86%, transparent);
+  padding: 1.25rem;
+}
+
+.settings-section h2 {
+  margin: 0 0 0.35rem;
+  font-family: "Sora", sans-serif;
+  font-size: 1.15rem;
+}
+
+.settings-section p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.settings-toggle {
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-banner {
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+
+.settings-summary,
+.settings-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-summary > div {
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  padding: 0.75rem;
+}
+
+.settings-summary span {
+  display: block;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.settings-summary strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .settings-section {
+    grid-template-columns: 1fr;
+  }
 }

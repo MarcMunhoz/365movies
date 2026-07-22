@@ -1,5 +1,5 @@
 <template>
-  <section class="w-full rounded-xl bg-slate-900 text-slate-100">
+  <section class="challenge-panel w-full rounded-xl">
     <q-expansion-item
       default-opened
       expand-separator
@@ -13,13 +13,14 @@
 
         <q-item-section>
           <q-item-label
-            class="font-['Sora'] text-xl font-bold leading-tight text-slate-100"
+            data-cy="challenge-title"
+            class="challenge-title font-['Sora'] text-xl font-bold leading-tight"
           >
             365 Movie Challenge
           </q-item-label>
           <q-item-label
             caption
-            class="mt-1 text-sm leading-relaxed text-slate-400"
+            class="challenge-description mt-1 text-sm leading-relaxed"
           >
             {{ challengeDescription }}
           </q-item-label>
@@ -28,7 +29,7 @@
         <q-item-section side>
           <q-icon
             :name="expanded ? 'expand_less' : 'expand_more'"
-            class="text-slate-400"
+            class="challenge-icon-muted"
             size="24px"
           />
         </q-item-section>
@@ -39,9 +40,9 @@
           <div
             v-for="metric in metrics"
             :key="metric.label"
-            class="rounded-lg bg-slate-800 p-4"
+            class="challenge-metric rounded-lg p-4"
           >
-            <span class="block text-xs font-medium uppercase text-slate-400">
+            <span class="challenge-metric-label block text-xs font-medium uppercase">
               {{ metric.label }}
             </span>
             <strong class="mt-1 block text-xl font-semibold">
@@ -93,16 +94,16 @@
         </div>
 
         <div
-          class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-slate-400"
+          class="challenge-legend mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs"
           aria-label="Grid color legend"
         >
           <span>Less</span>
-          <span class="h-4 w-4 rounded-sm bg-slate-700"></span>
+          <span class="challenge-day-empty h-4 w-4 rounded-sm"></span>
           <span class="h-4 w-4 rounded-sm bg-primary opacity-60"></span>
           <span class="h-4 w-4 rounded-sm bg-primary"></span>
           <span>More</span>
           <span
-            class="ml-2 h-4 w-4 rounded-sm bg-slate-800 opacity-30"
+            class="challenge-day-future ml-2 h-4 w-4 rounded-sm"
           ></span>
           <span>Future day</span>
         </div>
@@ -319,7 +320,7 @@ function formatDayCount(days: number): string {
 
 function getDayClasses(day: GridDay): string[] {
   if (day.isFuture) {
-    return ["cursor-not-allowed", "bg-slate-800", "opacity-30"];
+    return ["challenge-day-future", "cursor-not-allowed"];
   }
 
   if (day.count >= 2) {
@@ -330,7 +331,7 @@ function getDayClasses(day: GridDay): string[] {
     return ["cursor-default", "bg-primary", "opacity-60"];
   }
 
-  return ["bg-slate-700"];
+  return ["challenge-day-empty"];
 }
 
 function getDayAriaLabel(day: GridDay): string {

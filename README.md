@@ -113,6 +113,8 @@ Netlify Blobs uses the site context provided by Netlify in production. Local fun
 
 Reminder delivery is global for the local browser installation. Users can choose no reminders, e-mail reminders, calendar export, or both. E-mail reminders are sent two days before unwatched agenda items, and calendar exports generate one `.ics` file with matching two-day alarms.
 
+Inbox sender avatars are not controlled by the Brevo SMTP payload. Mail clients decide avatar replacement from domain and client configuration such as contacts, provider profile settings, BIMI, or workspace branding.
+
 ## Releases
 
 Release notes live in [CHANGELOG.md](./CHANGELOG.md).
