@@ -1,12 +1,13 @@
 <template>
   <q-item
     :to="link"
+    exact
     :data-cy="navDataCy"
-    class="q-mx-sm q-mb-xs rounded-borders border border-transparent text-[#dbe8f5] transition-all duration-200 ease-in hover:translate-x-[2px] hover:border-white/20 hover:bg-white/10 [&.q-router-link--active]:text-[#dbe8f5]"
-    :class="isCurrentRoute(link) ? 'border-[#4dc8b073] bg-[linear-gradient(90deg,rgba(77,200,176,0.3),rgba(77,200,176,0.1))] text-[#e7fff9]' : ''"
+    class="app-nav-link q-mx-sm q-mb-xs rounded-borders border border-transparent transition-all duration-200 ease-in hover:translate-x-[2px]"
+    :class="{ 'app-nav-link-active': isCurrentRoute(link) }"
   >
     <q-item-section v-if="icon" avatar>
-      <q-icon :name="icon" class="text-[#b8cee2]" />
+      <q-icon :name="icon" />
     </q-item-section>
 
     <q-item-section>

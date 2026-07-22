@@ -73,16 +73,64 @@ export const getOrCreateInstallationId = () => {
   return installationId;
 };
 
-export const buildReminderSnapshot = ({ installationId, email, preference, movies }) => ({
-  installationId,
-  email: String(email || "").trim(),
-  preference,
-  updatedAt: new Date().toISOString(),
-  movies: (movies || []).map((movie) => ({
+const normalizeOptionalString = (value) => {
+  const normalizedValue = String(value ?? "").trim();
+  return normalizedValue || undefined;
+};
+
+const normalizeOptionalNumber = (value) => {
+  const normalizedValue = Number(value);
+  return Number.isFinite(normalizedValue) && normalizedValue > 0 ? normalizedValue : undefined;
+};
+
+const normalizeStreamingProviders = (movie) => {
+  const providers = Array.isArray(movie.streamingProviders) ? movie.streamingProviders : movie.streamingList;
+
+  if (!Array.isArray(providers)) {
+    return undefined;
+  }
+
+  const normalizedProviders = providers
+    .map((provider) => {
+      const providerName = normalizeOptionalString(provider.providerName ?? provider.provider_name);
+      const logoPath = normalizeOptionalString(provider.logoPath ?? provider.logo_path);
+
+      return providerName
+        ? {
+            providerName,
+            ...(logoPath ? { logoPath } : {}),
+          }
+        : null;
+    })
+    .filter(Boolean);
+
+  return normalizedProviders.length ? normalizedProviders : undefined;
+};
+
+const buildReminderMovieSnapshot = (movie) => {
+  const metadata = {
+    posterPath: normalizeOptionalString(movie.posterPath ?? movie.poster_path),
+    posterUrl: normalizeOptionalString(movie.posterUrl ?? movie.poster_url),
+    overview: normalizeOptionalString(movie.overview),
+    runtime: normalizeOptionalNumber(movie.runtime),
+    releaseYear: normalizeOptionalNumber(movie.releaseYear ?? movie.release_year),
+    streamingProviders: normalizeStreamingProviders(movie),
+  };
+
+  return {
     movieID: String(movie.movieID ?? ""),
     movieTitle: String(movie.movieTitle ?? ""),
     movieLink: String(movie.movieLink ?? ""),
     watchDate: String(movie.watchDate ?? ""),
     watched: Boolean(movie.watched),
-  })),
+    ...Object.fromEntries(Object.entries(metadata).filter(([, value]) => value !== undefined)),
+  };
+};
+
+export const buildReminderSnapshot = ({ installationId, email, preference, movies }) => ({
+  installationId,
+  email: String(email || "").trim(),
+  preference,
+  updatedAt: new Date().toISOString(),
+  movies: (movies || []).map(buildReminderMovieSnapshot),
 });

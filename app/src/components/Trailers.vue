@@ -1,10 +1,10 @@
 <template>
   <q-dialog v-model="trailerDialog" full-width full-height persistent>
-    <q-card class="flex h-screen flex-col border border-white/15 bg-[linear-gradient(180deg,#15263a_0%,#0f1b2b_100%)]">
-      <q-card-section class="flex justify-end pb-0">
+    <q-card data-cy="trailer-dialog-surface" class="trailer-dialog-surface flex h-screen flex-col">
+      <q-card-section class="trailer-dialog-header flex items-center justify-end">
         <q-btn
           icon="close"
-          class="border border-white/15 bg-white/10 text-[#e5f2ff]"
+          class="trailer-dialog-close"
           flat
           round
           dense

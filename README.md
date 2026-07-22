@@ -1,5 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
-[![Version](https://img.shields.io/badge/version-2.5.0-1f8b4c)](#)
+[![Version](https://img.shields.io/badge/version-2.6.0-1f8b4c)](#)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/Quasar-2-1976d2)](https://quasar.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev/)
@@ -112,6 +112,8 @@ BREVO_APP_URL
 Netlify Blobs uses the site context provided by Netlify in production. Local function dry runs require the Netlify CLI/site context configured for Blobs.
 
 Reminder delivery is global for the local browser installation. Users can choose no reminders, e-mail reminders, calendar export, or both. E-mail reminders are sent two days before unwatched agenda items, and calendar exports generate one `.ics` file with matching two-day alarms.
+
+Inbox sender avatars are not controlled by the Brevo SMTP payload. Mail clients decide avatar replacement from domain and client configuration such as contacts, provider profile settings, BIMI, or workspace branding.
 
 ## Releases
 

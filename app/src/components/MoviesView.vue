@@ -18,7 +18,7 @@
       <q-card
         v-for="(sMovie, i) in sortedMovies"
         :key="i"
-class="relative w-[374px] max-w-[374px] overflow-hidden border border-white/10 bg-[linear-gradient(180deg,#132033_0%,#111f30_100%)] shadow-[0_12px_28px_rgba(0,0,0,0.32)] transition-all duration-200 ease-in hover:-translate-y-1 hover:border-[rgba(255,196,86,0.45)]" :class="{
+class="movie-card relative w-[374px] max-w-[374px] overflow-hidden transition-all duration-200 ease-in hover:-translate-y-1" :class="{
         'border-[rgba(77,200,176,0.7)] shadow-[0_14px_34px_rgba(14,120,104,0.35)]': isInAgenda(sMovie.id),
         'border-[rgba(100,221,160,0.9)] shadow-[0_16px_36px_rgba(31,174,109,0.4)]': isWatched(sMovie.id),
       }"
@@ -100,7 +100,7 @@ size="12px"
           />
         </div>
 
-          <q-card-section class="text-[#f0f6ff] pt-7">
+          <q-card-section class="movie-card-heading pt-7">
             <div class="mb-3 w-full text-[1.25rem] leading-tight">{{ sMovie.title }}</div>
             <div class="flex items-center gap-3">
               <div class="flex min-w-0 w-full justify-between items-center gap-3">
@@ -171,10 +171,10 @@ size="12px"
                 </q-btn>
               </div>
               <div class="flex shrink-0 items-center gap-3">
-                <div class="grey--text text-[1.05rem]">
+                <div class="movie-card-muted text-[1.05rem]">
                   {{ sMovie.release_date.split("-")[0] }}
                 </div>
-                <div v-if="getRuntime(sMovie.id) > 0" class="grey--text text-[1.05rem]">{{ getRuntime(sMovie.id) }}min</div>
+                <div v-if="getRuntime(sMovie.id) > 0" class="movie-card-muted text-[1.05rem]">{{ getRuntime(sMovie.id) }}min</div>
               </div>
             </div>
 
@@ -184,7 +184,7 @@ size="12px"
 
         <q-separator />
 
-        <q-card-section class="text-[#d9e8f6]">
+        <q-card-section class="movie-card-details">
           <div class="text-subtitle-1 w-100"><strong>Director:</strong> {{ getDirector(sMovie.id) }}</div>
 
           <div class="text-subtitle-1 w-100"><strong>Actors:</strong> {{ getActors(sMovie.id)?.join(", ") || "N/A" }}</div>
@@ -196,7 +196,7 @@ size="12px"
 
         <q-separator />
 
-        <q-card-section class="q-pt-none mt-3 flex min-h-[190px] flex-col text-[#c2d4e8]">
+        <q-card-section class="movie-card-overview q-pt-none mt-3 flex min-h-[190px] flex-col">
           <q-btn v-if="getTrailer(sMovie.id).length" icon="smart_display" color="primary" class="mb-4 block max-w-[130px]" @click="openTrailerDialog(getTrailer(sMovie.id))">&nbsp;Trailer</q-btn>
           <q-btn v-else outline color="negative" class="block mb-4" disable label="NO TRAILER" />
           <p class="mb-2">{{ getOverviewText(sMovie.id, sMovie.overview) }}</p>
@@ -239,6 +239,10 @@ size="12px"
       :movie-id="movieTmdbId"
       :movie-title="dialogTitle"
       :movie-providers="sMoviesProviders.filter((provider) => provider.id === movieTmdbId)"
+      :movie-poster-path="selectedMovieMetadata.posterPath"
+      :movie-overview="selectedMovieMetadata.overview"
+      :movie-runtime="selectedMovieMetadata.runtime"
+      :movie-release-year="selectedMovieMetadata.releaseYear"
       :selected-country="selectedCountry"
       :new-movie="newMovie"
     />
@@ -531,6 +535,18 @@ const getAgendaMovie = (movieId) => getLocalStorage("watchMovies").find((movie) 
 const isInAgenda = (movieId) => Boolean(getAgendaMovie(movieId));
 
 const isWatched = (movieId) => Boolean(getAgendaMovie(movieId)?.watched);
+
+const selectedMovieMetadata = computed(() => {
+  const movie = sMovies.value.find((movie) => movie.id === movieTmdbId.value);
+  const releaseYear = Number(movie?.release_date?.split("-")[0]);
+
+  return {
+    posterPath: movie?.poster_path || "",
+    overview: movie?.overview || "",
+    runtime: Number(getRuntime(movieTmdbId.value)) || 0,
+    releaseYear: Number.isFinite(releaseYear) ? releaseYear : 0,
+  };
+});
 
 const getDirector = (movieId) => getMovieData(sMoviesCredits, movieId, "crew", (crew) => crew.find((person) => person.job === "Director")?.name || "N/A");
 
