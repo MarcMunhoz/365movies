@@ -1,5 +1,5 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/580215fe-180b-48ac-ac58-3a410d8488b6/deploy-status)](https://app.netlify.com/sites/365movies/deploys)
-[![Version](https://img.shields.io/badge/version-2.6.0-1f8b4c)](#)
+[![Version](https://img.shields.io/badge/version-2.6.1-1f8b4c)](#)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883)](https://vuejs.org/)
 [![Quasar](https://img.shields.io/badge/Quasar-2-1976d2)](https://quasar.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646cff)](https://vite.dev/)

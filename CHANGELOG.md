@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.6.1
+- Accessibility toolbar reset now clears large cursor, text sizing, spacing, line height, contrast, grayscale, and reading guide runtime effects.
+- Accessibility reset preserves saved app-owned theme and language preferences.
+- Cypress regression coverage added for large cursor behavior, reset cleanup, and theme preservation.
+
 ### 2.4.0
 - Agenda reminder preferences added for none, e-mail, calendar export, and combined reminder modes.
 - Whole-agenda `.ics` export added for future unwatched movies with two-day alarms.
