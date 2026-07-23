@@ -7,6 +7,7 @@ import {
   getThemePreference,
 } from "utils/appPreferences";
 import { setAppLanguage } from "composables/useTranslations";
+import { installAccessibilityIntegration } from "utils/accessibilityIntegration";
 
 const DISABLED_ACCESSIBILITY_ACTIONS = ["underlineLinks", "disableAnimations"];
 
@@ -30,7 +31,7 @@ const observeAccessibilityMenu = () => {
   pruneAccessibilityActions();
 };
 
-const initializeAccessibilityToolbar = async () => {
+const initializeAccessibilityToolbar = async (quasar) => {
   if (typeof window === "undefined") {
     return false;
   }
@@ -50,6 +51,7 @@ const initializeAccessibilityToolbar = async () => {
         disableAnimations: false,
       },
     });
+    installAccessibilityIntegration(window.__movies365Accessibility, quasar);
     observeAccessibilityMenu();
     return true;
   } catch (error) {
@@ -70,6 +72,6 @@ export default boot(({ app, store, router }) => {
   });
 
   router.isReady().then(() => {
-    initializeAccessibilityToolbar();
+    initializeAccessibilityToolbar(quasar);
   });
 });

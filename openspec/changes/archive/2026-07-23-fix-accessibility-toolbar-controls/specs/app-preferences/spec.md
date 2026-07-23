@@ -1,18 +1,4 @@
-## Purpose
-Define app-wide local preferences for settings navigation, visual theme, accessibility behavior, English-owned interface copy, and form completion ergonomics.
-
-## Requirements
-
-### Requirement: Settings navigation
-The system SHALL provide a Settings or Preferences surface for app-wide configuration.
-
-#### Scenario: User opens settings from sidebar
-- **WHEN** the user activates the Settings or Preferences entry in the sidebar
-- **THEN** the system MUST navigate to a settings surface containing app-wide preference controls
-
-#### Scenario: Sidebar shows settings separately
-- **WHEN** the sidebar renders
-- **THEN** the Settings or Preferences entry MUST appear visually separated from primary navigation and remain available near the bottom of the sidebar on supported layouts
+## MODIFIED Requirements
 
 ### Requirement: Theme preference
 The system SHALL allow the user to choose between dark and light visual themes.
@@ -56,33 +42,3 @@ The system SHALL integrate an in-app accessibility toolbar using the `accessibil
 - **WHEN** the user activates one or more accessibility controls and then activates the reset accessibility control
 - **THEN** the system MUST remove toolbar-applied runtime effects including large cursor, text sizing, spacing, line height, contrast inversion, grayscale, and reading guide
 - **AND** the system MUST leave app-owned persisted preferences such as theme and language intact
-
-### Requirement: English app-owned interface copy
-The system SHALL keep app-owned interface copy in English until a complete and correct Portuguese translation is available.
-
-#### Scenario: Default language is English
-- **WHEN** the application renders app-owned UI text
-- **THEN** the system MUST render that text in English
-
-#### Scenario: Unsupported language is requested
-- **WHEN** a saved or requested language is not supported
-- **THEN** the system MUST fall back to English app-owned UI text
-
-#### Scenario: External content is displayed
-- **WHEN** the system displays externally supplied movie titles, provider names, or TMDB content
-- **THEN** the system MUST NOT translate that external content locally
-
-### Requirement: Enter submits completion forms
-The system SHALL submit forms with Enter when a primary completion action exists.
-
-#### Scenario: Form has a primary completion button
-- **WHEN** focus is inside a form with a primary save, confirm, okay, add, edit, or conclude action and the user presses Enter
-- **THEN** the system MUST trigger the same validation and action as activating the primary completion button
-
-#### Scenario: Form has invalid values
-- **WHEN** the user presses Enter in a completion form with invalid values
-- **THEN** the system MUST show the same validation feedback as activating the primary completion button
-
-#### Scenario: Control uses Enter for another interaction
-- **WHEN** focus is inside a control where Enter is required for native selection or multiline input behavior
-- **THEN** the system MUST preserve the control-specific behavior and MUST NOT submit prematurely
