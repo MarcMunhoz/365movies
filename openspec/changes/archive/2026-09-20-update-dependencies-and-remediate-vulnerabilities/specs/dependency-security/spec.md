@@ -1,8 +1,4 @@
-## Purpose
-
-Define dependency security requirements for package updates, vulnerability remediation, lockfile maintenance, and verification of the application dependency graph.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Vulnerable dependency remediation
 The application dependency graph SHALL resolve every actionable vulnerability identified by the current Dependabot alerts and the current local audit to patched, non-vulnerable, replaced, or explicitly justified versions.

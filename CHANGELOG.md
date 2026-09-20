@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.6.2
+- Dependabot and local-audit vulnerabilities remediated through direct, parent, and targeted transitive dependency updates.
+- Vitest upgraded to 4.1.11 with the existing Vue, Quasar, and Vite test workflows preserved.
+- Vulnerable `image-size` paths removed through the Netlify Blobs parent upgrade.
+- Unit, E2E, production build, dependency integrity, and final audit verification completed in the project container.
+
 ### 2.6.1
 - Accessibility toolbar reset now clears large cursor, text sizing, spacing, line height, contrast, grayscale, and reading guide runtime effects.
 - Accessibility reset preserves saved app-owned theme and language preferences.
