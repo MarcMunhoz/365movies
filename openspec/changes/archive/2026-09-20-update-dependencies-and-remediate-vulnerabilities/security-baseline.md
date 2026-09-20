@@ -121,3 +121,24 @@ All executable verification gates ran inside the prepared container with the rea
 Cypress emitted a non-blocking deprecation warning that the Quasar integration enables `allowCypressEnv`; the option is scheduled for removal in a future Cypress major. The warning did not affect the E2E result and does not represent an advisory in the final package audit.
 
 The final diff is limited to `app/package.json`, `app/yarn.lock`, and the OpenSpec change artifacts. No application, test, or configuration source file changed. The lockfile resolves the direct versions and targeted overrides declared by the manifest, and its broader churn corresponds to the parent upgrades and vulnerability removals documented above. The known `uuid@11.1.1` resolution range warning remains documented as a protective compatibility trade-off against reintroducing the earlier UUID advisory.
+
+## Post-push Dependabot Review
+
+After commit `b157bdf` was pushed to `issue_49`, GitHub still reported the original 22 alerts against the default branch. This is expected because the owner's workflow requires manual integration into `develop` and later promotion from `develop` to `main`; Dependabot does not close default-branch alerts merely because a non-default issue branch contains a safe graph.
+
+| Alerts | Package | `issue_49` disposition |
+| --- | --- | --- |
+| #156, #137 | js-yaml | Resolved at 4.3.2 |
+| #155, #153 | vitest | Resolved at 4.1.11 |
+| #152 | @vitest/mocker | Resolved at 4.1.11 |
+| #154 | baseline-browser-mapping | Resolved at 2.11.0 |
+| #151, #144 | qs | Resolved at 6.16.0 |
+| #150, #149 | joi | Resolved at 18.2.5 |
+| #148 | browserslist | Resolved at 4.28.9 |
+| #146, #145, #143, #142, #134 | fast-uri | Resolved at 3.1.8 |
+| #141 | nanoid | Resolved at 3.3.19 |
+| #140, #132 | postcss | Resolved at 8.5.28 |
+| #136, #135 | image-size | Removed from the graph through `@netlify/blobs@11.1.0` |
+| #130 | quasar | Resolved at 2.33.0 |
+
+The remaining remote status is therefore a branch-integration condition, not a local remediation gap. The alerts must be queried again after the remediated lockfile reaches the default branch; any alert that remains open after GitHub refreshes that graph requires renewed path analysis.

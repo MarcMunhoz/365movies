@@ -34,9 +34,9 @@
 
 ## 5. Confirm Remote Security State and Complete the Change
 
-- [ ] 5.1 Commit the remediation in detailed, logically separated English commits that follow the repository rules and reference issue #49.
-- [ ] 5.2 Push branch `issue_49` only after explicit authorization and allow GitHub to refresh its dependency graph.
-- [ ] 5.3 Query Dependabot via `gh` and confirm that the original 22 alerts are closed or document each remaining alert and its disposition.
-- [ ] 5.4 Update issue #49 with the verified test, build, audit, and Dependabot outcomes.
-- [ ] 5.5 Synchronize the dependency-security delta spec and archive the OpenSpec change before handing the branch off for integration.
-- [ ] 5.6 Hand off `issue_49` for manual integration into `develop` without opening a pull request; reserve pull requests for the owner's `develop` to `main` release flow.
+- [x] 5.1 Commit the remediation in detailed, logically separated English commits that follow the repository rules and reference issue #49.
+- [x] 5.2 Push branch `issue_49` only after explicit authorization and allow GitHub to refresh its dependency graph.
+- [x] 5.3 Query Dependabot via `gh` and confirm that the original 22 alerts are closed or document each remaining alert and its disposition.
+- [x] 5.4 Update issue #49 with the verified test, build, audit, and Dependabot outcomes.
+- [x] 5.5 Synchronize the dependency-security delta spec and archive the OpenSpec change before handing the branch off for integration.
+- [x] 5.6 Hand off `issue_49` for manual integration into `develop` without opening a pull request; reserve pull requests for the owner's `develop` to `main` release flow.
