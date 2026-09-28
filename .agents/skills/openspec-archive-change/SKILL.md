@@ -55,18 +55,20 @@ Archive a completed change in the experimental workflow.
 
 4. **Assess delta spec sync state**
 
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt.
+   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without synchronization.
 
    **If delta specs exist:**
    - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
    - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Show a combined summary before prompting
+   - Show a combined summary before continuing
 
-   **Prompt options:**
-   - If changes needed: "Sync now (recommended)", "Archive without syncing"
-   - If already synced: "Archive now", "Sync anyway", "Cancel"
+   **If changes are needed:**
+   - Invoke the `openspec-sync-specs` skill for change `<name>` using the analyzed delta spec summary
+   - If synchronization fails or is cancelled, stop and do not archive the change
+   - After synchronization, compare the delta specs with the main specs again
+   - Continue only after confirming the main specs contain the delta changes
 
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
+   **If already synchronized:** Proceed to archive without applying the same synchronization twice.
 
 5. **Perform the archive**
 
@@ -102,7 +104,7 @@ Archive a completed change in the experimental workflow.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**Specs:** ✓ Synced to main specs (or "Already synchronized" or "No delta specs")
 
 All artifacts complete. All tasks complete.
 ```
@@ -110,8 +112,9 @@ All artifacts complete. All tasks complete.
 **Guardrails**
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
+- Don't block archive on incomplete artifact or task warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use openspec-sync-specs approach (agent-driven)
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- If delta specs differ from main specs, use the openspec-sync-specs approach and block archive until synchronization succeeds
+- Never offer or follow an archive-without-sync path when delta specs differ from main specs
+- If delta specs exist, always run the sync assessment and show the combined summary before continuing
