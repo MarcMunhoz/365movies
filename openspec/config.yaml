@@ -1,20 +1,27 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  365movies is a local-first movie discovery, watch-planning, reminder, and yearly challenge application.
+  The frontend uses Vue 3, Quasar, Vite, Tailwind CSS, and Pinia. Server-side integrations use Netlify Functions and Netlify Blobs.
+  Follow the existing Composition API and Quasar patterns, keep derived Vue template data in computed values, and use strict explicit types without any when TypeScript is introduced.
+  Prefer concise self-explanatory code and native Quasar components for interface feedback and utilities.
+  Automated coverage uses Vitest for unit and component tests and Cypress for end-to-end tests.
+  Yarn v1 package-manager scripts, application tests, and builds must run only inside the Docker Compose app container.
+  Commit messages use English conventional-commit types; verbal summaries use the simple-present third-person singular and keep title and body in separate message arguments.
+  Follow the RTK command policy in RTK.md.
+  Use repository-relative references and preserve existing behavior unless a change explicitly modifies it.
+  The required OpenSpec lifecycle is propose → apply → sync → archive; synchronize delta specs before archiving.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - State the user or repository problem, scope, non-goals, affected capabilities, and expected impact.
+    - Identify application behavior, dependency, security, and migration impacts explicitly.
+  design:
+    - Record significant decisions, alternatives considered, risks, mitigations, and rollback strategy.
+    - Keep implementation choices consistent with the existing architecture and avoid unrelated redesigns.
+  specs:
+    - Express observable behavior with normative SHALL or MUST requirements and testable WHEN/THEN scenarios.
+    - Preserve existing requirements unless the delta explicitly modifies, removes, or renames them.
+  tasks:
+    - Break implementation into ordered, verifiable tasks with validation proportional to the affected surface.
+    - Include specification synchronization before archive whenever the change contains delta specs.
