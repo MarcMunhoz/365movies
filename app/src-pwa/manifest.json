@@ -1,7 +1,7 @@
 {
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#027be3",
+  "background_color": "#1e1e1e",
+  "theme_color": "#1e1e1e",
   "icons": [
     {
       "src": "icons/icon-128x128.png",
@@ -28,5 +28,10 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "name": "365movies",
+  "description": "Search, track and get notified about movies release dates",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
 }

@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Releases
 
+### 2.7.0
+- Remediates affected runtime and development dependencies, including the critical Express and shell-quote paths.
+- Upgrades Quasar CLI and Vite, aligns the test tooling, and locks the PWA build dependencies separately.
+- Adds a Docker-based release quality gate and automated GitHub tag and release publication.
+
 ### 2.6.2
 - Dependabot and local-audit vulnerabilities remediated through direct, parent, and targeted transitive dependency updates.
 - Vitest upgraded to 4.1.11 with the existing Vue, Quasar, and Vite test workflows preserved.

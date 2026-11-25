@@ -1,11 +1,11 @@
-import { boot } from 'quasar/wrappers';
+import { defineBoot } from '#q-app';
 import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000/api/tmdb', // Endereço do seu backend
 });
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // Fornecendo o TMDb globalmente
   app.provide('$tmdb', {
     fetch: (endpoint, params = {}) =>

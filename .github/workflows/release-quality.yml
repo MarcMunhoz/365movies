@@ -1,0 +1,65 @@
+name: Release quality
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quality-gate:
+    if: ${{ github.event.action != 'edited' || github.event.changes.base.ref.from != '' }}
+    concurrency:
+      group: release-quality-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Validate production PR source
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [[ "$HEAD_REF" != develop || "$HEAD_REPOSITORY" != "$GITHUB_REPOSITORY" ]]; then
+            echo "Production pull requests must come from this repository's develop branch."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release version
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 -B .github/scripts/test_release_policy.py
+          python3 -B .github/scripts/release_policy.py pr "$BASE_SHA" "$HEAD_SHA" --merge "$GITHUB_SHA"
+
+      - name: Build quality check image
+        run: |
+          git archive --format=tar HEAD |
+            docker build --target develop-stage --tag 365movies-quality-gate -
+
+      - name: Build and test application
+        run: |
+          docker run --rm --init --shm-size=1g \
+            -e CI=true \
+            -e CYPRESS_CACHE_FOLDER=/app/.cache/Cypress \
+            -e CYPRESS_BASE_URL=http://127.0.0.1:3650/ \
+            -e VITE_API_URL=http://127.0.0.1:3000 \
+            365movies-quality-gate sh -ec '
+              yarn install --frozen-lockfile --non-interactive
+              yarn build
+              test -s dist/pwa/index.html
+              yarn test:unit:ci
+              yarn test:e2e:ci
+            '
