@@ -8,15 +8,13 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-import { configure } from "quasar/wrappers";
-import dotenv from "dotenv";
+import { defineConfig } from "#q-app";
 import os from "os";
 import { fileURLToPath } from 'node:url';
 
 const isWSL = os.release().toLowerCase().includes("microsoft");
 
-export default configure(function (ctx) {
- dotenv.config();
+export default defineConfig(function () {
 
   return {
     // https://v2.quasar.dev/quasar-cli/prefetch-feature
@@ -62,9 +60,11 @@ export default configure(function (ctx) {
       // publicPath: '/',
       // analyze: true,
       env: {
-        // Client-side app only needs the backend endpoint.
-        // Secrets such as TMDB tokens must stay server-side.
-        VITE_API_URL: process.env.VITE_API_URL,
+        clientPrefix: "VITE_API_URL",
+        filter(env, type) {
+          if (type !== "client") return env;
+          return env.VITE_API_URL === undefined ? {} : { VITE_API_URL: env.VITE_API_URL };
+        },
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -72,13 +72,13 @@ export default configure(function (ctx) {
       // polyfillModulePreload: true,
       // distDir
 
-      extendViteConf(viteConf, { isServer, isClient }) {
-        Object.assign(viteConf.resolve.alias, {
-          utils: fileURLToPath(new URL("./src/utils", import.meta.url)),
-          composables: fileURLToPath(
-            new URL("./src/composables", import.meta.url),
-          ),
-        });
+      alias: {
+        src: fileURLToPath(new URL("./src", import.meta.url)),
+        components: fileURLToPath(new URL("./src/components", import.meta.url)),
+        layouts: fileURLToPath(new URL("./src/layouts", import.meta.url)),
+        pages: fileURLToPath(new URL("./src/pages", import.meta.url)),
+        utils: fileURLToPath(new URL("./src/utils", import.meta.url)),
+        composables: fileURLToPath(new URL("./src/composables", import.meta.url)),
       },
       // viteVuePluginOptions: {},
 
@@ -118,16 +118,10 @@ export default configure(function (ctx) {
     animations: [],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#property-sourcefiles
-    // sourceFiles: {
-    //   rootComponent: 'src/App.vue',
-    //   router: 'src/router/index',
-    //   store: 'src/store/index',
-    //   registerServiceWorker: 'src-pwa/register-service-worker',
-    //   serviceWorker: 'src-pwa/custom-service-worker',
-    //   pwaManifestFile: 'src-pwa/manifest.json',
-    //   electronMain: 'src-electron/electron-main',
-    //   electronPreload: 'src-electron/electron-preload'
-    // },
+    sourceFiles: {
+      pwaRegisterServiceWorker: "src-pwa/register-service-worker",
+      pwaServiceWorker: "src-pwa/custom-service-worker",
+    },
 
     // https://v2.quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
@@ -153,44 +147,7 @@ export default configure(function (ctx) {
     // https://v2.quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
       workboxMode: "GenerateSW", // or 'injectManifest'
-      manifest: {
-        name: `365movies`,
-        description: `Search, track and get notified about movies release dates`,
-        display: "standalone",
-        orientation: "portrait",
-        background_color: "#000000",
-        theme_color: "#1e1e1e",
-        start_url: "/",
-        scope: "/",
-        icons: [
-          {
-            src: "icons/icon-128x128.png",
-            sizes: "128x128",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-256x256.png",
-            sizes: "256x256",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-384x384.png",
-            sizes: "384x384",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
-      },
-      injectPwaMetaTags: true,
+      injectPWAMetaTags: true,
       useCredentialsForManifestTag: false,
       // swFilename: 'sw.js',
       // useFilenameHashes: true,

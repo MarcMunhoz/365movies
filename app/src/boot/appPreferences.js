@@ -1,4 +1,4 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app";
 import { Accessibility } from "accessibility";
 import {
   applyLanguagePreference,
@@ -60,7 +60,7 @@ const initializeAccessibilityToolbar = async (quasar) => {
   }
 };
 
-export default boot(({ app, store, router }) => {
+export default defineBoot(({ app, store, router }) => {
   const quasar = app.config.globalProperties.$q;
   const theme = applyThemePreference(getThemePreference(), quasar);
   const language = applyLanguagePreference(getLanguagePreference());

@@ -1,15 +1,15 @@
 ## 1. Capture the baseline
 
-- [ ] 1.1 Capture current Dependabot records for issue #53 and run the baseline Yarn audit covering runtime and development dependencies in the project container. Record alert IDs, advisory IDs, resolved versions, dependency paths, and severity.
-- [ ] 1.2 Reconcile the audit with Dependabot and verify candidate fixes, parent ranges, and compatibility constraints for every affected path.
+- [x] 1.1 Capture current Dependabot records for issue #53 and run the baseline Yarn audit covering runtime and development dependencies in the project container. Record alert IDs, advisory IDs, resolved versions, dependency paths, and severity.
+- [x] 1.2 Reconcile the audit with Dependabot and verify candidate fixes, parent ranges, and compatibility constraints for every affected path.
 
 ## 2. Update the dependency graph
 
-- [ ] 2.1 Remediate the critical `proxy-addr` paths through both Express copies and the `shell-quote` path through `concurrently`. Verify application server startup and the combined development command.
-- [ ] 2.2 Migrate Quasar CLI and Vite together. Update affected extensions and configuration, then verify preparation, the dev server, and the PWA build. Recheck Quasar's Express, SSR error, compression, certificate, and `node-forge` paths.
-- [ ] 2.3 Update Axios, Vue, and other compatible runtime packages. Recheck affected transitive paths for HTTP redirects, parsing, and Netlify integrations.
-- [ ] 2.4 Align Vitest and companions, update Happy DOM and Cypress, and refresh remaining transitive packages. Review each remaining Yarn resolution and confirm all affected copies resolve as intended.
-- [ ] 2.5 Document any advisory without a compatible fix, its remaining exposure, and the evidence supporting the selected disposition.
+- [x] 2.1 Remediate the critical `proxy-addr` paths through both Express copies and the `shell-quote` path through `concurrently`. Verify application server startup and the combined development command.
+- [x] 2.2 Migrate Quasar CLI and Vite together. Update affected extensions and configuration, then verify preparation, the dev server, and the PWA build. Recheck Quasar's Express, SSR error, compression, certificate, and `node-forge` paths.
+- [x] 2.3 Update Axios, Vue, and other compatible runtime packages. Recheck affected transitive paths for HTTP redirects, parsing, and Netlify integrations.
+- [x] 2.4 Align Vitest and companions, update Happy DOM and Cypress, and refresh remaining transitive packages. Review each remaining Yarn resolution and confirm all affected copies resolve as intended.
+- [x] 2.5 Document any advisory without a compatible fix, its remaining exposure, and the evidence supporting the selected disposition.
 
 ## 3. Verify compatibility and security
 

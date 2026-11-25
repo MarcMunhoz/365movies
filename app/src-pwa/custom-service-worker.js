@@ -18,11 +18,11 @@ cleanupOutdatedCaches()
 
 // Non-SSR fallbacks to index.html
 // Production SSR fallbacks to offline.html (except for dev)
-if (process.env.PROD) {
+if (import.meta.env.PROD) {
   registerRoute(
     new NavigationRoute(
-      createHandlerBoundToURL(process.env.PWA_FALLBACK_HTML),
-      { denylist: [new RegExp(process.env.PWA_SERVICE_WORKER_REGEX), /workbox-(.)*\.js$/] }
+      createHandlerBoundToURL(import.meta.env.QUASAR_PWA_FALLBACK_HTML),
+      { denylist: [new RegExp(import.meta.env.QUASAR_PWA_SERVICE_WORKER_REGEX), /workbox-(.)*\.js$/] }
     )
   )
 }
