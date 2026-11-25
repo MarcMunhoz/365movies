@@ -1,0 +1,73 @@
+name: Publish release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release:
+    if: ${{ !github.event.deleted }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect version increase
+        id: release
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          git merge-base --is-ancestor "$BEFORE_SHA" "$GITHUB_SHA"
+          TAG=$(python3 -B .github/scripts/release_policy.py push "$BEFORE_SHA" "$GITHUB_SHA")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  publish-release:
+    needs: validate-release
+    if: ${{ needs.validate-release.outputs.tag != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-release-${{ needs.validate-release.outputs.tag }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Publish tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.validate-release.outputs.tag }}
+        run: |
+          TAG_REF="refs/tags/$TAG"
+          REMOTE_TAG=$(git ls-remote --refs origin "$TAG_REF")
+          if [[ -z "$REMOTE_TAG" ]]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="$TAG_REF" -f sha="$GITHUB_SHA" >/dev/null
+          else
+            git fetch --no-tags origin "$TAG_REF"
+            TAG_SHA=$(git rev-parse 'FETCH_HEAD^{commit}')
+            if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
+              echo "Existing tag $TAG points to a different commit." >&2
+              exit 1
+            fi
+          fi
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+            exit 0
+          fi
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --verify-tag --generate-notes --title "$TAG"
