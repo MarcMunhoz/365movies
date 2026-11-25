@@ -13,7 +13,7 @@
 
 ## 3. Verify compatibility and security
 
-- [ ] 3.1 Verify a frozen install from the final lockfile in Docker. Run the final Yarn audit and compare the resolved graph and findings against the baseline. Record the evidence and any remaining findings.
-- [ ] 3.2 Run the production PWA build, Vitest, Cypress E2E, and applicable component checks inside the project container. Verify that the built PWA registers its service worker, handles deep links, and reloads offline after precaching.
-- [ ] 3.3 Verify movie discovery, watch planning, yearly challenge, preferences and accessibility, and agenda reminders. Exercise affected Netlify functions and redirects in an isolated context, including the reminder dry run with fixtures and zero outbound email.
-- [ ] 3.4 Record the results and blockers for all checks. Verify locally that the updated dependency paths satisfy the advisory ranges captured in the baseline.
+- [x] 3.1 Verify a frozen install from the final lockfile in Docker. Run the final Yarn audit and compare the resolved graph and findings against the baseline. Record the evidence and any remaining findings.
+- [x] 3.2 Run the production PWA build, Vitest, Cypress E2E, and applicable component checks inside the project container. Verify that the built PWA registers its service worker, handles deep links, and reloads offline after precaching.
+- [x] 3.3 Verify movie discovery, watch planning, yearly challenge, preferences and accessibility, and agenda reminders. Exercise affected Netlify functions and redirects in an isolated context, including the reminder dry run with fixtures and zero outbound email.
+- [x] 3.4 Record the results and blockers for all checks. Verify locally that the updated dependency paths satisfy the advisory ranges captured in the baseline.

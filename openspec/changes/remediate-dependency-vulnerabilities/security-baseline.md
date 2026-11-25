@@ -197,3 +197,13 @@ The original Express path through Quasar CLI is absent and the application retai
 Quasar preparation and the production PWA build succeeded. The build produced an application entry point, manifest, and service worker. Vitest passed all 45 tests across 15 files, and Cypress passed all 18 E2E tests across four specs. Live Netlify verification and browser offline checks remain in Group 3.
 
 The advisory checks describe the local updated graphs. GitHub has yet to scan those graphs on its default branch.
+
+## Group 3 verification
+
+- Verified both frozen Yarn installations in a clean copy of commit `d959bf2` inside the project's Node 22 Docker image. The application and PWA lockfiles remained byte-for-byte identical to the audited copies. The audit and advisory-range comparison above therefore apply to the verified installation.
+- Built the production PWA from the frozen install and confirmed the presence of its entry point, manifest, and service worker.
+- The full Vitest suite passed 45 tests across 15 files. Cypress passed all 18 tests across the four tracked E2E specs, covering navigation, agenda, challenge, preferences, and accessibility. The Vitest suite also exercised adding a planned movie, metadata persistence, and calendar export. The Cypress component runner has no matching tracked specs.
+- Exercised the built PWA in a headless browser. The Agenda deep link rendered through the configured SPA fallback, the service worker registered and controlled the page, the precache existed, and the route reloaded with the browser offline. A separate browser fixture returned a movie and its details through the search flow.
+- Ran the actual TMDB Netlify handler against an isolated HTTP upstream fixture. It forwarded the query and returned the expected movie payload and upstream 404. The reminder snapshot save and delete checks used mock Blobs bindings. The reminder dry run passed with the network disabled and an explicit assertion of zero outbound fetches.
+- Live Netlify function deployment, managed Blobs bindings, and scheduled invocation remain unverified. The isolated redirect and handler checks exercised those application paths without a deployed preview. The pre-existing production Docker packaging mismatch noted in the design is outside this dependency verification.
+- GitHub still reports 67 open Dependabot alerts on the unchanged default branch. The updated graphs are available on the remediation branch until the default branch is updated and rescanned.
