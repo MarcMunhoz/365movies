@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import release_policy as policy
@@ -57,6 +59,34 @@ class ReleasePolicyTest(unittest.TestCase):
         ):
             policy.validate_pr("base", "head", "merge")
         validate_metadata.assert_called_once_with("merge", "2.6.3")
+
+    def test_preparation_updates_metadata_and_is_idempotent(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "app").mkdir()
+            package = root / "app/package.json"
+            docker = root / "Dockerfile"
+            changelog = root / "CHANGELOG.md"
+            package.write_text('{\n  "name": "example",\n  "version": "2.6.2"\n}\n')
+            docker.write_text('LABEL author="example" \\\n  version="2.6.2"\n')
+            changelog.write_text("## Releases\n\n### 2.6.2\n- Previous release\n")
+            with (
+                patch.object(policy, "release_version", return_value=("2.6.2", "2.7.0")),
+                patch.object(policy, "git", return_value="feat(release): Adds a gate\n"),
+            ):
+                policy.prepare_version("base", "head", root)
+                policy.prepare_version("base", "updated-head", root)
+            self.assertIn('"version": "2.7.0"', package.read_text())
+            self.assertIn('version="2.7.0"', docker.read_text())
+            self.assertEqual(changelog.read_text().count("### 2.7.0"), 1)
+            self.assertIn("- feat(release): Adds a gate", changelog.read_text())
+
+    def test_preparation_leaves_a_no_bump_pr_unchanged(self):
+        with (
+            patch.object(policy, "release_version", return_value=("2.6.2", "2.6.2")),
+            patch.object(policy, "version_at", return_value="2.6.2"),
+        ):
+            policy.prepare_version("base", "head", Path("missing"))
 
 
 if __name__ == "__main__":

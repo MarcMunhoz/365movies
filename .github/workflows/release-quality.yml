@@ -13,13 +13,17 @@ defaults:
     shell: bash
 
 jobs:
-  quality-gate:
+  prepare-release:
     if: ${{ github.event.action != 'edited' || github.event.changes.base.ref.from != '' }}
     concurrency:
       group: release-quality-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      head: ${{ steps.prepare.outputs.head }}
     steps:
       - name: Validate production PR source
         env:
@@ -33,20 +37,68 @@ jobs:
 
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Validate release version
+      - name: Prepare release version
+        id: prepare
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 -B .github/scripts/test_release_policy.py
-          python3 -B .github/scripts/release_policy.py pr "$BASE_SHA" "$HEAD_SHA" --merge "$GITHUB_SHA"
+          git fetch origin main develop
+          if [[ "$(git rev-parse origin/develop)" != "$HEAD_SHA" || "$(git rev-parse origin/main)" != "$BASE_SHA" ]]; then
+            echo "The PR branches advanced. Run the gate against their current revisions." >&2
+            exit 1
+          fi
+          python3 -B .github/scripts/release_policy.py prepare "$BASE_SHA" "$HEAD_SHA"
+          git add -- app/package.json Dockerfile CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m 'chore(release): Updates release metadata'
+            git push origin HEAD:refs/heads/develop
+          fi
+          echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  quality-gate:
+    needs: prepare-release
+    if: ${{ always() && (github.event.action != 'edited' || github.event.changes.base.ref.from != '') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: Require release preparation
+        env:
+          PREPARATION_RESULT: ${{ needs.prepare-release.result }}
+        run: test "$PREPARATION_RESULT" = success
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare-release.outputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate the prepared merge
+        id: candidate
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ needs.prepare-release.outputs.head }}
+        run: |
+          TREE=$(git merge-tree --write-tree "$BASE_SHA" "$HEAD_SHA")
+          MERGE_SHA=$(git -c user.name='Release quality' -c user.email='release-quality@users.noreply.github.com' \
+            commit-tree "$TREE" -p "$BASE_SHA" -p "$HEAD_SHA" -m 'Validate proposed release merge')
+          python3 -B .github/scripts/release_policy.py pr "$BASE_SHA" "$HEAD_SHA" --merge "$MERGE_SHA"
+          echo "merge=$MERGE_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Build quality check image
+        env:
+          MERGE_SHA: ${{ steps.candidate.outputs.merge }}
         run: |
-          git archive --format=tar HEAD |
+          git archive --format=tar "$MERGE_SHA" |
             docker build --target develop-stage --tag 365movies-quality-gate -
 
       - name: Build and test application
@@ -63,3 +115,18 @@ jobs:
               yarn test:unit:ci
               yarn test:e2e:ci
             '
+
+      - name: Report quality result on the prepared commit
+        if: ${{ always() && needs.prepare-release.outputs.head != '' && needs.prepare-release.outputs.head != github.event.pull_request.head.sha }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ needs.prepare-release.outputs.head }}
+          RESULT: ${{ job.status }}
+        run: |
+          STATE=failure
+          if [[ "$RESULT" == success ]]; then
+            STATE=success
+          fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$STATE" -f context='Release quality / prepared commit' \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null

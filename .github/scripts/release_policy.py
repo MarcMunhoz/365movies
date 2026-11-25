@@ -5,6 +5,7 @@ import json
 import re
 import shlex
 import subprocess
+from pathlib import Path
 
 
 def git(*args):
@@ -69,10 +70,56 @@ def validate_metadata(revision, version):
         raise ValueError(f"CHANGELOG.md must include a '### {version}' heading")
 
 
-def validate_pr(base, head, merge):
+def release_version(base, head):
     base_version = version_at(base)
     messages = git("log", "-z", "--format=%B", f"{base}..{head}").split("\0")
-    expected = expected_version(base_version, messages)
+    return base_version, expected_version(base_version, messages)
+
+
+def prepare_version(base, head, root=Path(".")):
+    base_version, expected = release_version(base, head)
+    if expected == base_version:
+        if version_at(head) != expected:
+            raise ValueError(f"Expected unchanged package version {expected}")
+        return
+
+    package_path = root / "app/package.json"
+    docker_path = root / "Dockerfile"
+    changelog_path = root / "CHANGELOG.md"
+    package = package_path.read_text()
+    current = json.loads(package)["version"]
+    package, count = re.subn(
+        rf'^(  "version": ){re.escape(json.dumps(current))}(,?)$',
+        lambda match: f'{match[1]}"{expected}"{match[2]}',
+        package,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        raise ValueError("Expected one top-level package version")
+    docker, count = re.subn(
+        r'(?m)^(\s*version=")[^"\r\n]+(".*)$',
+        lambda match: f"{match[1]}{expected}{match[2]}",
+        docker_path.read_text(),
+    )
+    if count != 1:
+        raise ValueError("Expected one Docker version label on a continuation line")
+
+    changelog = changelog_path.read_text()
+    if not re.search(rf"^### {re.escape(expected)}[ \t]*$", changelog, re.MULTILINE):
+        marker = "## Releases\n"
+        if changelog.count(marker) != 1:
+            raise ValueError("Expected one Releases section in CHANGELOG.md")
+        subjects = git("log", "--reverse", "--no-merges", "--format=%s", f"{base}..{head}").splitlines()
+        notes = "\n".join(f"- {subject}" for subject in subjects if not subject.startswith("chore(release):"))
+        changelog = changelog.replace(marker, f"{marker}\n### {expected}\n{notes}\n", 1)
+
+    for path, updated in ((package_path, package), (docker_path, docker), (changelog_path, changelog)):
+        if path.read_text() != updated:
+            path.write_text(updated)
+
+
+def validate_pr(base, head, merge):
+    base_version, expected = release_version(base, head)
     if version_at(head) != expected:
         raise ValueError(f"Set app/package.json to the expected version {expected}")
     if version_at(merge) != expected:
@@ -93,12 +140,17 @@ def publication_tag(before, after):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=["pr", "push"])
+    parser.add_argument("mode", choices=["prepare", "pr", "push"])
     parser.add_argument("base")
     parser.add_argument("head")
     parser.add_argument("--merge", default="HEAD", help="Proposed merge revision for PR validation")
     args = parser.parse_args()
     try:
+        if args.mode == "prepare":
+            if git("rev-parse", "HEAD").strip() != git("rev-parse", args.head).strip():
+                raise ValueError("Release preparation requires checkout of the PR head")
+            prepare_version(args.base, args.head)
+            return
         if args.mode == "pr":
             validate_pr(args.base, args.head, args.merge)
             return
